@@ -1,6 +1,5 @@
-from pathlib import Path
-from noema.lint import lint_project
 from noema.audit import audit_project
+from noema.lint import lint_project
 from noema.schemas import schema_root
 
 

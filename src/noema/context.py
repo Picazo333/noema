@@ -18,10 +18,12 @@ def resolve_context_paths(root: Path, manifest: dict, mode: str | None = None) -
         if ref.scheme == "repo":
             paths.append(safe_project_path(root, ref.locator))
     # stable de-dup preserving order
-    seen = set(); out=[]
+    seen = set()
+    out = []
     for p in paths:
         if p not in seen:
-            seen.add(p); out.append(p)
+            seen.add(p)
+            out.append(p)
     return out
 
 

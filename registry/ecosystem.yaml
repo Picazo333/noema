@@ -6,7 +6,7 @@ ecosystem:
     noema_status: self-hosting
 
   - project_id: noema-plastic-surgeon-demo
-    status: experimental
+    status: active
     repository: github://Picazo333/noema-plastic-surgeon-demo
     manifest: github://Picazo333/noema-plastic-surgeon-demo/noema.project.yaml
     noema_status: reference-consumer-validated

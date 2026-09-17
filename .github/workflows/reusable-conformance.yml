@@ -16,14 +16,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Checkout pinned Noema
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: Picazo333/noema
           ref: 769a84efa0c1489d24a2b6f9879697d8ecae166a
           path: .noema-tool
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip

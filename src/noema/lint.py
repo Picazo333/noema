@@ -5,7 +5,7 @@ from .claims import claim_catalog, project_types, traits as known_traits
 from .context import resolve_context_paths
 from .loader import load_yaml
 from .manifest import validate_manifest
-from .refs import repo_ref_exists
+from .refs import repo_ref_exists, safe_project_path
 from .result import Check, Report
 from .schemas import schema_root, validation_errors
 from . import __version__
@@ -69,18 +69,33 @@ def lint_project(root: Path, protocol_root: Path | None = None) -> Report:
     else:
         checks.append(Check("NOEMA-AUTH-001", "INFO", "PASS", "Authority boundaries do not conflict."))
 
-    entry = root / manifest["context"]["entrypoint"]
-    if not entry.exists():
-        checks.append(Check("NOEMA-CTX-001", "ERROR", "FAIL", "Context entrypoint does not exist.", str(entry)))
+    try:
+        entry = safe_project_path(root, manifest["context"]["entrypoint"])
+    except ValueError as exc:
+        entry = None
+        checks.append(Check("NOEMA-CTX-001", "ERROR", "FAIL", f"Invalid context entrypoint: {exc}", "context.entrypoint"))
+    if entry is not None:
+        if not entry.exists():
+            checks.append(Check("NOEMA-CTX-001", "ERROR", "FAIL", "Context entrypoint does not exist.", str(entry)))
+        elif not entry.is_file():
+            checks.append(Check("NOEMA-CTX-001", "ERROR", "FAIL", "Context entrypoint must resolve to a file.", str(entry)))
+        else:
+            checks.append(Check("NOEMA-CTX-001", "INFO", "PASS", "Context entrypoint resolves to a project file."))
+
+    context = manifest.get("context", {})
+    modes = context.get("modes", {}) or {}
+    default_mode = context.get("default_mode")
+    if default_mode not in modes:
+        checks.append(Check("NOEMA-CTX-003", "ERROR", "FAIL", f"Default context mode `{default_mode}` is not declared in context.modes.", "context.default_mode"))
     else:
-        checks.append(Check("NOEMA-CTX-001", "INFO", "PASS", "Context entrypoint resolves."))
+        checks.append(Check("NOEMA-CTX-003", "INFO", "PASS", f"Default context mode `{default_mode}` is declared."))
 
     for name, ref in manifest.get("sources_of_truth", {}).items():
         if ref.get("scheme") == "repo":
             value = f"repo://{ref['locator']}"
             if not repo_ref_exists(root, value):
                 checks.append(Check("NOEMA-REF-001", "ERROR", "FAIL", f"Broken repo source_of_truth `{name}`: {value}", f"sources_of_truth.{name}"))
-    for mode in manifest.get("context", {}).get("modes", {}):
+    for mode in modes:
         try:
             for path in resolve_context_paths(root, manifest, mode):
                 if not path.exists():
@@ -93,42 +108,73 @@ def lint_project(root: Path, protocol_root: Path | None = None) -> Report:
     if bad_ext:
         checks.append(Check("NOEMA-EXT-001", "ERROR", "FAIL", f"Extension keys must start with x-: {', '.join(bad_ext)}", "extensions"))
 
-    # Validate executor and routing registries when present.
+    # Validate executor and routing registries when present. Malformed registries
+    # must fail closed rather than raising from optimistic `.get()`/`list()` calls.
     executors_path = root / "registry/executors.yaml"
     routes_path = root / "registry/routing.yaml"
+    ids: list[str] = []
     if executors_path.exists():
-        data = load_yaml(executors_path) or {}
-        executors = data.get("executors", []) if isinstance(data, dict) else []
-        ids = [e.get("id") for e in executors if isinstance(e, dict)]
-        if None in ids or len(ids) != len(set(ids)):
-            checks.append(Check("NOEMA-STACK-001", "ERROR", "FAIL", "Executor registry requires unique non-empty ids.", str(executors_path)))
+        try:
+            data = load_yaml(executors_path) or {}
+        except Exception as exc:
+            checks.append(Check("NOEMA-STACK-001", "ERROR", "FAIL", f"Cannot load executor registry: {exc}", str(executors_path)))
         else:
-            allowed_status = {"verified", "needs-verification", "disabled", "deprecated"}
-            bad = [e.get("id") for e in executors if e.get("status") not in allowed_status]
-            if bad:
-                checks.append(Check("NOEMA-STACK-001", "ERROR", "FAIL", f"Executors with invalid status: {', '.join(bad)}", str(executors_path)))
+            executors = data.get("executors", []) if isinstance(data, dict) else None
+            if not isinstance(executors, list):
+                checks.append(Check("NOEMA-STACK-001", "ERROR", "FAIL", "Executor registry `executors` must be a list.", str(executors_path)))
+            elif any(not isinstance(e, dict) for e in executors):
+                checks.append(Check("NOEMA-STACK-001", "ERROR", "FAIL", "Every executor registry item must be an object.", str(executors_path)))
             else:
-                checks.append(Check("NOEMA-STACK-001", "INFO", "PASS", "Executor registry structure is valid."))
-    else:
-        ids = []
+                raw_ids = [e.get("id") for e in executors]
+                if any(not isinstance(eid, str) or not eid for eid in raw_ids) or len(raw_ids) != len(set(raw_ids)):
+                    checks.append(Check("NOEMA-STACK-001", "ERROR", "FAIL", "Executor registry requires unique non-empty string ids.", str(executors_path)))
+                else:
+                    ids = raw_ids
+                    allowed_status = {"verified", "needs-verification", "disabled", "deprecated"}
+                    bad = [e.get("id") for e in executors if e.get("status") not in allowed_status]
+                    if bad:
+                        checks.append(Check("NOEMA-STACK-001", "ERROR", "FAIL", f"Executors with invalid status: {', '.join(bad)}", str(executors_path)))
+                    else:
+                        checks.append(Check("NOEMA-STACK-001", "INFO", "PASS", "Executor registry structure is valid."))
 
     if routes_path.exists():
-        data = load_yaml(routes_path) or {}
-        routes = data.get("routes", []) if isinstance(data, dict) else []
-        route_ids = [r.get("id") for r in routes if isinstance(r, dict)]
-        problems = []
-        if None in route_ids or len(route_ids) != len(set(route_ids)):
-            problems.append("route ids must be unique and non-empty")
-        known_ids = set(ids)
-        for route in routes:
-            refs = list(route.get("prefer", [])) + list(route.get("fallback", []))
-            missing = sorted(set(refs) - known_ids)
-            if missing:
-                problems.append(f"route `{route.get('id')}` references unknown executors: {', '.join(missing)}")
-        if problems:
-            checks.append(Check("NOEMA-ROUTE-REG-001", "ERROR", "FAIL", "; ".join(problems), str(routes_path)))
+        try:
+            data = load_yaml(routes_path) or {}
+        except Exception as exc:
+            checks.append(Check("NOEMA-ROUTE-REG-001", "ERROR", "FAIL", f"Cannot load routing registry: {exc}", str(routes_path)))
         else:
-            checks.append(Check("NOEMA-ROUTE-REG-001", "INFO", "PASS", "Routing registry structure is valid."))
+            routes = data.get("routes", []) if isinstance(data, dict) else None
+            problems: list[str] = []
+            if not isinstance(routes, list):
+                problems.append("routing registry `routes` must be a list")
+                routes = []
+            elif any(not isinstance(route, dict) for route in routes):
+                problems.append("every routing registry item must be an object")
+                routes = [route for route in routes if isinstance(route, dict)]
+
+            route_ids = [route.get("id") for route in routes]
+            if any(not isinstance(rid, str) or not rid for rid in route_ids) or len(route_ids) != len(set(route_ids)):
+                problems.append("route ids must be unique non-empty strings")
+
+            known_ids = set(ids)
+            for route in routes:
+                refs: list[str] = []
+                for field in ("prefer", "fallback"):
+                    value = route.get(field, [])
+                    if not isinstance(value, list):
+                        problems.append(f"route `{route.get('id')}` field `{field}` must be a list")
+                        continue
+                    if any(not isinstance(item, str) or not item for item in value):
+                        problems.append(f"route `{route.get('id')}` field `{field}` requires non-empty string executor ids")
+                        continue
+                    refs.extend(value)
+                missing = sorted(set(refs) - known_ids)
+                if missing:
+                    problems.append(f"route `{route.get('id')}` references unknown executors: {', '.join(missing)}")
+            if problems:
+                checks.append(Check("NOEMA-ROUTE-REG-001", "ERROR", "FAIL", "; ".join(problems), str(routes_path)))
+            else:
+                checks.append(Check("NOEMA-ROUTE-REG-001", "INFO", "PASS", "Routing registry structure is valid."))
 
     # Validate ecosystem index when the project contains Noema's registry.
     ecosystem_path = root / "registry/ecosystem.yaml"

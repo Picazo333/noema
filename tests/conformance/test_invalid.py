@@ -21,7 +21,8 @@ def test_missing_manifest_fails(tmp_path):
 
 
 def test_authority_overlap_fails(tmp_path):
-    data=base_manifest(); data["authority"]["does_not_own"]=["state"]
+    data=base_manifest()
+    data["authority"]["does_not_own"]=["state"]
     (tmp_path/"AGENTS.md").write_text("# agent", encoding="utf-8")
     (tmp_path/"noema.project.yaml").write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
     report=lint_project(tmp_path, schema_root())
@@ -30,7 +31,8 @@ def test_authority_overlap_fails(tmp_path):
 
 
 def test_unknown_claim_fails(tmp_path):
-    data=base_manifest(); data["quality_claims"]=["made-up-claim"]
+    data=base_manifest()
+    data["quality_claims"]=["made-up-claim"]
     (tmp_path/"AGENTS.md").write_text("# agent", encoding="utf-8")
     (tmp_path/"noema.project.yaml").write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
     report=lint_project(tmp_path, schema_root())

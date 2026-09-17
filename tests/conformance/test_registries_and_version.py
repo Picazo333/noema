@@ -1,4 +1,3 @@
-import copy
 import yaml
 from noema.lint import lint_project
 from noema.schemas import schema_root

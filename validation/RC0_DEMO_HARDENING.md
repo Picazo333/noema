@@ -2,7 +2,7 @@
 
 **Trigger:** external consumer demo (`noema-plastic-surgeon-demo`)  
 **Scope:** validator hardening only; protocol architecture remains closed.  
-**Branch:** `hardening/rc0-demo-edge-cases`
+**Validator commit:** `e1829101fb8173f8773728b94a88c353889c6837`
 
 ## Result
 
@@ -18,7 +18,7 @@ The demo exposed six deterministic validator edge cases plus one pre-existing CI
 | H-04 | scalar/non-object executor item could raise during lint | Validate list/item shape before semantic checks |
 | H-05 | scalar/non-object route item could raise during lint | Validate list/item shape before semantic checks |
 | H-06 | `prefer: null` / non-list route order could raise during lint | Require list-valued `prefer`/`fallback`; fail closed |
-| H-07 | CI lint behavior drifted as Ruff releases expanded active rule families | Declare the intended Ruff lint families explicitly and remove stale F401 debt |
+| H-07 | CI lint behavior drifted as Ruff releases expanded active rule families | Declare the intended Ruff lint families explicitly and remove stale lint debt blocking the intended gate |
 
 ## Regression coverage
 
@@ -26,7 +26,7 @@ The demo exposed six deterministic validator edge cases plus one pre-existing CI
 
 ## CI gate
 
-The hardening branch must pass the repository's normal gate:
+The hardening change passed the repository's normal gate:
 
 1. dependency installation;
 2. `ruff check .`;
@@ -34,7 +34,13 @@ The hardening branch must pass the repository's normal gate:
 4. `noema lint .`;
 5. `noema audit . --section context`.
 
-At the first green run after hardening, all five stages passed.
+The post-merge `main` run also completed successfully.
+
+## Consumer pin
+
+`.github/workflows/reusable-conformance.yml` is pinned to the immutable hardened validator commit above. Consumer projects therefore run the hardened validator rather than the original RC0 candidate implementation.
+
+Future validator changes must move this pin deliberately after their own regression/CI gate; consumers must not silently follow `main`.
 
 ## Architectural decision
 

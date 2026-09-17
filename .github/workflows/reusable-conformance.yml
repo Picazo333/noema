@@ -1,0 +1,26 @@
+name: Noema Conformance
+
+on:
+  workflow_call:
+    inputs:
+      project_root:
+        type: string
+        default: "."
+        required: false
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Checkout pinned Noema
+        uses: actions/checkout@v4
+        with:
+          repository: Picazo333/noema
+          ref: v0.1.0-rc.0
+          path: .noema-tool
+      - run: python -m pip install -e ./.noema-tool
+      - run: noema lint "${{ inputs.project_root }}"

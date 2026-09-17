@@ -22,7 +22,8 @@ def write_project(tmp_path, data):
 
 
 def test_wrong_protocol_pin_fails(tmp_path):
-    data=base_manifest(); data["noema"]["protocol"]="9.9.9"
+    data=base_manifest()
+    data["noema"]["protocol"]="9.9.9"
     write_project(tmp_path, data)
     report=lint_project(tmp_path, schema_root())
     assert report.status == "FAIL"
@@ -31,7 +32,8 @@ def test_wrong_protocol_pin_fails(tmp_path):
 
 def test_unknown_executor_reference_fails(tmp_path):
     write_project(tmp_path, base_manifest())
-    reg=tmp_path/"registry"; reg.mkdir()
+    reg=tmp_path/"registry"
+    reg.mkdir()
     (reg/"executors.yaml").write_text("executors:\n  - id: one\n    provider: test\n    status: verified\n", encoding="utf-8")
     (reg/"routing.yaml").write_text("routes:\n  - id: bad-route\n    requires: {capabilities: []}\n    prefer: [missing]\n    fallback: []\n", encoding="utf-8")
     report=lint_project(tmp_path, schema_root())

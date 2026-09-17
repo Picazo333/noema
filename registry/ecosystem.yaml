@@ -1,0 +1,18 @@
+ecosystem:
+  - project_id: noema
+    status: active
+    repository: repo://.
+    manifest: repo://noema.project.yaml
+    noema_status: self-hosting
+
+  - project_id: skill-foundry
+    status: active
+    repository: github://Picazo333/skill-foundry
+    manifest: null
+    noema_status: pending-read-only-audit
+
+  - project_id: agency-foundation
+    status: active
+    repository: github://Picazo333/agency-foundation
+    manifest: null
+    noema_status: pending-read-only-audit

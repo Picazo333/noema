@@ -1,0 +1,6 @@
+routes:
+  - id: code-high-reasoning
+    requires:
+      capabilities: [repository-work, code-editing]
+    prefer: [codex]
+    fallback: [claude-code]

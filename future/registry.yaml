@@ -1,0 +1,100 @@
+capabilities:
+  - id: external-triggers
+    status: deferred
+    problem: Normalize real event-driven invocation when a workflow requires it.
+    reason_deferred: No current workflow justifies trigger infrastructure.
+    activate_when: [a real workflow materially depends on external event invocation]
+    dependencies: [work-order contract]
+    expected_value: event-driven execution without provider-specific coupling
+    maintenance_cost: unknown
+    must_preserve: [permission boundaries, deterministic routing]
+
+  - id: drive-adapter
+    status: deferred
+    problem: Persist backups and large artifacts outside Git repositories.
+    reason_deferred: Backup/data migration follows the Noema/Skill Foundry/Agency foundations.
+    activate_when: [backup and data migration phase begins]
+    dependencies: [storage-ref contract]
+    expected_value: durable blob storage and app backup path
+    maintenance_cost: low-to-medium
+    must_preserve: [domain ownership, provider-replaceable storage refs]
+
+  - id: media-factory-automation
+    status: deferred
+    problem: Automate media artifact lifecycle across projects and Eidema.
+    reason_deferred: Protocol must be proven before automation.
+    activate_when: [manual media flow is repeated and measurably costly]
+    dependencies: [artifact contract, storage-ref contract, drive-adapter]
+    expected_value: reusable media lifecycle and provenance
+    maintenance_cost: medium
+    must_preserve: [human creative gates, Eidema authority]
+
+  - id: adaptive-executor-routing
+    status: deferred
+    problem: Optimize executor selection from project-specific evidence.
+    reason_deferred: No sufficient eval corpus exists.
+    activate_when: [multiple equivalent executors exist, task-specific eval corpus exists, deterministic routing causes measured waste]
+    dependencies: [routing, eval results]
+    expected_value: lower cost or higher quality selection
+    maintenance_cost: medium
+    must_preserve: [deterministic fallback, explainability]
+
+  - id: automatic-quota-ingestion
+    status: deferred
+    problem: Keep volatile executor availability current automatically.
+    reason_deferred: Manual runtime availability is currently sufficient.
+    activate_when: [manual availability upkeep materially harms routing]
+    dependencies: [runtime availability]
+    expected_value: less manual routing
+    maintenance_cost: provider-dependent
+    must_preserve: [no credentials in repository]
+
+  - id: advanced-observability
+    status: deferred
+    problem: Diagnose distributed or long-running workflows.
+    reason_deferred: RC0 has no persistent distributed runtime.
+    activate_when: [basic evidence is insufficient to debug repeated failures]
+    dependencies: []
+    expected_value: faster failure diagnosis
+    maintenance_cost: medium
+    must_preserve: [signal-to-noise, bounded maintenance]
+
+  - id: persistent-agent-runtime
+    status: deferred
+    problem: Support genuinely recurrent persistent autonomous workloads.
+    reason_deferred: Current work is better served by tasks, Skills, scripts, or CI jobs.
+    activate_when: [recurrent workload is measured and cannot be solved by simpler mechanisms]
+    dependencies: [security boundaries, recovery, evals]
+    expected_value: autonomous recurrent execution
+    maintenance_cost: high
+    must_preserve: [kill switch, least privilege, human authority]
+
+  - id: semantic-retrieval-rag
+    status: deferred
+    problem: Retrieve relevant context from corpora too large for structural navigation.
+    reason_deferred: Structural refs and progressive context have not failed yet.
+    activate_when: [retrieval failures are measured on a real corpus]
+    dependencies: [context metrics]
+    expected_value: better retrieval at scale
+    maintenance_cost: medium
+    must_preserve: [source citations, domain authority]
+
+  - id: knowledge-graph
+    status: deferred
+    problem: Query complex cross-domain relationships.
+    reason_deferred: Project relations and manifests are sufficient until proven otherwise.
+    activate_when: [material relationship queries cannot be answered reliably from manifests/indexes]
+    dependencies: [project relations]
+    expected_value: richer relationship queries
+    maintenance_cost: high
+    must_preserve: [source authority, reconstructibility]
+
+  - id: nested-project-manifests
+    status: deferred
+    problem: Represent monorepos with independently governed subprojects.
+    reason_deferred: RC0 needs one root manifest per project.
+    activate_when: [a real reference repo cannot be represented safely with one root manifest]
+    dependencies: [project manifest discovery]
+    expected_value: monorepo governance
+    maintenance_cost: medium
+    must_preserve: [unambiguous discovery]

@@ -1,0 +1,18 @@
+executors:
+  - id: codex
+    provider: openai
+    status: needs-verification
+    capabilities: [repository-work, code-editing]
+    modalities: [text, code]
+    interfaces: [github]
+    constraints: []
+    last_verified: null
+
+  - id: claude-code
+    provider: anthropic
+    status: needs-verification
+    capabilities: [repository-work, code-editing]
+    modalities: [text, code]
+    interfaces: [github, local]
+    constraints: []
+    last_verified: null

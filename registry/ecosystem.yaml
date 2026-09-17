@@ -9,7 +9,7 @@ ecosystem:
     status: active
     repository: github://Picazo333/skill-foundry
     manifest: null
-    noema_status: pending-read-only-audit
+    noema_status: audit-completed-migration-pending
 
   - project_id: agency-foundation
     status: active

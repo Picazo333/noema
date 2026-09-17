@@ -1,0 +1,74 @@
+noema:
+  protocol: "0.1.0-rc.0"
+  contracts:
+    project_manifest: 1
+
+project:
+  id: noema
+  name: Noema
+  type: infrastructure
+  status: active
+
+traits:
+  - agentic
+  - reusable
+  - deterministic
+
+authority:
+  owns:
+    - protocol
+    - schemas
+    - conformance
+    - executor-descriptors
+    - routing-policy
+    - ecosystem-index
+  does_not_own:
+    - domain-state
+    - capabilities
+    - secrets
+    - large-media
+
+sources_of_truth:
+  protocol:
+    scheme: repo
+    locator: PROTOCOL.md
+  constitution:
+    scheme: repo
+    locator: spec/00-constitution.md
+  decisions:
+    scheme: repo
+    locator: decisions/
+
+context:
+  entrypoint: AGENTS.md
+  default_mode: build
+  modes:
+    patch:
+      required: []
+    build:
+      required:
+        - repo://PROTOCOL.md
+    audit:
+      required:
+        - repo://spec/08-conformance.md
+    architect:
+      required:
+        - repo://spec/00-constitution.md
+        - repo://spec/02-project-composition.md
+        - repo://spec/03-context.md
+
+quality_claims:
+  - contract-conformance
+  - context-efficiency
+  - portability
+  - provenance
+  - recoverability
+
+relations:
+  - type: audits
+    target: project:skill-foundry
+  - type: audits
+    target: project:agency-foundation
+
+exceptions: []
+extensions: {}

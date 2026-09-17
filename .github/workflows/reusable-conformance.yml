@@ -21,12 +21,15 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: Picazo333/noema
-          ref: 769a84efa0c1489d24a2b6f9879697d8ecae166a
+          ref: 5b282ae358bc300fbc385c41050566bbe30cf6e3
           path: .noema-tool
       - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: .noema-tool/pyproject.toml
-      - run: python -m pip install -e ./.noema-tool
+          cache-dependency-path: .noema-tool/constraints/ci.txt
+      - name: Install pinned Noema toolchain
+        env:
+          PIP_CONSTRAINT: .noema-tool/constraints/ci.txt
+        run: python -m pip install -c .noema-tool/constraints/ci.txt -e ./.noema-tool
       - run: noema lint "${{ inputs.project_root }}"

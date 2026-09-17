@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Picazo333/noema
-          ref: v0.1.0-rc.0
+          ref: c4a8df78fd6025e3720bb879854bcfb38513cf0a
           path: .noema-tool
       - run: python -m pip install -e ./.noema-tool
       - run: noema lint "${{ inputs.project_root }}"

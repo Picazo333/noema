@@ -1,4 +1,3 @@
-from pathlib import Path
 import yaml
 from noema.lint import lint_project
 from noema.schemas import schema_root

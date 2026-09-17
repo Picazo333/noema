@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:storage-ref:1",
+  "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+}

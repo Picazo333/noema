@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:decision:1",
+  "type": "object",
+  "required": [
+    "decision_id",
+    "statement",
+    "status",
+    "rationale",
+    "evidence_refs",
+    "approved_by",
+    "reopen_triggers"
+  ],
+  "properties": {
+    "decision_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "statement": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "DRAFT",
+        "APPROVED",
+        "FROZEN",
+        "SUPERSEDED",
+        "REJECTED"
+      ]
+    },
+    "rationale": {
+      "type": "string"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+      }
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "supersedes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reopen_triggers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

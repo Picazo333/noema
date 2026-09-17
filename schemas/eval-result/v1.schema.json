@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:eval-result:1",
+  "type": "object",
+  "required": [
+    "eval_id",
+    "project_id",
+    "claim_id",
+    "grader_type",
+    "result",
+    "evidence_refs",
+    "evaluator",
+    "observed_at"
+  ],
+  "properties": {
+    "eval_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "project_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "claim_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "grader_type": {
+      "enum": [
+        "deterministic",
+        "human",
+        "model",
+        "runtime",
+        "external"
+      ]
+    },
+    "result": {
+      "enum": [
+        "pass",
+        "fail",
+        "inconclusive",
+        "unassessed"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+      }
+    },
+    "evaluator": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observed_at": {
+      "$ref": "urn:noema:schema:common:1#/$defs/timestamp"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

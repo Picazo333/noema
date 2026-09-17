@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:handoff:1",
+  "type": "object",
+  "required": [
+    "handoff_id",
+    "work_order_ref",
+    "status",
+    "summary",
+    "changes",
+    "artifacts",
+    "evidence",
+    "remaining",
+    "next_action",
+    "intentionally_unchanged"
+  ],
+  "properties": {
+    "handoff_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "work_order_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "partial",
+        "blocked",
+        "failed"
+      ]
+    },
+    "summary": {
+      "type": "string"
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "remaining": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_action": {
+      "type": "string"
+    },
+    "intentionally_unchanged": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

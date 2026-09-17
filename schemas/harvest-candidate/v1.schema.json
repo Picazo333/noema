@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:harvest-candidate:1",
+  "type": "object",
+  "required": [
+    "harvest_id",
+    "project_id",
+    "finding",
+    "evidence_refs",
+    "scope",
+    "confidence",
+    "routes",
+    "confidentiality",
+    "status"
+  ],
+  "properties": {
+    "harvest_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "project_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "finding": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+      }
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1
+    },
+    "confidence": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "routes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "noema",
+          "skill-foundry",
+          "obsidian",
+          "eidema",
+          "agency",
+          "eval",
+          "component",
+          "case-study"
+        ]
+      }
+    },
+    "confidentiality": {
+      "enum": [
+        "PUBLIC_SAFE",
+        "INTERNAL",
+        "CLIENT_CONFIDENTIAL",
+        "RESTRICTED"
+      ]
+    },
+    "status": {
+      "enum": [
+        "CANDIDATE",
+        "REVIEWED",
+        "APPROVED_FOR_REUSE",
+        "ROUTED",
+        "REJECTED",
+        "DUPLICATE",
+        "DEPRECATED"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

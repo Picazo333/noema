@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:work-order:1",
+  "type": "object",
+  "required": [
+    "work_order_id",
+    "project_id",
+    "objective",
+    "scope",
+    "context_mode",
+    "allowed_writes",
+    "forbidden_effects",
+    "expected_artifacts",
+    "quality_claims"
+  ],
+  "properties": {
+    "work_order_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "project_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "allowed",
+        "excluded"
+      ],
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excluded": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+      }
+    },
+    "context_mode": {
+      "enum": [
+        "patch",
+        "build",
+        "audit",
+        "research",
+        "architect",
+        "recover"
+      ]
+    },
+    "capability_requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "version": {
+            "type": [
+              "string",
+              "integer"
+            ]
+          },
+          "ref": {
+            "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "allowed_writes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "forbidden_effects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "expected_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "quality_claims": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "human_gates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:artifact:1",
+  "type": "object",
+  "required": [
+    "artifact_id",
+    "project_id",
+    "kind",
+    "status",
+    "location",
+    "provenance"
+  ],
+  "properties": {
+    "artifact_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "project_id": {
+      "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+    },
+    "kind": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "candidate",
+        "approved",
+        "rejected",
+        "deprecated",
+        "archived"
+      ]
+    },
+    "location": {
+      "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+    },
+    "version": {
+      "type": [
+        "string",
+        "integer",
+        "null"
+      ]
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "activity",
+        "actor",
+        "observed_at"
+      ],
+      "properties": {
+        "activity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actor": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_at": {
+          "$ref": "urn:noema:schema:common:1#/$defs/timestamp"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+          }
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:noema:schema:common:1#/$defs/storageRef"
+          }
+        },
+        "integrity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:noema:schema:common:1#/$defs/relation"
+      }
+    },
+    "quality_evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:noema:schema:common:1#/$defs/qualityEvidence"
+      }
+    }
+  },
+  "additionalProperties": false
+}

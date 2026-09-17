@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:ecosystem-index:1",
+  "type": "object",
+  "required": [
+    "ecosystem"
+  ],
+  "properties": {
+    "ecosystem": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "project_id",
+          "status",
+          "repository",
+          "noema_status"
+        ],
+        "properties": {
+          "project_id": {
+            "$ref": "urn:noema:schema:common:1#/$defs/identifier"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "paused",
+              "archived",
+              "planned"
+            ]
+          },
+          "repository": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifest": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "noema_status": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -15,4 +15,4 @@ ecosystem:
     status: active
     repository: github://Picazo333/agency-foundation
     manifest: null
-    noema_status: pending-read-only-audit
+    noema_status: audit-completed-migration-pending

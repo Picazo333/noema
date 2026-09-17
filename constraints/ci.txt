@@ -1,0 +1,6 @@
+PyYAML==6.0.2
+jsonschema==4.23.0
+pytest==8.3.5
+ruff==0.9.10
+setuptools==75.8.0
+wheel==0.45.1

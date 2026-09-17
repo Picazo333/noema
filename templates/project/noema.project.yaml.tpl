@@ -7,6 +7,7 @@ project:
   name: PROJECT_NAME
   type: PROJECT_TYPE
   status: active
+traits: []
 authority:
   owns: []
   does_not_own: []
@@ -14,6 +15,9 @@ sources_of_truth: {}
 context:
   entrypoint: AGENTS.md
   default_mode: build
+  modes:
+    build:
+      required: []
 quality_claims:
   - contract-conformance
 relations: []

@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 from noema.refs import safe_project_path, parse_ref
 

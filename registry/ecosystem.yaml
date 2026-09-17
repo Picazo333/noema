@@ -5,14 +5,20 @@ ecosystem:
     manifest: repo://noema.project.yaml
     noema_status: self-hosting
 
+  - project_id: noema-plastic-surgeon-demo
+    status: active
+    repository: github://Picazo333/noema-plastic-surgeon-demo
+    manifest: github://Picazo333/noema-plastic-surgeon-demo/noema.project.yaml
+    noema_status: reference-consumer-validated
+
   - project_id: skill-foundry
     status: active
     repository: github://Picazo333/skill-foundry
     manifest: null
-    noema_status: audit-completed-migration-pending
+    noema_status: audit-completed-migration-next
 
   - project_id: agency-foundation
     status: active
     repository: github://Picazo333/agency-foundation
     manifest: null
-    noema_status: audit-completed-migration-pending
+    noema_status: audit-completed-migration-deferred-until-checkpoint

@@ -1,0 +1,4 @@
+profile: agentic-capability-library
+type: library
+traits: [agentic, reusable, research-heavy]
+quality_claims: [contract-conformance, capability-trigger-accuracy, portability, context-efficiency, provenance]

@@ -1,0 +1,4 @@
+profile: operational-application
+type: application
+traits: [stateful]
+quality_claims: [contract-conformance, state-integrity, recoverability, provenance]

@@ -1,0 +1,4 @@
+profile: deterministic-software
+type: application
+traits: [deterministic, reusable]
+quality_claims: [contract-conformance, deterministic-correctness, provenance, recoverability]

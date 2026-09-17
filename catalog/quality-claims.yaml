@@ -1,0 +1,40 @@
+quality_claims:
+  contract-conformance:
+    evidence_types: [deterministic]
+    recommended_graders: [deterministic]
+  context-efficiency:
+    evidence_types: [observational]
+    recommended_graders: [deterministic, human]
+  provenance:
+    evidence_types: [deterministic, observational]
+    recommended_graders: [deterministic]
+  recoverability:
+    evidence_types: [runtime]
+    recommended_graders: [deterministic, human]
+  portability:
+    evidence_types: [runtime, observational]
+    recommended_graders: [deterministic, human]
+  security-boundaries:
+    evidence_types: [deterministic, human]
+    recommended_graders: [deterministic, human]
+  deterministic-correctness:
+    evidence_types: [deterministic, runtime]
+    recommended_graders: [deterministic]
+  state-integrity:
+    evidence_types: [runtime]
+    recommended_graders: [deterministic]
+  visual-coherence:
+    evidence_types: [human, model]
+    recommended_graders: [human, model]
+  research-groundedness:
+    evidence_types: [external-source, deterministic, human]
+    recommended_graders: [deterministic, human, model]
+  agent-task-success:
+    evidence_types: [runtime, observational]
+    recommended_graders: [deterministic, human, model]
+  capability-trigger-accuracy:
+    evidence_types: [runtime, deterministic]
+    recommended_graders: [deterministic, human]
+  delivery-integrity:
+    evidence_types: [human, runtime, observational]
+    recommended_graders: [human, deterministic]

@@ -1,0 +1,4 @@
+profile: infrastructure-protocol
+type: infrastructure
+traits: [agentic, reusable, deterministic]
+quality_claims: [contract-conformance, context-efficiency, portability, provenance, recoverability]

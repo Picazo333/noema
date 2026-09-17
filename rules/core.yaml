@@ -1,0 +1,28 @@
+rules:
+  - id: NOEMA-AUTH-001
+    level: MUST
+    scope: all
+    verification: STATIC
+    summary: Owned and explicitly unowned authority labels must not overlap.
+    rationale_ref: repo://spec/01-authority.md
+
+  - id: NOEMA-CTX-001
+    level: MUST
+    scope: all
+    verification: STATIC
+    summary: The declared agent context entrypoint must resolve inside the project.
+    rationale_ref: repo://spec/03-context.md
+
+  - id: NOEMA-QLT-001
+    level: MUST
+    scope: all
+    verification: EVIDENCE
+    summary: Material quality claims require proportional evidence and may remain unassessed.
+    rationale_ref: repo://spec/04-quality.md
+
+  - id: NOEMA-CPLX-001
+    level: MUST
+    scope: noema-platform
+    verification: EVIDENCE
+    summary: New platform complexity must pay rent and preserve bounded human maintenance.
+    rationale_ref: repo://spec/00-constitution.md

@@ -1,0 +1,7 @@
+project_types:
+  - application
+  - library
+  - infrastructure
+  - research
+  - delivery-system
+  - knowledge-system

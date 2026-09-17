@@ -1,0 +1,4 @@
+profile: minimal
+type: infrastructure
+traits: []
+quality_claims: [contract-conformance]

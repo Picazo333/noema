@@ -69,6 +69,8 @@ relations:
     target: project:skill-foundry
   - type: audits
     target: project:agency-foundation
+  - type: audits
+    target: project:4geeks-control-tower
 
 exceptions: []
 extensions: {}

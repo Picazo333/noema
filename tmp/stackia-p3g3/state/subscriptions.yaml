@@ -1,0 +1,188 @@
+schema: stackia/subscriptions@0.2
+status: canonical
+
+semantics:
+  purpose: "Plan/billing state only. A plan never creates a duplicate tool identity."
+  amount_certainty:
+    allowed: [CONFIRMED, REFERENCE_ESTIMATE, UNKNOWN]
+  subscription_state:
+    allowed: [ACTIVE, FREE, PREPAID, PENDING_ACTIVATION, WILL_NOT_RENEW, INACTIVE]
+  billing_period:
+    allowed: [MONTHLY, ANNUAL, PREPAID, FREE, UNKNOWN]
+  rule: "Budget views count each paid plan once; included tools/capabilities are expanded elsewhere without duplicate spend."
+
+subscriptions:
+  - id: chatgpt-plus
+    provider: OpenAI
+    plan_name: ChatGPT Plus
+    subscription_state: ACTIVE
+    billing_period: MONTHLY
+    billing:
+      currency: MXN
+      amount: 399
+      certainty: CONFIRMED
+    covers_tools: [chatgpt, codex]
+    includes_capabilities: [chatgpt-work, chatgpt-projects]
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: cursor-pro
+    provider: Cursor
+    plan_name: Cursor Pro
+    subscription_state: ACTIVE
+    billing_period: MONTHLY
+    billing:
+      currency: USD
+      amount: 20
+      certainty: CONFIRMED
+      reference_mxn: 340
+      reference_certainty: REFERENCE_ESTIMATE
+    covers_tools: [cursor]
+    includes_capabilities: [cursor-agent, cursor-cloud-agents, cursor-projects, grok-bot-cursor]
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: google-ai-pro
+    provider: Google
+    plan_name: Google AI Pro
+    subscription_state: ACTIVE
+    billing_period: MONTHLY
+    billing:
+      currency: MXN
+      amount: 395
+      certainty: CONFIRMED
+    covers_tools:
+      - gemini
+      - google-antigravity
+      - jules
+      - google-ai-studio
+      - notebooklm
+      - google-flow
+      - google-drive
+    includes_capabilities:
+      - gemini-deep-research
+      - gemini-spark
+      - gemini-gmail
+      - gemini-docs
+      - gemini-sheets
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: runway-free
+    provider: Runway
+    plan_name: Free
+    subscription_state: FREE
+    billing_period: FREE
+    billing:
+      currency: USD
+      amount: 0
+      certainty: CONFIRMED
+    covers_tools: [runway]
+    notes: "Round 09 confirmed an authenticated free workspace. Live credit balance is intentionally not stored in Git. Video generation is currently plan-gated; image models are available."
+    evidence: [validation/media-factory-workloads.yaml#runway-chatgpt-capability-discovery-v1]
+
+  - id: capcut-pro
+    provider: ByteDance
+    plan_name: CapCut Pro
+    subscription_state: PENDING_ACTIVATION
+    billing_period: MONTHLY
+    billing:
+      currency: UNKNOWN
+      amount: null
+      certainty: UNKNOWN
+      promotion: "First-period/account-specific promotion expected; checkout amount not yet canonicalized."
+    covers_tools: [capcut]
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: higgsfield-current
+    provider: Higgsfield
+    plan_name: "Current paid Higgsfield tier"
+    subscription_state: ACTIVE
+    billing_period: MONTHLY
+    billing:
+      currency: UNKNOWN
+      amount: null
+      certainty: UNKNOWN
+      reference_mxn: 255
+      reference_certainty: REFERENCE_ESTIMATE
+    covers_tools: [higgsfield]
+    notes: "Exact tier and charge remain to be reconciled; do not promote the reference estimate to confirmed billing."
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: figma-starter
+    provider: Figma
+    plan_name: Starter
+    subscription_state: FREE
+    billing_period: FREE
+    billing:
+      currency: USD
+      amount: 0
+      certainty: CONFIRMED
+    covers_tools: [figma]
+    effective_through: "2026-09"
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: figma-professional-full
+    provider: Figma
+    plan_name: Professional Full
+    subscription_state: PENDING_ACTIVATION
+    billing_period: MONTHLY
+    billing:
+      currency: USD
+      amount: 16
+      certainty: CONFIRMED
+      reference_mxn: 276
+      reference_certainty: REFERENCE_ESTIMATE
+    covers_tools: [figma]
+    includes_capabilities: [figma-dev-mode]
+    effective_from: "2026-10"
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: canva-free
+    provider: Canva
+    plan_name: Free
+    subscription_state: FREE
+    billing_period: FREE
+    billing:
+      currency: USD
+      amount: 0
+      certainty: CONFIRMED
+    covers_tools: [canva]
+    notes: "Paid upgrade requires demonstrated value; free-first is locked for September/October."
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: coursera-plus
+    provider: Coursera
+    plan_name: Coursera Plus
+    subscription_state: PREPAID
+    billing_period: PREPAID
+    billing:
+      currency: UNKNOWN
+      amount: null
+      certainty: UNKNOWN
+    covers_tools: [coursera]
+    notes: "No September/October cash-out; renewal economics are a later gate."
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: nordpass-prepaid
+    provider: Nord Security
+    plan_name: NordPass prepaid plan
+    subscription_state: PREPAID
+    billing_period: PREPAID
+    billing:
+      currency: UNKNOWN
+      amount: null
+      certainty: UNKNOWN
+    covers_tools: [nordpass]
+    notes: "No September/October cash-out in the locked baseline."
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - id: claude-pro-exit
+    provider: Anthropic
+    plan_name: Claude Pro
+    subscription_state: WILL_NOT_RENEW
+    billing_period: MONTHLY
+    billing:
+      currency: USD
+      amount: 20
+      certainty: REFERENCE_ESTIMATE
+    covers_tools: [claude, claude-code]
+    notes: "Residual current-period access may exist; no future active-stack renewal is planned."
+    evidence: [decisions/0002-september-october-stack-lock.md]

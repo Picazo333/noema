@@ -22,3 +22,9 @@ ecosystem:
     repository: github://Picazo333/agency-foundation
     manifest: null
     noema_status: audit-completed-migration-deferred-until-checkpoint
+
+  - project_id: stack-ia
+    status: active
+    repository: github://Picazo333/stack-ia
+    manifest: github://Picazo333/stack-ia/noema.project.yaml
+    noema_status: phase2-audit-integrated

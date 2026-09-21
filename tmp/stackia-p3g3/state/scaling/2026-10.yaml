@@ -1,0 +1,108 @@
+schema: stackia/monthly-scaling@0.1
+status: tracking
+month: "2026-10"
+scenario: ACTUAL
+
+purpose: "Derived scaling decision state for October. No paid action is authorized by this file."
+
+semantics:
+  initial_status: "UNASSESSED until capacity/fit evidence is recorded."
+  no_auto_purchase: true
+  paid_change_requires_human_approval: true
+
+resources:
+  - capacity_resource_id: chatgpt-plus-chat
+    status: UNASSESSED
+    rationale: "No capacity event recorded yet; high-cost upgrades require economic evidence if a future need appears."
+    reroute_result: NOT_RUN
+    economic_gate: UNASSESSED
+    next_action: OBSERVE
+
+  - capacity_resource_id: chatgpt-plus-codex
+    status: UNASSESSED
+    rationale: "Codex is core, but no October depletion evidence exists yet."
+    reroute_result: NOT_RUN
+    economic_gate: UNASSESSED
+    next_action: OBSERVE
+
+  - capacity_resource_id: cursor-pro-agent
+    status: UNASSESSED
+    rationale: "Cursor is core; upgrade only if observed depletion/blocked workloads justify it."
+    reroute_result: NOT_RUN
+    economic_gate: UNASSESSED
+    next_action: OBSERVE
+
+  - capacity_resource_id: google-ai-pro-gemini
+    status: UNASSESSED
+    rationale: "No October capacity event recorded."
+    reroute_result: NOT_RUN
+    economic_gate: UNASSESSED
+    next_action: OBSERVE
+
+  - capacity_resource_id: google-ai-pro-jules
+    status: UNASSESSED
+    rationale: "No October capacity event recorded."
+    reroute_result: NOT_RUN
+    economic_gate: UNASSESSED
+    next_action: OBSERVE
+
+  - capacity_resource_id: google-ai-pro-antigravity
+    status: UNASSESSED
+    rationale: "No October capacity event recorded."
+    reroute_result: NOT_RUN
+    economic_gate: UNASSESSED
+    next_action: OBSERVE
+
+  - capacity_resource_id: google-ai-pro-flow
+    status: UNASSESSED
+    rationale: "Benchmark against Higgsfield/Runway before any media-plan escalation."
+    reroute_result: NOT_RUN
+    economic_gate: UNASSESSED
+    next_action: BENCHMARK
+
+  - capacity_resource_id: firecrawl-free-or-current
+    status: UNASSESSED
+    rationale: "Free/current tier must be observed in real MCP use; true quota exhaustion is the primary upgrade signal."
+    reroute_result: NOT_RUN
+    economic_gate: NOT_REQUIRED
+    next_action: OBSERVE_AND_REROUTE_IF_NEEDED
+
+  - capacity_resource_id: context7-free-or-current
+    status: UNASSESSED
+    rationale: "Free/current tier must be exhausted or materially blocking before paid evaluation."
+    reroute_result: NOT_RUN
+    economic_gate: NOT_REQUIRED
+    next_action: OBSERVE
+
+  - capacity_resource_id: higgsfield-current
+    status: UNASSESSED
+    rationale: "Paid media capability is retained during benchmark; redundancy against included Flow/Runway must be evaluated."
+    reroute_result: NOT_RUN
+    economic_gate: UNASSESSED
+    redundancy_gate: PENDING_BENCHMARK
+    next_action: BENCHMARK
+
+  - capacity_resource_id: figma-professional-full
+    status: UNASSESSED
+    rationale: "October activation is pre-approved; evaluate actual agency/design leverage rather than seeking a further upgrade."
+    reroute_result: NOT_APPLICABLE
+    economic_gate: NOT_REQUIRED
+    next_action: ACTIVATE_AND_MEASURE
+
+  - capacity_resource_id: runway-free-video
+    status: WATCH
+    rationale: "Video is plan-gated on the connected free workspace, but no workload is blocked because current-paid Higgsfield and included Google Flow provide reroute candidates."
+    reroute_result: EXISTING_ENTITLEMENTS_AVAILABLE
+    economic_gate: NOT_REQUIRED
+    next_action: BENCHMARK_HIGGSFIELD_AND_FLOW_BEFORE_RUNWAY_PAID
+
+monthly_summary:
+  watch_signals: 1
+  scale_candidates: 0
+  evaluate_now: 0
+  redundant_candidates: 0
+  upgrades_authorized: 0
+  notes:
+    - "UNASSESSED is the neutral initial state; WATCH requires an actual signal."
+    - "Round-05 capacity events drive transitions to OK / SCALE_CANDIDATE / EVALUATE_NOW."
+    - "The November stack remains provisional until October evidence is reviewed."

@@ -1,0 +1,911 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stackia/ui-snapshot/v1",
+  "title": "StackIA UI Snapshot v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "meta",
+    "selection",
+    "overview",
+    "budget",
+    "registry",
+    "integrations",
+    "actions",
+    "capacity",
+    "media_factory",
+    "scenarios",
+    "evidence"
+  ],
+  "properties": {
+    "schema": {
+      "const": "stackia/ui-snapshot@1"
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generated_at",
+        "source_repo",
+        "source_ref",
+        "source_commit",
+        "derived_only"
+      ],
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source_repo": {
+          "const": "Picazo333/stack-ia"
+        },
+        "source_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "derived_only": {
+          "const": true
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "month",
+        "scenario"
+      ],
+      "properties": {
+        "month": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}$"
+        },
+        "scenario": {
+          "enum": [
+            "ACTUAL",
+            "LEAN",
+            "SCALE"
+          ]
+        }
+      }
+    },
+    "overview": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "counts",
+        "spend",
+        "signals"
+      ],
+      "properties": {
+        "counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "required": [
+            "registry_items",
+            "verified",
+            "tested",
+            "unverified",
+            "deployments",
+            "pending_actions"
+          ]
+        },
+        "spend": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "known_exact_mxn",
+            "paid_confirmed_mxn",
+            "reference_mxn",
+            "reference_excludes",
+            "unresolved_subscription_ids"
+          ],
+          "properties": {
+            "reference_mxn": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "reference_excludes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "unresolved_subscription_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "known_exact_mxn": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "paid_confirmed_mxn": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "signals": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "capacity_events",
+            "scaling_status_counts"
+          ],
+          "properties": {
+            "capacity_events": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "scaling_status_counts": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "paid_plans",
+        "entitlements",
+        "exiting"
+      ],
+      "properties": {
+        "paid_plans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/paidPlan"
+          }
+        },
+        "entitlements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entitlement"
+          }
+        },
+        "exiting": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/registryItem"
+          }
+        }
+      }
+    },
+    "integrations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hosts",
+        "matrix"
+      ],
+      "properties": {
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "matrix": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/integrationMatrixRow"
+          }
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/action"
+      }
+    },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resources"
+      ],
+      "properties": {
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/capacityResource"
+          }
+        }
+      }
+    },
+    "media_factory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stages",
+        "human_gates"
+      ],
+      "properties": {
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mediaStage"
+          }
+        },
+        "human_gates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "scenarios": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ACTUAL",
+        "LEAN",
+        "SCALE"
+      ],
+      "properties": {
+        "ACTUAL": {
+          "$ref": "#/$defs/scenarioProjection"
+        },
+        "LEAN": {
+          "$ref": "#/$defs/scenarioProjection"
+        },
+        "SCALE": {
+          "$ref": "#/$defs/scenarioProjection"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workload_summary",
+        "executor_projection"
+      ],
+      "properties": {
+        "workload_summary": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "executor_projection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "eligible_now",
+            "published_count"
+          ],
+          "properties": {
+            "eligible_now": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "published_count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "paidPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subscription_id",
+        "provider",
+        "plan_name",
+        "payment_state",
+        "subscription_state",
+        "amount",
+        "covers_tools",
+        "includes_capabilities"
+      ],
+      "properties": {
+        "subscription_id": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "plan_name": {
+          "type": "string"
+        },
+        "payment_state": {
+          "type": "string"
+        },
+        "subscription_state": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "currency",
+            "native_amount",
+            "native_certainty",
+            "reference_mxn",
+            "reference_mxn_certainty"
+          ],
+          "properties": {
+            "currency": {
+              "type": "string"
+            },
+            "native_amount": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "reference_mxn": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "native_certainty": {
+              "enum": [
+                "CONFIRMED",
+                "REFERENCE_ESTIMATE",
+                "UNKNOWN"
+              ]
+            },
+            "reference_mxn_certainty": {
+              "enum": [
+                "CONFIRMED",
+                "REFERENCE_ESTIMATE",
+                "UNKNOWN"
+              ]
+            }
+          }
+        },
+        "covers_tools": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "includes_capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "entitlement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subscription_id",
+        "basis"
+      ],
+      "properties": {
+        "subscription_id": {
+          "type": "string"
+        },
+        "basis": {
+          "type": "string"
+        }
+      }
+    },
+    "registryItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "category",
+        "provider",
+        "description",
+        "state",
+        "deployments",
+        "alternative_groups",
+        "plan_relations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "related_tool": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "packaged_host": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "surfaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "state": {
+          "$ref": "#/$defs/evaluationState"
+        },
+        "deployments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/deployment"
+          }
+        },
+        "alternative_groups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "plan_relations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "evaluationState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "usage",
+        "verification",
+        "decision",
+        "priority"
+      ],
+      "properties": {
+        "usage": {
+          "enum": [
+            "UNKNOWN",
+            "NOT_TRIED",
+            "USED"
+          ]
+        },
+        "verification": {
+          "enum": [
+            "UNKNOWN",
+            "UNVERIFIED",
+            "TESTED",
+            "VERIFIED"
+          ]
+        },
+        "decision": {
+          "enum": [
+            "KEEP",
+            "TEST",
+            "PARK",
+            "DROP",
+            "UNKNOWN"
+          ]
+        },
+        "priority": {
+          "enum": [
+            "CORE",
+            "NOW",
+            "NEXT",
+            "LATER",
+            "TRIGGER",
+            "NONE",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "state"
+      ],
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "NOT_DEPLOYED",
+            "INSTALLED",
+            "CONFIGURED",
+            "CONNECTED"
+          ]
+        }
+      }
+    },
+    "integrationMatrixRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_id",
+        "kind",
+        "verification",
+        "cells"
+      ],
+      "properties": {
+        "subject_id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "SKILL",
+            "MCP",
+            "PLUGIN_CONNECTOR"
+          ]
+        },
+        "verification": {
+          "enum": [
+            "UNKNOWN",
+            "UNVERIFIED",
+            "TESTED",
+            "VERIFIED"
+          ]
+        },
+        "cells": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "UNKNOWN",
+              "NOT_DEPLOYED",
+              "INSTALLED",
+              "CONFIGURED",
+              "CONNECTED"
+            ]
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rank",
+        "subject_id",
+        "action_type",
+        "priority",
+        "reason_codes",
+        "human_required",
+        "source_refs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "rank": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "subject_id": {
+          "type": "string"
+        },
+        "action_type": {
+          "enum": [
+            "VERIFY",
+            "DEPLOY",
+            "TEST",
+            "RESOLVE_ACCOUNT_FACT",
+            "BENCHMARK",
+            "CAPACITY_REVIEW",
+            "ECONOMIC_REVIEW"
+          ]
+        },
+        "priority": {
+          "enum": [
+            "CORE",
+            "NOW",
+            "NEXT",
+            "LATER",
+            "TRIGGER",
+            "NONE"
+          ]
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "human_required": {
+          "type": "boolean"
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "capacityResource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capacity_resource_id",
+        "plan_ref",
+        "subjects",
+        "events",
+        "depletion_class",
+        "scaling_status",
+        "reroute_result",
+        "economic_gate",
+        "next_action"
+      ],
+      "properties": {
+        "capacity_resource_id": {
+          "type": "string"
+        },
+        "plan_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "events": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "depletion_class": {
+          "type": "string"
+        },
+        "scaling_status": {
+          "enum": [
+            "UNASSESSED",
+            "OK",
+            "WATCH",
+            "SCALE_CANDIDATE",
+            "EVALUATE_NOW",
+            "REDUNDANT"
+          ]
+        },
+        "reroute_result": {
+          "type": "string"
+        },
+        "economic_gate": {
+          "type": "string"
+        },
+        "next_action": {
+          "type": "string"
+        }
+      }
+    },
+    "mediaStage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "order",
+        "primary_subjects",
+        "fallback_subjects",
+        "verification_state",
+        "human_gate_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "primary_subjects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fallback_subjects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "verification_state": {
+          "enum": [
+            "UNVERIFIED",
+            "TESTED",
+            "VERIFIED",
+            "MIXED"
+          ]
+        },
+        "human_gate_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "scenarioProjection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "status",
+        "paid_subscription_ids",
+        "reference_mxn",
+        "reference_excludes",
+        "changes",
+        "rationale"
+      ],
+      "properties": {
+        "authority": {
+          "enum": [
+            "MONTHLY_LOCK",
+            "DERIVED_PROPOSAL"
+          ]
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "PROPOSED",
+            "NOT_LOCKED"
+          ]
+        },
+        "paid_subscription_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "reference_mxn": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "reference_excludes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scenarioChange"
+          }
+        },
+        "rationale": {
+          "type": "string"
+        }
+      }
+    },
+    "scenarioChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation",
+        "subject",
+        "state",
+        "condition"
+      ],
+      "properties": {
+        "operation": {
+          "enum": [
+            "ADD",
+            "REMOVE",
+            "UPGRADE",
+            "DOWNGRADE",
+            "KEEP"
+          ]
+        },
+        "subject": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "CONDITION_ONLY",
+            "APPROVED",
+            "BLOCKED",
+            "NO_CHANGE"
+          ]
+        },
+        "condition": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

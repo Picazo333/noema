@@ -1,0 +1,65 @@
+schema: stackia/executor-qualification@0.1
+status: canonical
+
+purpose: "Track whether candidate executors have enough evidence to enter the stable StackIA -> Noema executor projection."
+
+noema_requirements:
+  source:
+    - "Picazo333/noema/registry/executors.yaml"
+    - "Picazo333/noema/spec/05-capabilities-and-stack.md"
+    - "Picazo333/noema/spec/06-routing.md"
+  rule: "Noema eliminates disabled or unverified executors before routing. Provider identity alone is not qualification."
+
+qualification_requirements:
+  - "candidate has a stable StackIA tool identity"
+  - "candidate is not DROP"
+  - "declared interface is real and evidenced"
+  - "representative required capability workload passes"
+  - "validation/evidence is inspectable"
+  - "verification is recent enough for the declared executor descriptor"
+  - "runtime quota/reset availability remains outside this stable qualification"
+
+candidates:
+  - subject_id: codex
+    intended_capabilities: [repository-work, code-editing]
+    intended_interfaces: [github]
+    qualification: NEEDS_VERIFICATION
+    workload_ref: validation/verification-workloads.yaml#noema-executor-repository-work-v1
+    reason: "Used, but no Round-07 executor-specific repository workload was executed through Codex."
+
+  - subject_id: cursor
+    intended_capabilities: [repository-work, code-editing]
+    intended_interfaces: [github, local]
+    qualification: NEEDS_VERIFICATION
+    workload_ref: validation/verification-workloads.yaml#noema-executor-repository-work-v1
+    reason: "Core engineering tool, but no reproducible Round-07 Noema executor workload/evidence exists yet."
+
+  - subject_id: jules
+    intended_capabilities: [repository-work, code-editing]
+    intended_interfaces: [github]
+    qualification: NEEDS_VERIFICATION
+    workload_ref: validation/verification-workloads.yaml#noema-executor-repository-work-v1
+    reason: "Historical use exists, but StackIA has not yet bound that use to the formal executor workload."
+
+  - subject_id: google-antigravity
+    intended_capabilities: [repository-work, code-editing]
+    intended_interfaces: [github, local]
+    qualification: NEEDS_VERIFICATION
+    workload_ref: validation/verification-workloads.yaml#noema-executor-repository-work-v1
+    reason: "Historical use exists, but no formal executor verification evidence has been recorded."
+
+  - subject_id: opencode
+    intended_capabilities: [repository-work, code-editing]
+    intended_interfaces: [local]
+    qualification: NOT_TRIED
+    workload_ref: validation/verification-workloads.yaml#noema-executor-repository-work-v1
+
+  - subject_id: hermes-agent
+    intended_capabilities: [repository-work, orchestration]
+    intended_interfaces: [local]
+    qualification: NOT_TRIED
+    workload_ref: validation/verification-workloads.yaml#noema-executor-repository-work-v1
+
+stable_projection:
+  eligible_now: []
+  reason: "Round 07 produced connector/service verification evidence but no core coding executor passed the full Noema workload/interface gate."

@@ -71,6 +71,12 @@ relations:
     target: project:agency-foundation
   - type: audits
     target: project:4geeks-control-tower
+  - type: consumes-stable-executor-projection-from
+    target: project:stack-ia
+    ref:
+      scheme: github
+      locator: Picazo333/stack-ia/exports/noema/executors.yaml
+    notes: Candidate descriptors require explicit promotion into Noema registry/executors.yaml before RC0 can route to them.
 
 exceptions: []
 extensions: {}

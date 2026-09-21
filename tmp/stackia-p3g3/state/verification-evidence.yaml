@@ -1,0 +1,42 @@
+schema: stackia/verification-evidence-index@0.1
+status: canonical
+workloads:
+  source: validation/verification-workloads.yaml
+  additional_sources:
+    - validation/media-factory-workloads.yaml
+verified_now:
+  - subject_id: chatgpt-instavar-remotion
+    workload_id: instavar-remotion-planning-v1
+  - subject_id: chatgpt-github
+    workload_id: github-chatgpt-repo-ops-v1
+  - subject_id: chatgpt-firecrawl
+    workload_id: firecrawl-chatgpt-developer-search-v1
+  - subject_id: firecrawl
+    workload_id: firecrawl-chatgpt-developer-search-v1
+tested_now:
+  - subject_id: chatgpt-runway
+    workload_id: runway-chatgpt-capability-discovery-v1
+  - subject_id: runway
+    workload_id: runway-chatgpt-capability-discovery-v1
+  - subject_id: chatgpt-google-drive
+    workload_id: google-drive-chatgpt-search-v1
+  - subject_id: google-drive
+    workload_id: google-drive-chatgpt-search-v1
+  - subject_id: chatgpt-figma
+    workload_id: figma-chatgpt-auth-readiness-v1
+  - subject_id: figma
+    workload_id: figma-chatgpt-auth-readiness-v1
+pending_groups:
+  - september-skill-host-verification-v1
+  - core-mcp-host-verification-v1
+  - agent-lab-tool-verification-v1
+  - noema-executor-repository-work-v1
+  - elevenlabs-voice-v1
+  - higgsfield-flow-video-benchmark-v1
+  - remotion-render-v1
+  - ffmpeg-assembly-v1
+  - capcut-finish-v1
+  - n8n-media-orchestration-v1
+  - buffer-publish-v1
+  - media-metrics-v1
+  - media-factory-e2e-v1

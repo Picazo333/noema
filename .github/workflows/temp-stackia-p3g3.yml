@@ -43,6 +43,7 @@ jobs:
       - name: Validate
         working-directory: tmp/stackia-p3g3
         run: |
+          set -o pipefail
           python scripts/validate_stackia_outputs.py             --month 2026-10             --snapshot /tmp/stackia-a.json             --capacity /tmp/capacity-a.json | tee /tmp/stackia-validation.json
 
       - name: Persist outputs on temp branch

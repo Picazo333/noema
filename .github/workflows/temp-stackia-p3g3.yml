@@ -1,0 +1,61 @@
+name: Temp StackIA P3-G3 Runner
+
+on:
+  push:
+    branches:
+      - "temp/stackia-p3g3-runner-20260921"
+    paths-ignore:
+      - "tmp/stackia-p3g3/out/**"
+
+permissions:
+  contents: write
+
+jobs:
+  run-stackia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        working-directory: tmp/stackia-p3g3
+        run: pip install -r requirements-dev.txt
+
+      - name: Compile A
+        working-directory: tmp/stackia-p3g3
+        run: |
+          python scripts/build_stackia.py             --month 2026-10             --source-commit 921d7da63a036e1d066e0ec7447bc5b11b98fe7b             --source-timestamp 2026-09-21T20:52:08Z             --source-ref phase3/compiler-golden-snapshot             --snapshot-out /tmp/stackia-a.json             --capacity-out /tmp/capacity-a.json
+
+      - name: Compile B
+        working-directory: tmp/stackia-p3g3
+        run: |
+          python scripts/build_stackia.py             --month 2026-10             --source-commit 921d7da63a036e1d066e0ec7447bc5b11b98fe7b             --source-timestamp 2026-09-21T20:52:08Z             --source-ref phase3/compiler-golden-snapshot             --snapshot-out /tmp/stackia-b.json             --capacity-out /tmp/capacity-b.json
+
+      - name: Determinism
+        run: |
+          cmp /tmp/stackia-a.json /tmp/stackia-b.json
+          cmp /tmp/capacity-a.json /tmp/capacity-b.json
+          sha256sum /tmp/stackia-a.json /tmp/capacity-a.json | tee /tmp/stackia-hashes.txt
+
+      - name: Validate
+        working-directory: tmp/stackia-p3g3
+        run: |
+          python scripts/validate_stackia_outputs.py             --month 2026-10             --snapshot /tmp/stackia-a.json             --capacity /tmp/capacity-a.json | tee /tmp/stackia-validation.json
+
+      - name: Persist outputs on temp branch
+        run: |
+          mkdir -p tmp/stackia-p3g3/out
+          cp /tmp/stackia-a.json tmp/stackia-p3g3/out/2026-10.actual.json
+          cp /tmp/capacity-a.json tmp/stackia-p3g3/out/capacity-router-stack.json
+          cp /tmp/stackia-hashes.txt tmp/stackia-p3g3/out/hashes.txt
+          cp /tmp/stackia-validation.json tmp/stackia-p3g3/out/validation.json
+          git config user.name "stackia-temp-runner"
+          git config user.email "stackia-temp-runner@users.noreply.github.com"
+          git add tmp/stackia-p3g3/out
+          if ! git diff --cached --quiet; then
+            git commit -m "temp: persist StackIA P3-G3 execution outputs"
+            git push origin HEAD:temp/stackia-p3g3-runner-20260921
+          fi

@@ -1,0 +1,27 @@
+harvest_id: harvest-20260921-reference-authority-layering
+project_id: noema
+finding: >-
+  Cross-project generative workflows may need typed positive-reference authority rather than
+  one undifferentiated context pool. Semantic canon, latest approved execution-state anchors,
+  and quarantined negative evidence can be simultaneously valid but must have different
+  precedence and routing semantics.
+evidence_refs:
+  - scheme: github
+    locator: Picazo333/agency-foundation/pull/30
+  - scheme: github
+    locator: Picazo333/agency-foundation/pull/31
+  - scheme: github
+    locator: Picazo333/agency-foundation/blob/main/docs/03-brand/workbench/divinivid/generation/GENERATION_RUNTIME_LOCK_V1.md
+  - scheme: github
+    locator: Picazo333/agency-foundation/blob/main/docs/03-brand/workbench/divinivid/generation/EXECUTION_STYLE_ANCHOR_SET_V1.md
+  - scheme: github
+    locator: Picazo333/agency-foundation/blob/main/docs/03-brand/workbench/divinivid/generation/SURFACE_LOCK_V1.md
+scope: >-
+  Noema protocol candidate for context authority typing, precedence and recovery semantics.
+  Domain-specific brand aesthetics and thresholds remain owned by the source project.
+confidence: high
+routes:
+  - noema
+  - eval
+confidentiality: INTERNAL
+status: CANDIDATE

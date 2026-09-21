@@ -1,0 +1,77 @@
+schema: stackia/alternatives@0.1
+status: canonical
+
+purpose: "Explicit functional-alternative groups for human comparison and reroute UX. Membership never implies 1:1 feature parity, price parity, deployment or verification."
+
+semantics:
+  relation: FUNCTIONAL_ALTERNATIVES
+  parity: PARTIAL_BY_DEFAULT
+  rule: "Use these groups to answer 'what else serves this job?'. Use evaluations/deployments/subscriptions to decide whether an alternative is actually available or appropriate now."
+  not_implied:
+    - feature_parity
+    - equivalent_quality
+    - equivalent_cost
+    - installed
+    - connected
+    - verified
+
+groups:
+  - id: general-ai-workspace
+    label: General AI workspace
+    members: [chatgpt, gemini, claude, deepseek, grok]
+    notes: "General conversational/reasoning workspaces; ecosystem and tool access differ materially."
+
+  - id: repository-coding-agent
+    label: Repository coding agent
+    members: [codex, cursor, jules, claude-code, opencode, openhands, google-antigravity]
+    notes: "Agents/environments capable of meaningful repository work; autonomy, interface and execution model differ."
+
+  - id: persistent-agent-environment
+    label: Persistent agent environment
+    members: [google-antigravity, hermes-agent, manus, openhands, openclaw]
+    notes: "Longer-running or multi-step agent environments; not interchangeable with simple chat surfaces."
+
+  - id: web-research-extraction
+    label: Web research and extraction
+    members: [firecrawl, perplexity, tavily, brave-search, scrapling]
+    notes: "Search/retrieval/scraping alternatives with different abstraction levels."
+
+  - id: code-context-memory
+    label: Code/context memory
+    members: [repomix, serena, codebasegraph, beads, claude-mem, obsidian]
+    notes: "Context persistence/navigation tools; some are complementary rather than direct substitutes."
+
+  - id: design-authoring
+    label: Design authoring
+    members: [figma, canva]
+    notes: "Both create visual artifacts; product-design and collateral/social strengths differ."
+
+  - id: generative-media
+    label: Generative image/video
+    members: [higgsfield, google-flow, runway]
+    notes: "Current Media Factory benchmark family."
+
+  - id: video-finishing
+    label: Video editing and finishing
+    members: [capcut, davinci-resolve]
+    notes: "Fast social editing versus deeper professional finishing."
+
+  - id: automation-orchestration
+    label: Automation and orchestration
+    members: [n8n, langflow, trigger-dev]
+    notes: "Workflow automation/control alternatives with different code/visual/agent emphasis."
+
+  - id: browser-automation
+    label: Browser automation
+    members: [playwright, agent-browser, browserbase]
+    notes: "Local library, persistent agent browser and hosted browser infrastructure."
+
+  - id: backend-platform
+    label: Application backend platform
+    members: [supabase, firebase]
+    notes: "Hosted backend alternatives; product/API semantics differ."
+
+  - id: deployment-edge-platform
+    label: Deployment and edge platform
+    members: [vercel, cloudflare]
+    notes: "Application/edge deployment alternatives with overlapping but non-identical capabilities."

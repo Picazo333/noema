@@ -1,0 +1,687 @@
+schema: stackia/integrations@0.2
+status: canonical
+rules:
+  compatibility_does_not_imply_deployment: true
+  deployment_does_not_imply_verification: true
+  skill_source_authority: skill-foundry-or-upstream
+  cli_is_surface_not_integration_kind: true
+
+skills:
+  - id: superpowers
+    name: Superpowers
+    kind: SKILL
+    category: ENGINEERING_PROCESS
+    aliases: [superpowers-plugin]
+    description: "Structured agentic engineering process for specs, planning, TDD, debugging and verification."
+
+  - id: ponytail
+    name: Ponytail
+    kind: SKILL
+    category: EFFICIENCY
+    description: "Anti-overengineering guidance focused on the minimal correct solution."
+
+  - id: skill-creator
+    name: Skill Creator
+    kind: SKILL
+    category: SKILL_FOUNDRY
+    description: "Create and evaluate reusable Agent Skills."
+
+  - id: mcp-builder
+    name: MCP Builder
+    kind: SKILL
+    category: SKILL_FOUNDRY
+    description: "Design and implement MCP integrations."
+
+  - id: webapp-testing
+    name: Webapp Testing
+    kind: SKILL
+    category: QA
+    description: "Browser-oriented QA workflow for web applications."
+
+  - id: impeccable
+    name: Impeccable
+    kind: SKILL
+    category: DESIGN_QA
+    description: "Visual critique, polish, typography, layout and refinement workflow."
+
+  - id: taste
+    name: Taste
+    kind: SKILL
+    category: VISUAL_DIRECTION
+    aliases: [design-taste-frontend]
+    description: "Opinionated visual direction and anti-generic frontend design guidance."
+
+  - id: frontend-design
+    name: Frontend Design
+    kind: SKILL
+    category: FRONTEND
+    description: "High-quality frontend implementation and composition workflow."
+
+  - id: react-best-practices
+    name: React Best Practices
+    kind: SKILL
+    category: CODING
+    description: "React implementation and performance best practices."
+
+  - id: vercel-composition-patterns
+    name: Vercel Composition Patterns
+    kind: SKILL
+    category: ARCHITECTURE
+    description: "Composable React/frontend architecture patterns."
+
+  - id: playwright-skills
+    name: Playwright Skills
+    kind: SKILL
+    category: QA
+    description: "Agent workflows and patterns for Playwright-based testing."
+
+  - id: secure-coding
+    name: Secure Coding / Review
+    kind: SKILL
+    category: SECURITY
+    description: "Secure coding and review guidance for application work."
+
+  - id: semgrep-code-security
+    name: Semgrep Code Security
+    kind: SKILL
+    category: SECURITY
+    description: "Static-analysis-driven code security workflow."
+
+  - id: semgrep-llm-security
+    name: Semgrep LLM Security
+    kind: SKILL
+    category: SECURITY
+    description: "Security workflow for LLM and agentic application surfaces."
+
+  - id: planning-with-files
+    name: Planning with Files
+    kind: SKILL
+    category: PLANNING
+    description: "Persistent planning artifacts for longer engineering tasks."
+
+  - id: caveman
+    name: Caveman
+    kind: SKILL
+    category: EFFICIENCY
+    description: "Compact technical-output workflow whose efficiency benefit must be evidenced."
+
+  - id: repomix-skill
+    name: Repomix Skill
+    kind: SKILL
+    category: CONTEXT
+    related_tool: repomix
+    description: "Repository-context packaging workflow using Repomix."
+
+  - id: web-design-guidelines
+    name: Web Design Guidelines
+    kind: SKILL
+    category: DESIGN_QA
+    description: "Web-interface design and quality guidance."
+
+  - id: coderabbit-code-review
+    name: CodeRabbit Code Review
+    kind: SKILL
+    category: QA
+    description: "Code-review workflow candidate centered on review quality."
+
+  - id: openai-docs
+    name: OpenAI Docs
+    kind: SKILL
+    category: CONTEXT
+    related_tool: chatgpt
+    description: "Current OpenAI documentation lookup and implementation guidance."
+
+  - id: n8n-official
+    name: n8n Official Skills
+    kind: SKILL
+    category: AUTOMATION
+    related_tool: n8n
+    description: "Official n8n agent workflow guidance."
+
+  - id: n8n-workflow-builder
+    name: n8n Workflow Builder
+    kind: SKILL
+    category: AUTOMATION
+    related_tool: n8n
+    description: "Build and modify n8n workflows."
+
+  - id: n8n-debugging-executions
+    name: n8n Debugging Executions
+    kind: SKILL
+    category: AUTOMATION
+    related_tool: n8n
+    description: "Diagnose and correct failed n8n executions."
+
+  - id: n8n-credential-security
+    name: n8n Credential Security
+    kind: SKILL
+    category: SECURITY
+    related_tool: n8n
+    description: "Secure credential and integration setup for n8n."
+
+  - id: n8n-agent-builder
+    name: n8n Agent Builder
+    kind: SKILL
+    category: AUTOMATION
+    related_tool: n8n
+    description: "Agent-oriented n8n workflow construction."
+
+  - id: remotion-best-practices
+    name: Remotion Best Practices
+    kind: SKILL
+    category: MEDIA_FACTORY
+    related_tool: remotion
+    aliases: [remotion-agent-skills]
+    description: "Programmatic video best practices for Remotion."
+
+  - id: runway-skill
+    name: Runway Skill
+    kind: SKILL
+    category: MEDIA_FACTORY
+    related_tool: runway
+    description: "Runway media-generation workflow guidance."
+
+  - id: elevenlabs-tts
+    name: ElevenLabs Text to Speech
+    kind: SKILL
+    category: MEDIA_FACTORY
+    related_tool: elevenlabs
+    description: "Text-to-speech workflow for ElevenLabs."
+
+  - id: elevenlabs-stt
+    name: ElevenLabs Speech to Text
+    kind: SKILL
+    category: MEDIA_FACTORY
+    related_tool: elevenlabs
+    description: "Speech-to-text workflow for ElevenLabs."
+
+  - id: elevenlabs-sound-effects
+    name: ElevenLabs Sound Effects
+    kind: SKILL
+    category: MEDIA_FACTORY
+    related_tool: elevenlabs
+    description: "Generative sound-effects workflow."
+
+  - id: elevenlabs-music
+    name: ElevenLabs Music
+    kind: SKILL
+    category: MEDIA_FACTORY
+    related_tool: elevenlabs
+    description: "Generative music workflow."
+
+  - id: product-marketing
+    name: Product Marketing
+    kind: SKILL
+    category: MARKETING
+    description: "Product positioning and go-to-market workflow."
+
+  - id: copywriting
+    name: Copywriting
+    kind: SKILL
+    category: MARKETING
+    description: "Commercial and conversion-oriented copy workflow."
+
+  - id: analytics
+    name: Analytics
+    kind: SKILL
+    category: MARKETING
+    description: "Measurement and analytics workflow."
+
+  - id: seo-audit
+    name: SEO Audit
+    kind: SKILL
+    category: MARKETING
+    description: "Search-engine optimization audit workflow."
+
+  - id: paid-ads
+    name: Paid Ads
+    kind: SKILL
+    category: MARKETING
+    description: "Paid-acquisition campaign workflow."
+
+  - id: ab-testing
+    name: A/B Testing
+    kind: SKILL
+    category: GROWTH
+    description: "Experiment design and A/B testing workflow."
+
+  - id: superdesign
+    name: SuperDesign
+    kind: SKILL
+    category: DESIGN
+    description: "Broad design-agent workflow retained for overlap evaluation."
+
+  - id: ui-ux-pro-max
+    name: UI UX Pro Max
+    kind: SKILL
+    category: DESIGN
+    description: "Broad UI/UX workflow retained for overlap evaluation."
+
+  - id: high-end-visual-design
+    name: High-End Visual Design
+    kind: SKILL
+    category: DESIGN
+    description: "Premium visual-design workflow retained for overlap evaluation."
+
+  - id: emil-design-engineering
+    name: Emil Design Engineering
+    kind: SKILL
+    category: DESIGN
+    description: "Design-engineering workflow retained for overlap evaluation."
+
+  - id: canvas-design
+    name: Canvas Design
+    kind: SKILL
+    category: DESIGN
+    description: "General canvas/design workflow retained for overlap evaluation."
+
+  - id: compound-engineering
+    name: Compound Engineering
+    kind: SKILL
+    category: ENGINEERING_PROCESS
+    description: "Broader engineering-process candidate retained for overlap evaluation."
+
+  - id: agent-browser-skill
+    name: Agent Browser Skill
+    kind: SKILL
+    category: QA
+    related_tool: agent-browser
+    description: "Browser workflow guidance associated with Agent Browser."
+
+  - id: document-formats
+    name: Document Format Skills
+    kind: SKILL
+    category: DOCUMENTS
+    aliases: [anthropic-pdf-docx-pptx-xlsx]
+    description: "Document creation/transformation workflows for PDF, DOCX, PPTX and XLSX."
+
+  - id: firebase-skills
+    name: Firebase Skills
+    kind: SKILL
+    category: INFRA
+    related_tool: firebase
+    description: "Firebase implementation workflows retained for project-triggered use."
+
+  - id: sentry-skills
+    name: Sentry Skills
+    kind: SKILL
+    category: OBSERVABILITY
+    related_tool: sentry
+    description: "Sentry/observability workflows for production workloads."
+
+  - id: posthog-skills
+    name: PostHog Skills
+    kind: SKILL
+    category: ANALYTICS
+    related_tool: posthog
+    description: "Product analytics implementation workflows."
+
+  - id: trigger-dev-skills
+    name: Trigger.dev Skills
+    kind: SKILL
+    category: AUTOMATION
+    related_tool: trigger-dev
+    description: "Durable background-task workflows for Trigger.dev."
+
+mcps:
+  - id: github-mcp
+    name: GitHub MCP
+    kind: MCP
+    category: REPOSITORY
+    related_tool: github
+    cost_model: EXISTING_ACCOUNT
+    description: "Repository, issue, pull request and workflow operations."
+
+  - id: playwright-mcp
+    name: Playwright MCP
+    kind: MCP
+    category: QA
+    related_tool: playwright
+    cost_model: FREE_OSS
+    description: "Browser automation for agents."
+
+  - id: chrome-devtools-mcp
+    name: Chrome DevTools MCP
+    kind: MCP
+    category: QA
+    related_tool: chrome-devtools
+    cost_model: FREE_OSS
+    description: "Browser console, network and performance diagnostics for agents."
+
+  - id: context7-mcp
+    name: Context7 MCP
+    kind: MCP
+    category: DOCUMENTATION
+    related_tool: context7
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Version-aware technical documentation for agents."
+
+  - id: firecrawl-mcp
+    name: Firecrawl MCP
+    kind: MCP
+    category: RESEARCH
+    related_tool: firecrawl
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Search, scrape and crawl capability through MCP."
+
+  - id: figma-mcp
+    name: Figma MCP
+    kind: MCP
+    category: DESIGN
+    related_tool: figma
+    cost_model: ACCOUNT_PLAN_DEPENDENT
+    description: "Design/dev context and supported canvas operations."
+
+  - id: google-developer-knowledge-mcp
+    name: Google Developer Knowledge MCP
+    kind: MCP
+    category: DOCUMENTATION
+    provider: Google
+    cost_model: SERVICE_QUOTA
+    description: "Google developer documentation/knowledge access."
+
+  - id: supabase-mcp
+    name: Supabase MCP
+    kind: MCP
+    category: BACKEND
+    related_tool: supabase
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Supabase project/backend operations."
+
+  - id: vercel-mcp
+    name: Vercel MCP
+    kind: MCP
+    category: DEPLOYMENT
+    related_tool: vercel
+    cost_model: EXISTING_ACCOUNT
+    description: "Vercel project, deployment and runtime operations."
+
+  - id: n8n-mcp
+    name: n8n MCP
+    kind: MCP
+    category: AUTOMATION
+    related_tool: n8n
+    cost_model: SELF_HOST_OR_PLAN
+    description: "Create, edit, validate and operate n8n workflows."
+
+  - id: serena-mcp
+    name: Serena MCP
+    kind: MCP
+    category: CODE_INTELLIGENCE
+    related_tool: serena
+    cost_model: FREE_OSS
+    description: "Symbol-level repository navigation/editing."
+
+  - id: obsidian-mcp
+    name: Obsidian MCP / Bridge
+    kind: MCP
+    category: KNOWLEDGE
+    related_tool: obsidian
+    cost_model: FREE_LOCAL
+    description: "Agent access to an Obsidian knowledge vault."
+
+  - id: 21st-dev-mcp
+    name: 21st.dev MCP
+    kind: MCP
+    category: DESIGN
+    related_tool: 21st-dev
+    cost_model: SERVICE_DEPENDENT
+    description: "Component discovery and installation."
+
+  - id: elevenlabs-mcp
+    name: ElevenLabs MCP
+    kind: MCP
+    category: MEDIA_FACTORY
+    related_tool: elevenlabs
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Speech/audio/media generation via ElevenLabs."
+
+  - id: motion-mcp
+    name: Motion MCP / AI Kit
+    kind: MCP
+    category: DESIGN
+    related_tool: motion
+    cost_model: SERVICE_DEPENDENT
+    description: "Motion/design implementation capability."
+
+  - id: spline-mcp
+    name: Spline MCP
+    kind: MCP
+    category: DESIGN
+    related_tool: spline
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Agent interaction with Spline 3D workflows."
+
+  - id: stripe-mcp
+    name: Stripe MCP
+    kind: MCP
+    category: PAYMENTS
+    provider: Stripe
+    cost_model: TRANSACTION_OR_ACCOUNT
+    description: "Payment/developer integration operations."
+
+  - id: sentry-mcp
+    name: Sentry / Seer MCP
+    kind: MCP
+    category: OBSERVABILITY
+    related_tool: sentry
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Error/trace/incident context for agents."
+
+  - id: repomix-mcp
+    name: Repomix MCP
+    kind: MCP
+    category: CONTEXT
+    related_tool: repomix
+    cost_model: FREE_OSS
+    description: "Repository packaging/context through MCP."
+
+  - id: cloudflare-mcp
+    name: Cloudflare MCP
+    kind: MCP
+    category: INFRA
+    related_tool: cloudflare
+    cost_model: ACCOUNT_PLAN_DEPENDENT
+    description: "Cloudflare infrastructure operations."
+
+  - id: filesystem-mcp
+    name: Filesystem MCP
+    kind: MCP
+    category: FILESYSTEM
+    cost_model: FREE_OSS
+    description: "Broad filesystem access; security-sensitive and often redundant with native host tools."
+
+  - id: notion-mcp
+    name: Notion MCP
+    kind: MCP
+    category: KNOWLEDGE
+    related_tool: notion
+    cost_model: ACCOUNT_PLAN_DEPENDENT
+    description: "Notion workspace access."
+
+  - id: sqlite-mcp
+    name: SQLite MCP
+    kind: MCP
+    category: BACKEND
+    related_tool: sqlite
+    cost_model: FREE_OSS
+    description: "SQLite database operations."
+
+  - id: codebasegraph-mcp
+    name: CodebaseGraph MCP
+    kind: MCP
+    category: CODE_INTELLIGENCE
+    related_tool: codebasegraph
+    cost_model: FREE_OR_SERVICE_DEPENDENT
+    description: "Dependency and change-impact graph operations."
+
+  - id: scrapling-mcp
+    name: Scrapling MCP
+    kind: MCP
+    category: RESEARCH
+    related_tool: scrapling
+    cost_model: FREE_OSS
+    description: "Difficult-site scraping fallback."
+
+  - id: posthog-mcp
+    name: PostHog MCP
+    kind: MCP
+    category: ANALYTICS
+    related_tool: posthog
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Product analytics operations."
+
+  - id: firebase-mcp
+    name: Firebase MCP
+    kind: MCP
+    category: BACKEND
+    related_tool: firebase
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Firebase project operations."
+
+  - id: browserbase-mcp
+    name: Browserbase MCP
+    kind: MCP
+    category: BROWSER
+    related_tool: browserbase
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Remote/persistent browser infrastructure."
+
+  - id: tavily-mcp
+    name: Tavily MCP
+    kind: MCP
+    category: RESEARCH
+    related_tool: tavily
+    cost_model: FREE_TIER_THEN_PAID
+    description: "Agent search/research capability."
+
+plugins_connectors:
+  - id: chatgpt-github
+    name: GitHub for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: REPOSITORY
+    related_tool: github
+    host: chatgpt
+    description: "ChatGPT connector for GitHub."
+
+  - id: chatgpt-google-drive
+    name: Google Drive for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: KNOWLEDGE
+    related_tool: google-drive
+    host: chatgpt
+    description: "ChatGPT connector for Google Drive."
+
+  - id: chatgpt-figma
+    name: Figma for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: DESIGN
+    related_tool: figma
+    host: chatgpt
+    description: "ChatGPT connector for Figma."
+
+  - id: chatgpt-firecrawl
+    name: Firecrawl for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: RESEARCH
+    related_tool: firecrawl
+    host: chatgpt
+    description: "ChatGPT connector for Firecrawl."
+
+  - id: chatgpt-canva
+    name: Canva for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: DESIGN
+    related_tool: canva
+    host: chatgpt
+    description: "ChatGPT connector for Canva."
+
+  - id: chatgpt-mobbin
+    name: Mobbin for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: DESIGN
+    related_tool: mobbin
+    host: chatgpt
+    description: "ChatGPT connector for Mobbin."
+
+  - id: chatgpt-product-design
+    name: Product Design for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: DESIGN
+    host: chatgpt
+    description: "Product-design workflow connector for ChatGPT."
+
+  - id: chatgpt-runway
+    name: Runway for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: MEDIA_FACTORY
+    related_tool: runway
+    host: chatgpt
+    description: "ChatGPT connector for Runway media workflows."
+
+  - id: chatgpt-instavar-remotion
+    name: Instavar Remotion Templates for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: MEDIA_FACTORY
+    related_tool: remotion
+    host: chatgpt
+    description: "ChatGPT connector for structured Remotion templates."
+
+  - id: chatgpt-higgsfield
+    name: Higgsfield for ChatGPT
+    kind: PLUGIN_CONNECTOR
+    category: MEDIA_FACTORY
+    related_tool: higgsfield
+    host: chatgpt
+    description: "Candidate ChatGPT integration for Higgsfield; deployment state belongs in state/deployments.yaml."
+
+  - id: claude-firecrawl
+    name: Firecrawl for Claude
+    kind: PLUGIN_CONNECTOR
+    category: RESEARCH
+    related_tool: firecrawl
+    host: claude
+    description: "Claude-hosted Firecrawl integration identity."
+
+  - id: sentry-plugin
+    name: Sentry Plugin
+    kind: PLUGIN_CONNECTOR
+    category: OBSERVABILITY
+    related_tool: sentry
+    host: MULTI_HOST
+    description: "Host-packaged Sentry integration identity."
+
+  - id: supabase-plugin
+    name: Supabase Plugin
+    kind: PLUGIN_CONNECTOR
+    category: BACKEND
+    related_tool: supabase
+    host: MULTI_HOST
+    description: "Host-packaged Supabase integration identity."
+
+  - id: vercel-plugin
+    name: Vercel Plugin
+    kind: PLUGIN_CONNECTOR
+    category: DEPLOYMENT
+    related_tool: vercel
+    host: MULTI_HOST
+    description: "Host-packaged Vercel integration identity."
+
+aliases:
+  legacy_cli_entries:
+    rule: "CLI entries from the legacy HTML are modeled as surfaces of their owning tool/service, not as peer integrations."
+    examples:
+      obsidian-cli: obsidian
+      docker-cli: docker
+      gitleaks-cli: gitleaks
+      vercel-cli: vercel
+      supabase-cli: supabase
+      antigravity-cli: google-antigravity
+      codex-cli: codex
+      gemini-cli: gemini
+      playwright-cli: playwright
+      ffmpeg-cli: ffmpeg
+      gh: github
+      git: git
+      repomix-cli: repomix
+      skills-cli: skills-sh

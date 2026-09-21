@@ -1,0 +1,214 @@
+schema: stackia/monthly-needs@0.1
+status: tracking
+month: "2026-10"
+scenario: ACTUAL
+
+purpose: "Durable monthly aggregate of capacity evidence used later by StackIA scaling policy."
+
+semantics:
+  no_event_recorded: "No durable capacity problem has been observed yet; this is not proof that capacity is sufficient."
+  raw_runtime_data: "Out of Git. This file stores only durable summaries/evidence."
+  upgrade_decision: "Derived in state/scaling/2026-10.yaml under rules/scale-triggers.yaml; no paid change is automatic."
+
+capacity_watch:
+  - capacity_resource_id: chatgpt-plus-chat
+    plan_ref: chatgpt-plus
+    subjects: [chatgpt]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+
+  - capacity_resource_id: chatgpt-plus-codex
+    plan_ref: chatgpt-plus
+    subjects: [codex]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+    notes: "Track Codex depletion independently from general ChatGPT unless provider evidence proves a shared pool."
+
+  - capacity_resource_id: cursor-pro-agent
+    plan_ref: cursor-pro
+    subjects: [cursor]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+
+  - capacity_resource_id: google-ai-pro-gemini
+    plan_ref: google-ai-pro
+    subjects: [gemini]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+
+  - capacity_resource_id: google-ai-pro-jules
+    plan_ref: google-ai-pro
+    subjects: [jules]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+
+  - capacity_resource_id: google-ai-pro-antigravity
+    plan_ref: google-ai-pro
+    subjects: [google-antigravity]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+
+  - capacity_resource_id: google-ai-pro-flow
+    plan_ref: google-ai-pro
+    subjects: [google-flow]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+    notes: "Treat Flow/media credits as independent until provider evidence proves sharing with another Google AI capacity pool."
+
+  - capacity_resource_id: firecrawl-free-or-current
+    subjects: [firecrawl]
+    integrations: [firecrawl-mcp, chatgpt-firecrawl]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+    notes: "If the same underlying Firecrawl account quota is exhausted from multiple hosts, deduplicate the event against this capacity resource."
+
+  - capacity_resource_id: context7-free-or-current
+    subjects: [context7]
+    integrations: [context7-mcp]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+
+  - capacity_resource_id: higgsfield-current
+    plan_ref: higgsfield-current
+    subjects: [higgsfield]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+
+  - capacity_resource_id: figma-professional-full
+    plan_ref: figma-professional-full
+    subjects: [figma]
+    integrations: [figma-mcp]
+    quota_scope: UNKNOWN
+    evidence_state: NONE_RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 0
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+
+  - capacity_resource_id: runway-free-video
+    plan_ref: runway-free
+    subjects: [runway]
+    integrations: [chatgpt-runway]
+    quota_scope: PLAN_FEATURE
+    evidence_state: RECORDED
+    events:
+      RATE_LIMIT: 0
+      CAPACITY_EXHAUSTED: 0
+      PLAN_FEATURE_BLOCKED: 1
+      SERVICE_UNAVAILABLE: 0
+    completed_cycles_observed: 0
+    depletion_class: UNKNOWN
+    blocked_workloads: 0
+    workaround_minutes: 0
+    evidence:
+      - validation/media-factory-workloads.yaml#runway-chatgpt-capability-discovery-v1
+    notes: "Round 09 capability discovery showed image generation available but video generation unavailable on the connected free workspace. No delivery was blocked because existing Higgsfield/Flow routes are available."
+
+
+monthly_summary:
+  capacity_exhaustions: 0
+  early_depletions: 0
+  severe_early_depletions: 0
+  rate_limits: 0
+  feature_blocks: 1
+  service_unavailable_events: 0
+  blocked_workloads: 0
+  workaround_minutes: 0
+  notes:
+    - "All zeros are initial tracking state for October, not historical claims about September."
+    - "Scaling decisions are derived in state/scaling/2026-10.yaml; Round 09 added the first real plan-feature signal through Runway video gating."

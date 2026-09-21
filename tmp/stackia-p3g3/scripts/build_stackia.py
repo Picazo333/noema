@@ -538,7 +538,7 @@ def compile_capacity_seed(month: str, source_commit: str):
             "covered_subjects": list(sub.get("covers_tools", []) or []),
         })
 
-    need_rows = needs_doc.get("capacity_resources", needs_doc.get("resources", [])) or []
+    need_rows = needs_doc.get("capacity_watch", needs_doc.get("capacity_resources", needs_doc.get("resources", []))) or []
     scale_rows = scaling_doc.get("decisions", scaling_doc.get("resources", [])) or []
     scale_by_id = {x["capacity_resource_id"]: x for x in scale_rows}
     resources = []

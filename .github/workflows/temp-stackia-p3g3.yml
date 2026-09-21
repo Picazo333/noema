@@ -27,12 +27,12 @@ jobs:
       - name: Compile A
         working-directory: tmp/stackia-p3g3
         run: |
-          python scripts/build_stackia.py             --month 2026-10             --source-commit c77ab553f4e29d05617483f97fccdd3f2c0f0722             --source-timestamp 2026-09-21T20:56:52Z             --source-ref phase3/compiler-golden-snapshot             --snapshot-out /tmp/stackia-a.json             --capacity-out /tmp/capacity-a.json
+          python scripts/build_stackia.py             --month 2026-10             --source-commit 6584423e524ca0af3c169bb0a03f9ca03cc7cb12             --source-timestamp 2026-09-21T20:58:53Z             --source-ref phase3/compiler-golden-snapshot             --snapshot-out /tmp/stackia-a.json             --capacity-out /tmp/capacity-a.json
 
       - name: Compile B
         working-directory: tmp/stackia-p3g3
         run: |
-          python scripts/build_stackia.py             --month 2026-10             --source-commit c77ab553f4e29d05617483f97fccdd3f2c0f0722             --source-timestamp 2026-09-21T20:56:52Z             --source-ref phase3/compiler-golden-snapshot             --snapshot-out /tmp/stackia-b.json             --capacity-out /tmp/capacity-b.json
+          python scripts/build_stackia.py             --month 2026-10             --source-commit 6584423e524ca0af3c169bb0a03f9ca03cc7cb12             --source-timestamp 2026-09-21T20:58:53Z             --source-ref phase3/compiler-golden-snapshot             --snapshot-out /tmp/stackia-b.json             --capacity-out /tmp/capacity-b.json
 
       - name: Determinism
         run: |

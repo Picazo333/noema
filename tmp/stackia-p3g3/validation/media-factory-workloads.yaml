@@ -1,0 +1,169 @@
+schema: stackia/media-factory-workloads@0.1
+status: canonicalizing
+
+purpose: "Representative workloads for verifying each Media Factory stage without treating tool availability as production readiness."
+
+workloads:
+  - id: runway-chatgpt-capability-discovery-v1
+    subject_id: chatgpt-runway
+    related_subjects: [runway]
+    stage: visual_generation
+    target_level: TESTED
+    objective: "Confirm authenticated Runway access and enumerate capabilities available to the connected workspace without consuming generation credits."
+    expected:
+      - "authentication succeeds"
+      - "available image/video model sets are returned"
+      - "plan-gated capabilities are identifiable"
+    result: PASS
+    tested_at: "2026-09-21"
+    evidence_summary:
+      - "Authenticated workspace detected."
+      - "Image models are available."
+      - "No video models are available on the connected workspace."
+      - "Video generation is plan-gated."
+    volatile_exclusion:
+      - "Exact live credit balance is not persisted in Git."
+
+  - id: instavar-remotion-planning-v1
+    subject_id: chatgpt-instavar-remotion
+    related_subjects: [remotion]
+    stage: script
+    target_level: VERIFIED
+    objective: "Turn an approved brief into a deterministic vertical-video planning artifact without rendering or publishing."
+    expected:
+      - "list compatible template families"
+      - "propose a structured storyboard"
+      - "produce a deterministic VideoSpec skeleton"
+      - "perform no write/publish side effect"
+    result: PASS
+    verified_at: "2026-09-21"
+    evidence_summary:
+      - "Listed available 9:16 Remotion template families."
+      - "Produced a three-beat qa-ad storyboard for a small-business AI workflow explainer."
+      - "Produced a schemaVersion 1.0 VideoSpec skeleton for the same vertical format."
+
+  - id: media-research-grounding-v1
+    subjects: [chatgpt, firecrawl]
+    integration_ids: [chatgpt-firecrawl]
+    stage: research
+    target_level: VERIFIED
+    objective: "Ground a media brief with usable external evidence before scripting."
+    result: SATISFIED_BY_EXISTING_EVIDENCE
+    evidence_ref: validation/verification-workloads.yaml#firecrawl-chatgpt-developer-search-v1
+
+  - id: elevenlabs-voice-v1
+    subject_id: elevenlabs
+    integration_ids: [elevenlabs-mcp]
+    skill_ids: [elevenlabs-tts]
+    stage: voice
+    target_level: VERIFIED
+    objective: "Generate narration for an approved short script and return a usable audio artifact plus timing/duration metadata."
+    expected:
+      - "voice generation succeeds"
+      - "audio is intelligible and usable"
+      - "cost/limit behavior is visible"
+      - "asset can be passed to the composition stage"
+    result: PENDING
+
+  - id: higgsfield-flow-video-benchmark-v1
+    subjects: [higgsfield, google-flow]
+    stage: visual_generation
+    target_level: VERIFIED
+    objective: "Generate comparable short-form visual/video assets from the same approved storyboard to measure unique value and redundancy."
+    expected:
+      - "same brief and target aspect used"
+      - "quality, control, speed and cost/friction recorded"
+      - "unique capability differences documented"
+      - "result can support KEEP/REDUNDANT/scale decisions"
+    result: PENDING
+
+  - id: remotion-render-v1
+    subject_id: remotion
+    integration_ids: [chatgpt-instavar-remotion]
+    skill_ids: [remotion-best-practices]
+    stage: composition
+    target_level: VERIFIED
+    objective: "Render a deterministic vertical video from an approved VideoSpec with reproducible output."
+    expected:
+      - "spec validates"
+      - "render completes"
+      - "target aspect/fps are correct"
+      - "output file exists and is inspectable"
+    result: PENDING
+
+  - id: ffmpeg-assembly-v1
+    subject_id: ffmpeg
+    stage: composition
+    target_level: VERIFIED
+    objective: "Assemble or transcode approved media assets deterministically with an inspectable command/output."
+    expected:
+      - "probe succeeds"
+      - "assembly/transcode succeeds"
+      - "output codec/container is valid"
+    result: PENDING
+
+  - id: capcut-finish-v1
+    subject_id: capcut
+    stage: edit_finish
+    target_level: VERIFIED
+    objective: "Finish one representative short-form master with captions/audio/visual polish and export the approved format."
+    expected:
+      - "editing workflow completed"
+      - "captions/audio meet requirements"
+      - "final master exported"
+      - "manual effort/friction recorded"
+    result: PENDING
+
+  - id: n8n-media-orchestration-v1
+    subject_id: n8n
+    integration_ids: [n8n-mcp]
+    skill_ids: [n8n-official, n8n-workflow-builder, n8n-debugging-executions, n8n-credential-security]
+    stage: orchestration
+    target_level: VERIFIED
+    objective: "Move approved media metadata/assets through a resumable workflow without bypassing human publication approval."
+    expected:
+      - "workflow receives approved input"
+      - "failure/retry path is visible"
+      - "credentials remain outside repository"
+      - "MF-G5 approval blocks publication until granted"
+    result: PENDING
+
+  - id: buffer-publish-v1
+    subject_id: buffer
+    stage: publish
+    target_level: VERIFIED
+    objective: "Schedule or publish one approved media artifact and retain platform receipt/URL."
+    expected:
+      - "approved asset accepted"
+      - "publication/schedule succeeds"
+      - "receipt or URL returned"
+      - "no unintended channel publication"
+    result: PENDING
+
+  - id: media-metrics-v1
+    subject_id: buffer
+    skill_ids: [analytics]
+    stage: metrics
+    target_level: VERIFIED
+    objective: "Retrieve minimum performance metrics for a published artifact and produce one actionable creative learning."
+    expected:
+      - "metrics tied to a known published asset"
+      - "measurement window recorded"
+      - "one evidence-based learning recorded"
+    result: PENDING
+
+  - id: media-factory-e2e-v1
+    stage: end_to_end
+    target_level: VERIFIED
+    objective: "Complete one media item from grounded research through metrics with all human gates preserved."
+    depends_on:
+      - media-research-grounding-v1
+      - elevenlabs-voice-v1
+      - higgsfield-flow-video-benchmark-v1
+      - remotion-render-v1
+      - ffmpeg-assembly-v1
+      - capcut-finish-v1
+      - n8n-media-orchestration-v1
+      - buffer-publish-v1
+      - media-metrics-v1
+    result: PENDING

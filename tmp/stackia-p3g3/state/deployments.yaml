@@ -1,0 +1,140 @@
+schema: stackia/deployments@0.1
+status: canonical
+
+semantics:
+  allowed_states: [NOT_DEPLOYED, INSTALLED, CONFIGURED, CONNECTED]
+  absent_entry: "Deployment is unknown/unrecorded. Absence is not NOT_DEPLOYED."
+  rule: "Deployment state is host-specific and never implies TESTED or VERIFIED."
+
+hosts:
+  - chatgpt
+  - claude
+  - cursor
+  - codex
+  - google-antigravity
+  - gemini-cli
+  - opencode
+  - hermes-agent
+  - local
+
+deployments:
+  - subject_id: chatgpt-github
+    subject_kind: PLUGIN_CONNECTOR
+    host: chatgpt
+    state: CONNECTED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-google-drive
+    subject_kind: PLUGIN_CONNECTOR
+    host: chatgpt
+    state: CONNECTED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-figma
+    subject_kind: PLUGIN_CONNECTOR
+    host: chatgpt
+    state: CONNECTED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-firecrawl
+    subject_kind: PLUGIN_CONNECTOR
+    host: chatgpt
+    state: CONNECTED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-canva
+    subject_kind: PLUGIN_CONNECTOR
+    host: chatgpt
+    state: CONNECTED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-mobbin
+    subject_kind: PLUGIN_CONNECTOR
+    host: chatgpt
+    state: CONNECTED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-product-design
+    subject_kind: PLUGIN_CONNECTOR
+    host: chatgpt
+    state: CONNECTED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-runway
+    subject_kind: PLUGIN_CONNECTOR
+    host: chatgpt
+    state: CONNECTED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-instavar-remotion
+    subject_kind: PLUGIN_CONNECTOR
+    host: chatgpt
+    state: CONNECTED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: superpowers
+    subject_kind: SKILL
+    host: claude
+    state: CONFIGURED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: taste
+    subject_kind: SKILL
+    host: claude
+    state: CONFIGURED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: impeccable
+    subject_kind: SKILL
+    host: claude
+    state: CONFIGURED
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: superpowers
+    subject_kind: SKILL
+    host: chatgpt
+    state: NOT_DEPLOYED
+    evidence: [validation/verification-workloads.yaml#september-skill-host-verification-v1]
+    notes: "Not present in the authoritative ChatGPT skills inventory observed during Round 07."
+
+  - subject_id: ponytail
+    subject_kind: SKILL
+    host: chatgpt
+    state: NOT_DEPLOYED
+    evidence: [validation/verification-workloads.yaml#september-skill-host-verification-v1]
+
+  - subject_id: skill-creator
+    subject_kind: SKILL
+    host: chatgpt
+    state: NOT_DEPLOYED
+    evidence: [validation/verification-workloads.yaml#september-skill-host-verification-v1]
+
+  - subject_id: mcp-builder
+    subject_kind: SKILL
+    host: chatgpt
+    state: NOT_DEPLOYED
+    evidence: [validation/verification-workloads.yaml#september-skill-host-verification-v1]
+
+  - subject_id: webapp-testing
+    subject_kind: SKILL
+    host: chatgpt
+    state: NOT_DEPLOYED
+    evidence: [validation/verification-workloads.yaml#september-skill-host-verification-v1]
+
+  - subject_id: impeccable
+    subject_kind: SKILL
+    host: chatgpt
+    state: NOT_DEPLOYED
+    evidence: [validation/verification-workloads.yaml#september-skill-host-verification-v1]
+
+  - subject_id: taste
+    subject_kind: SKILL
+    host: chatgpt
+    state: NOT_DEPLOYED
+    evidence: [validation/verification-workloads.yaml#september-skill-host-verification-v1]
+
+  - subject_id: frontend-design
+    subject_kind: SKILL
+    host: chatgpt
+    state: NOT_DEPLOYED
+    evidence: [validation/verification-workloads.yaml#september-skill-host-verification-v1]

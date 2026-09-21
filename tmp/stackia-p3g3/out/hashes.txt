@@ -1,0 +1,2 @@
+5431492011683d18e05984d3398f97d55349fc65eaf7eeed2fdde53a12d8c2fe  /tmp/stackia-a.json
+fc0afb3393d427590fa1fd9599d0f2a28586cca5153111c0a0598e260b2ee1f0  /tmp/capacity-a.json

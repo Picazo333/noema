@@ -1,0 +1,159 @@
+{
+  "schema": "stackia/capacity-router-seed@1",
+  "meta": {
+    "derived_only": true,
+    "source_repo": "Picazo333/stack-ia",
+    "source_commit": "921d7da63a036e1d066e0ec7447bc5b11b98fe7b"
+  },
+  "month": "2026-10",
+  "plans": [
+    {
+      "subscription_id": "chatgpt-plus",
+      "subscription_state": "ACTIVE",
+      "billing": {
+        "currency": "MXN",
+        "native_amount": 399,
+        "native_certainty": "CONFIRMED",
+        "reference_mxn": 399,
+        "reference_mxn_certainty": "CONFIRMED"
+      },
+      "covered_subjects": [
+        "chatgpt",
+        "codex"
+      ]
+    },
+    {
+      "subscription_id": "cursor-pro",
+      "subscription_state": "ACTIVE",
+      "billing": {
+        "currency": "USD",
+        "native_amount": 20,
+        "native_certainty": "CONFIRMED",
+        "reference_mxn": 340,
+        "reference_mxn_certainty": "REFERENCE_ESTIMATE"
+      },
+      "covered_subjects": [
+        "cursor"
+      ]
+    },
+    {
+      "subscription_id": "google-ai-pro",
+      "subscription_state": "ACTIVE",
+      "billing": {
+        "currency": "MXN",
+        "native_amount": 395,
+        "native_certainty": "CONFIRMED",
+        "reference_mxn": 395,
+        "reference_mxn_certainty": "CONFIRMED"
+      },
+      "covered_subjects": [
+        "gemini",
+        "google-antigravity",
+        "jules",
+        "google-ai-studio",
+        "notebooklm",
+        "google-flow",
+        "google-drive"
+      ]
+    },
+    {
+      "subscription_id": "capcut-pro",
+      "subscription_state": "PENDING_ACTIVATION",
+      "billing": {
+        "currency": "UNKNOWN",
+        "native_amount": null,
+        "native_certainty": "UNKNOWN",
+        "reference_mxn": null,
+        "reference_mxn_certainty": "UNKNOWN"
+      },
+      "covered_subjects": [
+        "capcut"
+      ]
+    },
+    {
+      "subscription_id": "higgsfield-current",
+      "subscription_state": "ACTIVE",
+      "billing": {
+        "currency": "UNKNOWN",
+        "native_amount": null,
+        "native_certainty": "UNKNOWN",
+        "reference_mxn": 255,
+        "reference_mxn_certainty": "REFERENCE_ESTIMATE"
+      },
+      "covered_subjects": [
+        "higgsfield"
+      ]
+    },
+    {
+      "subscription_id": "figma-professional-full",
+      "subscription_state": "PENDING_ACTIVATION",
+      "billing": {
+        "currency": "USD",
+        "native_amount": 16,
+        "native_certainty": "CONFIRMED",
+        "reference_mxn": 276,
+        "reference_mxn_certainty": "REFERENCE_ESTIMATE"
+      },
+      "covered_subjects": [
+        "figma"
+      ]
+    },
+    {
+      "subscription_id": "canva-free",
+      "subscription_state": "FREE",
+      "billing": {
+        "currency": "USD",
+        "native_amount": 0,
+        "native_certainty": "CONFIRMED",
+        "reference_mxn": null,
+        "reference_mxn_certainty": "UNKNOWN"
+      },
+      "covered_subjects": [
+        "canva"
+      ]
+    },
+    {
+      "subscription_id": "runway-free",
+      "subscription_state": "FREE",
+      "billing": {
+        "currency": "USD",
+        "native_amount": 0,
+        "native_certainty": "CONFIRMED",
+        "reference_mxn": null,
+        "reference_mxn_certainty": "UNKNOWN"
+      },
+      "covered_subjects": [
+        "runway"
+      ]
+    },
+    {
+      "subscription_id": "coursera-plus",
+      "subscription_state": "PREPAID",
+      "billing": {
+        "currency": "UNKNOWN",
+        "native_amount": null,
+        "native_certainty": "UNKNOWN",
+        "reference_mxn": null,
+        "reference_mxn_certainty": "UNKNOWN"
+      },
+      "covered_subjects": [
+        "coursera"
+      ]
+    },
+    {
+      "subscription_id": "nordpass-prepaid",
+      "subscription_state": "PREPAID",
+      "billing": {
+        "currency": "UNKNOWN",
+        "native_amount": null,
+        "native_certainty": "UNKNOWN",
+        "reference_mxn": null,
+        "reference_mxn_certainty": "UNKNOWN"
+      },
+      "covered_subjects": [
+        "nordpass"
+      ]
+    }
+  ],
+  "capacity_resources": []
+}

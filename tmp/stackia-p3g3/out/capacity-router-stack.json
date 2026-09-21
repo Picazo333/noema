@@ -3,7 +3,7 @@
   "meta": {
     "derived_only": true,
     "source_repo": "Picazo333/stack-ia",
-    "source_commit": "c77ab553f4e29d05617483f97fccdd3f2c0f0722"
+    "source_commit": "6584423e524ca0af3c169bb0a03f9ca03cc7cb12"
   },
   "month": "2026-10",
   "plans": [
@@ -155,5 +155,243 @@
       ]
     }
   ],
-  "capacity_resources": []
+  "capacity_resources": [
+    {
+      "capacity_resource_id": "chatgpt-plus-chat",
+      "plan_ref": "chatgpt-plus",
+      "subjects": [
+        "chatgpt"
+      ],
+      "integrations": [],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "UNASSESSED",
+      "next_action": "OBSERVE"
+    },
+    {
+      "capacity_resource_id": "chatgpt-plus-codex",
+      "plan_ref": "chatgpt-plus",
+      "subjects": [
+        "codex"
+      ],
+      "integrations": [],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "UNASSESSED",
+      "next_action": "OBSERVE"
+    },
+    {
+      "capacity_resource_id": "context7-free-or-current",
+      "plan_ref": null,
+      "subjects": [
+        "context7"
+      ],
+      "integrations": [
+        "context7-mcp"
+      ],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "NOT_REQUIRED",
+      "next_action": "OBSERVE"
+    },
+    {
+      "capacity_resource_id": "cursor-pro-agent",
+      "plan_ref": "cursor-pro",
+      "subjects": [
+        "cursor"
+      ],
+      "integrations": [],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "UNASSESSED",
+      "next_action": "OBSERVE"
+    },
+    {
+      "capacity_resource_id": "figma-professional-full",
+      "plan_ref": "figma-professional-full",
+      "subjects": [
+        "figma"
+      ],
+      "integrations": [
+        "figma-mcp"
+      ],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_APPLICABLE",
+      "economic_gate": "NOT_REQUIRED",
+      "next_action": "ACTIVATE_AND_MEASURE"
+    },
+    {
+      "capacity_resource_id": "firecrawl-free-or-current",
+      "plan_ref": null,
+      "subjects": [
+        "firecrawl"
+      ],
+      "integrations": [
+        "firecrawl-mcp",
+        "chatgpt-firecrawl"
+      ],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "NOT_REQUIRED",
+      "next_action": "OBSERVE_AND_REROUTE_IF_NEEDED"
+    },
+    {
+      "capacity_resource_id": "google-ai-pro-antigravity",
+      "plan_ref": "google-ai-pro",
+      "subjects": [
+        "google-antigravity"
+      ],
+      "integrations": [],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "UNASSESSED",
+      "next_action": "OBSERVE"
+    },
+    {
+      "capacity_resource_id": "google-ai-pro-flow",
+      "plan_ref": "google-ai-pro",
+      "subjects": [
+        "google-flow"
+      ],
+      "integrations": [],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "UNASSESSED",
+      "next_action": "BENCHMARK"
+    },
+    {
+      "capacity_resource_id": "google-ai-pro-gemini",
+      "plan_ref": "google-ai-pro",
+      "subjects": [
+        "gemini"
+      ],
+      "integrations": [],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "UNASSESSED",
+      "next_action": "OBSERVE"
+    },
+    {
+      "capacity_resource_id": "google-ai-pro-jules",
+      "plan_ref": "google-ai-pro",
+      "subjects": [
+        "jules"
+      ],
+      "integrations": [],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "UNASSESSED",
+      "next_action": "OBSERVE"
+    },
+    {
+      "capacity_resource_id": "higgsfield-current",
+      "plan_ref": "higgsfield-current",
+      "subjects": [
+        "higgsfield"
+      ],
+      "integrations": [],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 0,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "UNASSESSED",
+      "reroute_result": "NOT_RUN",
+      "economic_gate": "UNASSESSED",
+      "next_action": "BENCHMARK"
+    },
+    {
+      "capacity_resource_id": "runway-free-video",
+      "plan_ref": "runway-free",
+      "subjects": [
+        "runway"
+      ],
+      "integrations": [
+        "chatgpt-runway"
+      ],
+      "durable_events": {
+        "RATE_LIMIT": 0,
+        "CAPACITY_EXHAUSTED": 0,
+        "PLAN_FEATURE_BLOCKED": 1,
+        "SERVICE_UNAVAILABLE": 0
+      },
+      "depletion_class": "UNKNOWN",
+      "scaling_status": "WATCH",
+      "reroute_result": "EXISTING_ENTITLEMENTS_AVAILABLE",
+      "economic_gate": "NOT_REQUIRED",
+      "next_action": "BENCHMARK_HIGGSFIELD_AND_FLOW_BEFORE_RUNWAY_PAID"
+    }
+  ]
 }

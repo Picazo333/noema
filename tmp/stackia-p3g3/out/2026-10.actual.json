@@ -1,10 +1,10 @@
 {
   "schema": "stackia/ui-snapshot@1",
   "meta": {
-    "generated_at": "2026-09-21T20:56:52Z",
+    "generated_at": "2026-09-21T20:58:53Z",
     "source_repo": "Picazo333/stack-ia",
     "source_ref": "phase3/compiler-golden-snapshot",
-    "source_commit": "c77ab553f4e29d05617483f97fccdd3f2c0f0722",
+    "source_commit": "6584423e524ca0af3c169bb0a03f9ca03cc7cb12",
     "derived_only": true
   },
   "selection": {

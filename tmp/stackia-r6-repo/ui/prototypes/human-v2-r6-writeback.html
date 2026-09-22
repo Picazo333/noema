@@ -9013,8 +9013,11 @@ const labels={
  usage:{USED:"En uso",NOT_TRIED:"Por probar",UNKNOWN:"Sin registrar"},
  verification:{UNVERIFIED:"Falta probar",TESTED:"Probado",VERIFIED:"Verificado",UNKNOWN:"Sin registrar"},
  decision:{KEEP:"Mantener",TEST:"Probar",PARK:"En pausa",DROP:"Fuera",UNKNOWN:"Sin decidir"},
- priority:{CORE:"Core",NOW:"Ahora",NEXT:"Siguiente",LATER:"Después",TRIGGER:"Trigger",NONE:"Sin prioridad",UNKNOWN:"Sin prioridad"}
+ priority:{CORE:"Core",NOW:"Ahora",NEXT:"Siguiente",LATER:"Después",TRIGGER:"Trigger",NONE:"Sin prioridad",UNKNOWN:"Sin prioridad"},
+ deployment:{NOT_DEPLOYED:"No configurado",INSTALLED:"Instalado",CONFIGURED:"Configurado",CONNECTED:"Conectado",UNKNOWN:"Configuración no registrada"}
 };
+const hostLabels={chatgpt:"ChatGPT",claude:"Claude",cursor:"Cursor",codex:"Codex","google-antigravity":"Google Antigravity","gemini-cli":"Gemini CLI",opencode:"OpenCode","hermes-agent":"Hermes Agent",local:"Local"};
+const hostLabel=id=>hostLabels[id]||humanize(id);
 const kindLane={TOOL:"Tools",SERVICE:"Tools",LIBRARY:"Tools",SKILL:"Skills",MCP:"MCPs",PLUGIN_CONNECTOR:"Plugins"};
 let currentClass="Tools",selectedMonth=DATA.selection?.month||DATA.selection?.available_months?.at(-1)||Object.keys(months).sort().at(-1),returnFocus=null;
 
@@ -9193,7 +9196,7 @@ function openItem(id,source){
   $("#drawerClass").textContent=laneOf(x)+" · "+humanize(x.category||"");
   $("#drawerTitle").textContent=x.name;
   const deps=(x.deployments||[]),surfs=(x.surfaces||[]),plans=(x.plan_relations||[]);
-  const access=[...surfs,...deps.map(d=>humanize(d.host)+": "+humanize(d.state))];
+  const access=[...surfs,...deps.map(d=>hostLabel(d.host)+": "+(labels.deployment[d.state]||"Configuración no registrada"))];
   $("#drawerBody").innerHTML=`
     <div class="drawer-section"><p>${esc(x.description||"Sin descripción.")}</p><div class="detail-grid">
       <div class="detail-cell"><small>Uso</small><strong>${esc(primaryState(x))}</strong></div>
@@ -9347,7 +9350,7 @@ init();
   function deploymentForm(x){
     var hosts=(DATA.integrations&&DATA.integrations.hosts)||[];
     installForm(
-      '<div class="command-form"><div class="row"><select id="r6Host">'+hosts.map(function(h){return '<option value="'+safe(h)+'">'+safe(humanize(h))+'</option>'}).join("")+'</select><select id="r6DepState">'+["NOT_DEPLOYED","INSTALLED","CONFIGURED","CONNECTED"].map(function(v){return '<option value="'+v+'">'+safe(humanize(v))+'</option>'}).join("")+'</select></div><input id="r6Reason" placeholder="Motivo si retrocedes un estado"><button class="action-btn" id="r6DepPreview">Previsualizar configuración</button></div>',
+      '<div class="command-form"><div class="row"><select id="r6Host">'+hosts.map(function(h){return '<option value="'+safe(h)+'">'+safe(hostLabel(h))+'</option>'}).join("")+'</select><select id="r6DepState">'+["NOT_DEPLOYED","INSTALLED","CONFIGURED","CONNECTED"].map(function(v){return '<option value="'+v+'">'+safe(humanize(v))+'</option>'}).join("")+'</select></div><input id="r6Reason" placeholder="Motivo si retrocedes un estado"><button class="action-btn" id="r6DepPreview">Previsualizar configuración</button></div>',
       function(){
         q("#r6DepPreview").addEventListener("click",function(){
           var host=q("#r6Host").value,target=q("#r6DepState").value,reason=q("#r6Reason").value.trim()||null;

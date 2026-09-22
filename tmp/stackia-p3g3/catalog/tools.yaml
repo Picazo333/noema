@@ -406,6 +406,22 @@ tools:
     description: "Product analytics and instrumentation platform."
     surfaces: [WEB, API]
 
+  - id: google-analytics-4
+    name: Google Analytics 4
+    kind: SERVICE
+    category: DEVELOPER_QA
+    provider: Google
+    description: "Web and app acquisition, conversion and event analytics platform."
+    surfaces: [WEB, API]
+
+  - id: microsoft-clarity
+    name: Microsoft Clarity
+    kind: SERVICE
+    category: DEVELOPER_QA
+    provider: Microsoft
+    description: "Behavior analytics platform for session recordings, heatmaps and interaction diagnostics."
+    surfaces: [WEB]
+
   - id: sentry
     name: Sentry
     kind: SERVICE
@@ -442,6 +458,14 @@ tools:
     description: "Workflow automation, webhooks, APIs and agent orchestration."
     surfaces: [WEB, LOCAL_RUNTIME, API]
 
+  - id: attio
+    name: Attio
+    kind: SERVICE
+    category: AUTOMATION_ORCHESTRATION
+    provider: Attio
+    description: "CRM and RevOps workspace for lead, contact, pipeline and workflow operations."
+    surfaces: [WEB, API]
+
   - id: langflow
     name: Langflow
     kind: TOOL
@@ -465,6 +489,14 @@ tools:
     provider: Notion
     description: "Workspace/database platform retained as a conditional integration target."
     surfaces: [WEB, DESKTOP, MOBILE, API]
+
+  - id: v0
+    name: v0
+    kind: TOOL
+    category: DESIGN_VISUAL
+    provider: Vercel
+    description: "AI frontend acceleration surface for generating editable web application UI and code."
+    surfaces: [WEB]
 
   - id: figma
     name: Figma

@@ -1,0 +1,260 @@
+schema: stackia/verification-workloads@0.1
+status: canonicalizing
+
+purpose: "Define reproducible workloads and evidence thresholds for TESTED vs VERIFIED without equating installation/connection with capability proof."
+
+levels:
+  TESTED:
+    meaning: "A real invocation succeeded, but coverage is too narrow to prove the integration/tool can reliably perform its intended StackIA workload."
+  VERIFIED:
+    meaning: "A defined representative workload succeeded with durable evidence and no hidden manual substitution."
+
+global_requirements:
+  VERIFIED:
+    - "Subject identity exists in catalog."
+    - "Required deployment/connection exists on the tested host when applicable."
+    - "Workload has an explicit objective and expected outcome."
+    - "Invocation succeeds on the actual host/provider."
+    - "Result is materially useful for the intended capability."
+    - "Evidence is recorded durably."
+    - "No hidden manual substitution performed the core task instead of the subject."
+  TESTED:
+    - "At least one real invocation succeeds."
+    - "Evidence is recorded."
+    - "Coverage may be narrower than the intended capability."
+
+workloads:
+  - id: github-chatgpt-repo-ops-v1
+    subject_id: chatgpt-github
+    host: chatgpt
+    target_level: VERIFIED
+    category: REPOSITORY
+    objective: "Read and mutate a private GitHub repository through the connected GitHub integration."
+    expected:
+      - "read repository files"
+      - "create a branch"
+      - "create/update files"
+      - "open a pull request"
+      - "merge an approved pull request"
+      - "read back resulting state"
+    evidence_refs:
+      - docs/checkpoints/2026-09-20-round-01-freeze.md
+      - docs/checkpoints/2026-09-20-round-02-catalog.md
+      - docs/checkpoints/2026-09-20-round-03-state.md
+      - docs/checkpoints/2026-09-20-round-04-months-subscriptions.md
+      - docs/checkpoints/2026-09-20-round-05-capacity.md
+      - docs/checkpoints/2026-09-20-round-06-scaling.md
+    result: PASS
+    verified_at: "2026-09-20"
+
+  - id: firecrawl-chatgpt-developer-search-v1
+    subject_id: chatgpt-firecrawl
+    related_subjects: [firecrawl]
+    host: chatgpt
+    target_level: VERIFIED
+    category: RESEARCH
+    objective: "Use Firecrawl from ChatGPT to retrieve coding/agent-skill documentation from the developer index."
+    expected:
+      - "query developer index"
+      - "return ranked sources"
+      - "return matched passages useful to the requested developer question"
+    evidence:
+      query: "agent skills SKILL.md progressive disclosure repository"
+      result_summary: "Returned five ranked developer/skill documentation sources with matched passages, including OpenHands skill guidance and Agent Skills progressive-disclosure references."
+    result: PASS
+    verified_at: "2026-09-20"
+
+  - id: figma-chatgpt-auth-readiness-v1
+    subject_id: chatgpt-figma
+    related_subjects: [figma]
+    host: chatgpt
+    target_level: TESTED
+    category: DESIGN
+    objective: "Confirm authenticated Figma access and plan visibility from the current ChatGPT host."
+    expected:
+      - "authenticated identity is returned"
+      - "plan/team metadata is returned"
+    evidence:
+      result_summary: "Figma whoami succeeded and returned authenticated handle plus Starter team/seat metadata."
+    result: PASS
+    tested_at: "2026-09-20"
+    limitation: "Does not prove design-file read/write, design-to-code, canvas mutation, or Professional-tier capabilities."
+
+  - id: figma-chatgpt-design-context-v1
+    subject_id: chatgpt-figma
+    related_subjects: [figma]
+    host: chatgpt
+    target_level: VERIFIED
+    category: DESIGN
+    objective: "Read a real design node and return usable design context/screenshot/metadata."
+    expected:
+      - "valid file/node access"
+      - "design context returned"
+      - "screenshot/context usable for implementation"
+    result: PENDING
+    blocker: "No user-approved Figma file/node target is available in this round."
+
+  - id: figma-chatgpt-write-v1
+    subject_id: chatgpt-figma
+    related_subjects: [figma]
+    host: chatgpt
+    target_level: VERIFIED
+    category: DESIGN
+    objective: "Perform a reversible write to an approved Figma file and confirm resulting state."
+    expected:
+      - "write action succeeds"
+      - "result can be read back"
+      - "no unexpected plan/permission blocker"
+    result: PENDING
+    blocker: "No user-approved Figma file target/write task is available in this round."
+
+  - id: september-skill-host-verification-v1
+    subject_group:
+      - superpowers
+      - ponytail
+      - skill-creator
+      - mcp-builder
+      - webapp-testing
+      - impeccable
+      - taste
+      - frontend-design
+    target_level: VERIFIED
+    category: SKILL
+    objective: "Prove each Skill is actually installed/discoverable on a named host and completes one representative invocation."
+    expected:
+      - "host-specific discovery evidence"
+      - "representative invocation"
+      - "result evidence"
+    result: PENDING
+    blocker: "The current ChatGPT host does not expose these named Skills as installed Skills. Compatibility or historical configuration cannot be promoted to VERIFIED."
+
+  - id: core-mcp-host-verification-v1
+    subject_group:
+      - github-mcp
+      - playwright-mcp
+      - chrome-devtools-mcp
+      - context7-mcp
+      - firecrawl-mcp
+      - figma-mcp
+      - google-developer-knowledge-mcp
+    target_level: VERIFIED
+    category: MCP
+    objective: "For each MCP, prove host-specific availability plus one representative real workload."
+    expected:
+      - "deployment/connection evidence"
+      - "actual MCP invocation"
+      - "representative result"
+    result: PARTIAL
+    notes:
+      - "Firecrawl service/plugin workload is verified in ChatGPT, but this does not automatically verify every MCP deployment on every host."
+      - "Figma authentication is tested, not fully verified."
+      - "Other MCPs require host-specific evidence."
+
+  - id: agent-lab-tool-verification-v1
+    subject_group:
+      - hermes-agent
+      - opencode
+      - openhands
+      - manus
+      - openclaw
+      - google-ai-studio
+      - notebooklm
+      - google-flow
+    target_level: VERIFIED
+    category: AGENT_LAB
+    objective: "Run one representative workload per candidate, record setup friction, output quality, autonomy, cost/limits and KEEP/PARK/DROP decision."
+    result: PENDING
+    blocker: "Requires actual host/account access or local runtime not available through this verification turn for most candidates."
+
+  - id: google-drive-chatgpt-search-v1
+    subject_id: chatgpt-google-drive
+    related_subjects: [google-drive]
+    host: chatgpt
+    target_level: TESTED
+    category: KNOWLEDGE
+    objective: "Confirm that ChatGPT can issue a read-only Google Drive search through the connected Drive integration."
+    expected:
+      - "search request executes without auth/connection failure"
+      - "provider returns a structured result set, including an empty set when no match exists"
+    evidence:
+      query: "StackIA"
+      result_summary: "Drive search executed successfully and returned an empty structured result set; connectivity/search path is functional."
+    result: PASS
+    tested_at: "2026-09-20"
+    limitation: "No matching document was returned, so useful retrieval over a real document is not yet VERIFIED."
+
+  - id: noema-executor-repository-work-v1
+    subject_group: [codex, cursor, jules, google-antigravity, opencode, hermes-agent]
+    target_level: VERIFIED
+    category: EXECUTOR
+    objective: "Prove an executor can satisfy Noema repository-work/code-editing requirements over its declared interface."
+    expected:
+      - "receive a bounded repository task"
+      - "read repository state"
+      - "make an intentional code/config/document change"
+      - "run or provide relevant validation"
+      - "produce inspectable branch/commit/PR or equivalent evidence"
+      - "complete without another executor silently performing the core work"
+    result: PENDING
+    blocker: "No candidate in this round has a newly executed, workload-specific StackIA verification that satisfies the full Noema executor descriptor/interface gate."
+
+  - id: agency-web-v0-frontend-acceleration-v1
+    subject_id: v0
+    related_subjects: [figma, github, cursor, codex, vercel]
+    target_level: VERIFIED
+    category: AGENCY_WEB
+    objective: "Prove v0 materially accelerates an approved frontend workload while preserving an editable repository handoff."
+    expected:
+      - "approved interface brief or design context is used"
+      - "frontend output is generated for the intended workload"
+      - "generated code is available for repository handoff"
+      - "Cursor/Codex can continue editing without a rebuild from scratch"
+      - "a preview can be delivered through the existing deployment path"
+      - "result is materially useful rather than a disposable prototype"
+    result: PENDING
+    blocker: "No representative agency, MD Dental or betting/product frontend workload has yet been executed through v0 under this contract."
+
+  - id: agency-revops-attio-v1
+    subject_id: attio
+    related_subjects: [n8n]
+    target_level: VERIFIED
+    category: AGENCY_REVOPS
+    objective: "Prove Attio can serve as the CRM state layer in a lead-to-follow-up workflow without hidden manual substitution."
+    expected:
+      - "create or update a representative lead/contact record"
+      - "store pipeline/status data needed by the workflow"
+      - "read or mutate the record through an API or approved n8n path"
+      - "produce a deterministic notification or follow-up transition"
+      - "read back the resulting CRM state"
+    result: PENDING
+    blocker: "Attio account/configuration and a representative lead workflow have not yet been executed."
+
+  - id: agency-analytics-ga4-v1
+    subject_id: google-analytics-4
+    related_subjects: [vercel]
+    target_level: VERIFIED
+    category: AGENCY_ANALYTICS
+    objective: "Prove GA4 captures a defined acquisition/conversion event on an approved real property without collecting prohibited sensitive data."
+    expected:
+      - "approved web/app property is configured"
+      - "analytics tag or SDK is installed through the intended delivery path"
+      - "defined test event is emitted"
+      - "event is visible in GA4 reporting or debug evidence"
+      - "event taxonomy avoids sensitive clinical or credential data"
+    result: PENDING
+    blocker: "No approved production or preview property has yet been instrumented under this workload."
+
+  - id: agency-analytics-clarity-v1
+    subject_id: microsoft-clarity
+    related_subjects: [vercel]
+    target_level: VERIFIED
+    category: AGENCY_ANALYTICS
+    objective: "Prove Clarity provides useful behavior analytics on an approved property with appropriate privacy masking."
+    expected:
+      - "approved property is instrumented"
+      - "privacy/masking configuration is reviewed for the workload"
+      - "a real or controlled test session is captured"
+      - "recording or heatmap evidence is visible"
+      - "at least one actionable interaction observation can be derived"
+    result: PENDING
+    blocker: "No approved property has yet been instrumented and observed under this workload."

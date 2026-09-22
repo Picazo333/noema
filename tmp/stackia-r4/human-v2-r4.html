@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>StackIA — Human UI V2 · R4</title>
+<style>
+:root{
+  --ink:#0a0908;--ink2:#100f0d;--ink3:#171410;--line:#2b2720;--line2:#42392d;
+  --ivory:#eee8da;--ivory2:#cfc7b7;--muted:#8d8578;--gold:#aa8f58;--crimson:#8e2638;--crimson2:#c24a5e;
+  --ok:#859877;--danger:#b54b5a;--max:1180px;
+}
+*{box-sizing:border-box}
+html{background:var(--ink);color:var(--ivory);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{margin:0;background:var(--ink);min-height:100vh}
+button,input,select{font:inherit}
+button{color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ivory);outline-offset:3px}
+.shell{max-width:var(--max);margin:0 auto;padding:0 28px 80px}
+.top{
+  position:sticky;top:0;z-index:40;background:rgba(10,9,8,.97);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:28px;min-height:66px;
+}
+.brand{font:600 13px/1 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+.nav{display:flex;gap:6px;align-items:center;flex:1}
+.nav button,.seg button,.lens button,.quiet-btn,.action-btn,.link-btn{
+  appearance:none;background:none;border:0;cursor:pointer;
+}
+.nav button{padding:22px 10px 18px;border-bottom:2px solid transparent;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.nav button[aria-current="page"]{color:var(--ivory);border-color:var(--crimson2)}
+.top-meta{margin-left:auto;color:var(--muted);font:10px ui-monospace,SFMono-Regular,Consolas,monospace;white-space:nowrap}
+.prototype-flag{color:var(--gold)}
+main{padding-top:40px}
+.page{display:none}
+.page.active{display:block}
+.eyebrow{font:10px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--gold);text-transform:uppercase;letter-spacing:.13em}
+h1{font:400 52px/1.02 Georgia,"Times New Roman",serif;margin:10px 0 8px;letter-spacing:-.03em}
+h2{font:400 25px/1.1 Georgia,"Times New Roman",serif;margin:0}
+h3{font:600 12px/1.2 ui-sans-serif,system-ui,sans-serif;margin:0}
+p{line-height:1.5}
+.lede{max-width:690px;color:var(--muted);font-size:14px;margin:0 0 36px}
+.section{margin-top:38px;border-top:1px solid var(--line);padding-top:18px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:14px}
+.section-head .meta{color:var(--muted);font:10px ui-monospace,SFMono-Regular,Consolas,monospace}
+.money-hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.6fr);gap:24px;align-items:end;border-bottom:1px solid var(--line);padding:14px 0 28px}
+.money-primary small,.money-side small{display:block;color:var(--gold);font:10px ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase;letter-spacing:.08em}
+.money-primary strong{display:block;font:400 clamp(58px,9vw,108px)/.86 Georgia,"Times New Roman",serif;letter-spacing:-.06em}
+.money-primary span{color:var(--muted);font-size:12px}
+.money-side{display:grid;gap:16px;padding-bottom:8px}
+.money-side strong{display:block;font:400 29px Georgia,"Times New Roman",serif;margin-top:4px}
+.money-side .alert{color:var(--crimson2)}
+.plan-strip{display:flex;flex-wrap:wrap;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.plan-chip{padding:11px 14px;border-right:1px solid var(--line);font-size:11px;color:var(--ivory2)}
+.plan-chip span{color:var(--muted);margin-left:6px}
+.simple-list{border-top:1px solid var(--line)}
+.simple-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line)}
+.simple-row strong{font-size:13px}
+.simple-row p{margin:4px 0 0;color:var(--muted);font-size:11px}
+.link-btn,.quiet-btn{color:var(--ivory);font-size:11px;border-bottom:1px solid var(--line2);padding:6px 0}
+.link-btn:hover,.quiet-btn:hover{border-color:var(--ivory)}
+.attention .simple-row{grid-template-columns:28px minmax(0,1fr) auto}
+.index{font:10px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--gold)}
+.decision-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.decision{background:var(--ink);padding:15px 16px;min-height:76px}
+.decision span{display:block;color:var(--gold);font:9px ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase}
+.decision strong{display:block;margin-top:6px;font-size:12px;line-height:1.4}
+.seg,.lens{display:flex;gap:0;border-bottom:1px solid var(--line);overflow:auto}
+.seg button,.lens button{padding:12px 15px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;font-size:11px}
+.seg button.active,.lens button.active{color:var(--ivory);border-color:var(--crimson2)}
+.toolbar{display:grid;grid-template-columns:minmax(210px,1fr) repeat(3,minmax(130px,.32fr));gap:8px;padding:14px 0;border-bottom:1px solid var(--line)}
+.control{background:var(--ink2);color:var(--ivory);border:1px solid var(--line);padding:10px 11px;font-size:11px;min-width:0}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line2);color:var(--gold);font:9px ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase;letter-spacing:.08em}
+td{padding:13px 10px;border-bottom:1px solid var(--line);font-size:11px;vertical-align:middle}
+td:first-child{padding-left:0}
+th:first-child{padding-left:0}
+.item-name strong{display:block;font-size:13px}
+.item-name small{display:block;color:var(--muted);margin-top:4px}
+.status{display:inline-flex;align-items:center;gap:6px;color:var(--ivory2);white-space:nowrap}
+.status:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.status.used:before,.status.verified:before{background:var(--ok)}
+.status.tested:before{background:var(--gold)}
+.status.unresolved:before,.status.unverified:before{background:var(--crimson)}
+.tag{display:inline-block;border:1px solid var(--line2);padding:4px 6px;font:9px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ivory2);white-space:nowrap}
+.manage{appearance:none;background:none;border:1px solid var(--line2);color:var(--ivory);padding:7px 10px;cursor:pointer;font-size:10px}
+.manage:hover{border-color:var(--ivory)}
+.empty{padding:34px 0;color:var(--muted);font-size:12px}
+.budget-summary{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.budget-stat{padding:18px 0}
+.budget-stat+ .budget-stat{padding-left:22px;border-left:1px solid var(--line)}
+.budget-stat small{display:block;color:var(--gold);font:9px ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase}
+.budget-stat strong{display:block;font:400 32px Georgia,"Times New Roman",serif;margin-top:4px}
+.budget-stat p{margin:4px 0 0;color:var(--muted);font-size:10px}
+.month-row{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.month-row select{min-width:140px}
+.scenario-note{margin:14px 0 0;border-left:2px solid var(--gold);padding:8px 12px;color:var(--muted);font-size:11px}
+.scenario-note strong{color:var(--ivory2)}
+.benchmark-intro{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:end}
+.evidence-state{font-size:11px}
+.next-proof{color:var(--muted);font-size:10px;max-width:260px}
+.drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.62);opacity:0;pointer-events:none;transition:.18s;z-index:80}
+.drawer-backdrop.open{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;width:min(520px,100vw);height:100vh;background:#0c0b09;border-left:1px solid var(--line2);z-index:90;transform:translateX(100%);transition:.2s ease;overflow:auto}
+.drawer.open{transform:none}
+.drawer-head{position:sticky;top:0;background:#0c0b09;border-bottom:1px solid var(--line);padding:18px 22px;display:flex;align-items:start;justify-content:space-between;gap:20px;z-index:3}
+.drawer-head h2{margin-top:5px}
+.drawer-close{background:none;border:1px solid var(--line);color:var(--ivory);width:34px;height:34px;cursor:pointer}
+.drawer-body{padding:4px 22px 60px}
+.drawer-section{padding:20px 0;border-bottom:1px solid var(--line)}
+.drawer-section label{display:block;color:var(--gold);font:9px ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.drawer-section p{color:var(--muted);font-size:11px;margin:7px 0}
+.action-grid{display:flex;flex-wrap:wrap;gap:7px}
+.action-btn{border:1px solid var(--line2);padding:8px 10px;font-size:10px;background:var(--ink2)}
+.action-btn:hover{border-color:var(--ivory)}
+.action-btn.primary{border-color:var(--crimson);color:var(--ivory)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.detail-cell{background:var(--ink);padding:11px}
+.detail-cell small{display:block;color:var(--gold);font:8px ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase}
+.detail-cell strong{display:block;font-size:11px;margin-top:4px}
+details.tech{border-top:1px solid var(--line);padding-top:14px}
+details.tech summary{cursor:pointer;color:var(--muted);font-size:10px}
+.preview{margin-top:12px;border-left:2px solid var(--crimson2);padding:12px 14px;background:rgba(142,38,56,.07)}
+.preview small{display:block;color:var(--gold);font:9px ui-monospace,SFMono-Regular,Consolas,monospace;text-transform:uppercase}
+.preview strong{display:block;margin-top:6px;font-size:12px}
+.preview p{margin:5px 0 0}
+.prototype-only{color:var(--crimson2)!important}
+.technical-link{margin-top:24px;color:var(--muted);font-size:10px}
+.mobile-label{display:none}
+@media(max-width:820px){
+  .shell{padding:0 16px 60px}
+  .top{display:block;padding-top:13px;min-height:auto}
+  .brand{display:block;margin-bottom:10px}
+  .nav{overflow:auto;gap:0;border-top:1px solid var(--line)}
+  .nav button{flex:1;padding:12px 9px 10px;font-size:10px}
+  .top-meta{position:absolute;right:16px;top:14px}
+  main{padding-top:26px}
+  h1{font-size:42px}
+  .money-hero{grid-template-columns:1fr;gap:18px}
+  .money-primary strong{font-size:66px}
+  .money-side{grid-template-columns:1fr 1fr}
+  .decision-list{grid-template-columns:1fr}
+  .toolbar{grid-template-columns:1fr 1fr}
+  .toolbar input{grid-column:1/-1}
+  .budget-summary{grid-template-columns:1fr}
+  .budget-stat+.budget-stat{border-left:0;border-top:1px solid var(--line);padding-left:0}
+  .section-head{align-items:start}
+  .month-row{justify-content:flex-start}
+  .benchmark-intro{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .top-meta .prototype-flag{display:none}
+  .money-side{grid-template-columns:1fr}
+  .toolbar{grid-template-columns:1fr}
+  .toolbar input{grid-column:auto}
+  .simple-row,.attention .simple-row{grid-template-columns:1fr}
+  .attention .index{display:none}
+  .detail-grid{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.drawer,.drawer-backdrop{transition:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="brand">STACKIA</div>
+    <nav class="nav" aria-label="Navegación principal">
+      <button data-page="hoy" aria-current="page">Hoy</button>
+      <button data-page="inventario">Inventario</button>
+      <button data-page="presupuesto">Presupuesto</button>
+      <button data-page="benchmark">Benchmark</button>
+    </nav>
+    <div class="top-meta"><span class="prototype-flag">R4 PROTOTIPO</span> · OCT 2026</div>
+  </header>
+
+  <main>
+    <section id="page-hoy" class="page active">
+      <div class="eyebrow">01 / Hoy</div>
+      <h1>Lo que importa ahora.</h1>
+      <p class="lede">Tu stack operativo sin mostrarte el motor interno. El detalle técnico sigue disponible, pero deja de competir por atención.</p>
+
+      <div class="money-hero">
+        <div class="money-primary">
+          <small>Planeación / referencia · octubre</small>
+          <strong>MX$1,665</strong>
+          <span>6 planes · CapCut fuera del total hasta resolver precio</span>
+        </div>
+        <div class="money-side">
+          <div><small>Confirmado pagado</small><strong>MX$0</strong></div>
+          <div><small>Pendiente de resolver</small><strong class="alert">2</strong></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h2>Planes del mes</h2><button class="link-btn" data-go="presupuesto">Ver presupuesto</button></div>
+        <div class="plan-strip">
+          <div class="plan-chip">ChatGPT Plus <span>399</span></div>
+          <div class="plan-chip">Cursor Pro <span>≈340</span></div>
+          <div class="plan-chip">Google AI Pro <span>395</span></div>
+          <div class="plan-chip">Figma Pro <span>≈276</span></div>
+          <div class="plan-chip">Higgsfield <span>≈255</span></div>
+          <div class="plan-chip">CapCut Pro <span>pendiente</span></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h2>Ya pagas / incluido, aún por aprovechar</h2><span class="meta">máx. 4 visibles</span></div>
+        <div class="simple-list">
+          <div class="simple-row"><div><strong>Gemini Deep Research</strong><p>Incluido en Google AI Pro · objetivo de uso vigente.</p></div><button class="link-btn" data-inspect="gemini">Ver Gemini</button></div>
+          <div class="simple-row"><div><strong>Gemini Spark</strong><p>Incluido en Google AI Pro · objetivo de uso vigente.</p></div><button class="link-btn" data-inspect="gemini">Ver Gemini</button></div>
+          <div class="simple-row"><div><strong>Figma Dev Mode</strong><p>Incluido con Professional Full · activación planeada.</p></div><button class="link-btn" data-inspect="figma">Ver Figma</button></div>
+          <div class="simple-row"><div><strong>Cursor Cloud Agents</strong><p>Incluido en Cursor Pro · mantener visible antes de comprar capacidad redundante.</p></div><button class="link-btn" data-inspect="cursor">Ver Cursor</button></div>
+        </div>
+      </div>
+
+      <div class="section attention">
+        <div class="section-head"><h2>Necesita tu atención</h2><span class="meta">4 asuntos que sí requieren decisión</span></div>
+        <div class="simple-list">
+          <div class="simple-row"><span class="index">01</span><div><strong>n8n — uso sin registrar</strong><p>Está en el stack activo, pero no sabemos si ya lo usaste.</p></div><button class="manage" data-inspect="n8n">Resolver</button></div>
+          <div class="simple-row"><span class="index">02</span><div><strong>v0 — por probar</strong><p>Aprobado FREE NOW; todavía no existe una prueba representativa.</p></div><button class="manage" data-inspect="v0">Probar</button></div>
+          <div class="simple-row"><span class="index">03</span><div><strong>CapCut Pro — precio pendiente</strong><p>El plan está previsto, pero su importe exacto sigue sin resolver.</p></div><button class="manage" data-budget="capcut-pro">Resolver</button></div>
+          <div class="simple-row"><span class="index">04</span><div><strong>Higgsfield — importe no confirmado</strong><p>MX$255 es referencia, no precio confirmado.</p></div><button class="manage" data-budget="higgsfield-current">Resolver</button></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h2>Decisiones clave</h2><span class="meta">máx. 5</span></div>
+        <div class="decision-list">
+          <div class="decision"><span>Stack</span><strong>ChatGPT, Cursor, Gemini y Codex siguen como núcleo.</strong></div>
+          <div class="decision"><span>Figma</span><strong>Professional Full entra en octubre; Starter deja de ser la referencia principal.</strong></div>
+          <div class="decision"><span>Agency delta</span><strong>v0, Attio, GA4 y Clarity siguen FREE NOW; Bitwarden y Lovable se difieren.</strong></div>
+          <div class="decision"><span>Escalamiento</span><strong>No hay expansión pagada adicional justificada hoy.</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-inventario" class="page">
+      <div class="eyebrow">02 / Inventario</div>
+      <h1>Qué tienes y cómo está.</h1>
+      <p class="lede">Una sola superficie operativa. Las clases permanecen separadas; el detalle técnico aparece sólo cuando lo pides.</p>
+
+      <div class="seg" id="classSeg" aria-label="Clase de inventario">
+        <button class="active" data-class="Tools">Tools</button>
+        <button data-class="Skills">Skills</button>
+        <button data-class="MCPs">MCPs</button>
+        <button data-class="Plugins">Plugins</button>
+        <button data-class="Todo">Todo</button>
+      </div>
+
+      <div class="toolbar">
+        <input id="invSearch" class="control" placeholder="Buscar por nombre, proveedor o función" aria-label="Buscar inventario">
+        <select id="invStatus" class="control" aria-label="Estado"><option value="">Todos los estados</option><option>En uso</option><option>Por probar</option><option>Sin registrar</option></select>
+        <select id="invDecision" class="control" aria-label="Decisión"><option value="">Todas las decisiones</option><option>Mantener</option><option>Probar</option><option>En pausa</option><option>Fuera</option></select>
+        <select id="invPriority" class="control" aria-label="Prioridad"><option value="">Todas las prioridades</option><option>Core</option><option>Ahora</option><option>Siguiente</option><option>Después</option><option>Trigger</option></select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Nombre</th><th>Estado</th><th>Decisión</th><th>Prioridad</th><th></th></tr></thead>
+          <tbody id="inventoryBody"></tbody>
+        </table>
+      </div>
+      <div class="technical-link">Prototipo reducido: sólo una muestra real por clase. La integración completa pertenece a una ronda posterior.</div>
+    </section>
+
+    <section id="page-presupuesto" class="page">
+      <div class="eyebrow">03 / Presupuesto</div>
+      <div class="section-head" style="margin-top:8px">
+        <div><h1 style="margin-bottom:8px">Dinero, sin mezclarlo.</h1><p class="lede" style="margin:0">Sólo los planes producen cash-out. Skills, MCPs y Plugins no se convierten en filas de gasto.</p></div>
+        <div class="month-row"><label class="eyebrow" for="monthSelect">Mes</label><select id="monthSelect" class="control"><option value="2026-10">Octubre 2026</option><option value="2026-09">Septiembre 2026</option></select></div>
+      </div>
+
+      <div class="budget-summary">
+        <div class="budget-stat"><small>Confirmado pagado</small><strong id="budgetPaid">MX$0</strong><p>cash-out ya confirmado</p></div>
+        <div class="budget-stat"><small>Planeación / referencia</small><strong id="budgetRef">MX$1,665</strong><p>no equivale a gasto confirmado</p></div>
+        <div class="budget-stat"><small>Pendiente de resolver</small><strong id="budgetPending">2</strong><p>precios / estados todavía abiertos</p></div>
+      </div>
+
+      <div class="section">
+        <div class="seg" id="scenarioSeg" aria-label="Escenario">
+          <button class="active" data-scenario="ACTUAL">ACTUAL</button>
+          <button data-scenario="LEAN">LEAN</button>
+          <button data-scenario="SCALE">SCALE</button>
+        </div>
+        <div class="scenario-note" id="scenarioNote"><strong>ACTUAL</strong> es el stack bloqueado de octubre. LEAN y SCALE siguen siendo propuestas.</div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h2>Planes</h2><span class="meta" id="planCount">6 filas</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Plan</th><th>Precio / cash-out</th><th>Pago</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="budgetBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><h2>Comparación mensual</h2><span class="meta">histórico sólo donde existe</span></div>
+        <div class="simple-list">
+          <div class="simple-row"><div><strong>Septiembre → Octubre</strong><p>MX$1,389 → MX$1,665 de referencia. Figma Professional Full entra en octubre; septiembre conserva Figma Starter como entitlement gratuito.</p></div><span class="tag">+MX$276 ref.</span></div>
+          <div class="simple-row"><div><strong>Expansión pagada</strong><p>No hay incremento adicional justificado hoy. SCALE mantiene todas las expansiones condicionadas.</p></div><span class="tag">Sin cambio</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-benchmark" class="page">
+      <div class="eyebrow">04 / Benchmark</div>
+      <h1>Qué candidato tiene evidencia.</h1>
+      <p class="lede">Sin puntajes inventados y sin ganador automático cuando todavía falta prueba.</p>
+
+      <div class="lens" id="benchLens">
+        <button class="active" data-lens="repo">Repo</button>
+        <button data-lens="research">Research</button>
+        <button data-lens="long">Long-running</button>
+        <button data-lens="multi">Multi-agent</button>
+      </div>
+
+      <div id="benchmarkContent">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Candidato</th><th>Acceso</th><th>Evidencia</th><th>Decisión</th><th>Siguiente paso</th></tr></thead>
+            <tbody id="benchmarkBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="backdrop" class="drawer-backdrop"></div>
+<aside id="drawer" class="drawer" aria-hidden="true" aria-modal="true" role="dialog">
+  <div class="drawer-head">
+    <div><div class="eyebrow" id="drawerClass">Detalle</div><h2 id="drawerTitle">—</h2></div>
+    <button id="drawerClose" class="drawer-close" aria-label="Cerrar">×</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</aside>
+
+<script>
+const inventory=[
+{id:"chatgpt",name:"ChatGPT",cls:"Tools",provider:"OpenAI",fn:"IA general",usage:"USED",verification:"UNVERIFIED",decision:"KEEP",priority:"CORE",desc:"Workspace general de IA para razonamiento, research y apps conectadas.",surfaces:["Web","Desktop","Mobile"],plans:["ChatGPT Plus"]},
+{id:"cursor",name:"Cursor",cls:"Tools",provider:"Cursor",fn:"Coding",usage:"USED",verification:"UNVERIFIED",decision:"KEEP",priority:"CORE",desc:"Entorno principal de ingeniería agentic.",surfaces:["Desktop","IDE","CLI","Cloud Agent"],plans:["Cursor Pro"]},
+{id:"codex",name:"Codex",cls:"Tools",provider:"OpenAI",fn:"Coding",usage:"USED",verification:"UNVERIFIED",decision:"KEEP",priority:"CORE",desc:"Agente de coding para repo, review, cloud y CLI.",surfaces:["Web","Cloud Agent","CLI","IDE"],plans:["ChatGPT Plus"]},
+{id:"gemini",name:"Gemini",cls:"Tools",provider:"Google",fn:"IA general",usage:"USED",verification:"UNVERIFIED",decision:"KEEP",priority:"CORE",desc:"Workspace general y entrada al ecosistema Google AI.",surfaces:["Web","Mobile"],plans:["Google AI Pro"]},
+{id:"figma",name:"Figma",cls:"Tools",provider:"Figma",fn:"Diseño",usage:"USED",verification:"TESTED",decision:"KEEP",priority:"NOW",desc:"Fuente de verdad de producto/UI con Dev Mode e integración.",surfaces:["Web","Desktop"],plans:["Professional Full"]},
+{id:"n8n",name:"n8n",cls:"Tools",provider:"n8n",fn:"Automatización",usage:"UNKNOWN",verification:"UNVERIFIED",decision:"KEEP",priority:"NOW",desc:"Automatización de workflows, webhooks, APIs y agentes.",surfaces:["Web","Local Runtime","API"],plans:[]},
+{id:"v0",name:"v0",cls:"Tools",provider:"Vercel",fn:"Frontend",usage:"NOT_TRIED",verification:"UNVERIFIED",decision:"TEST",priority:"NOW",desc:"Aceleración de frontend con UI/código editable.",surfaces:["Web"],plans:[]},
+{id:"firecrawl",name:"Firecrawl",cls:"Tools",provider:"Firecrawl",fn:"Research",usage:"USED",verification:"VERIFIED",decision:"KEEP",priority:"NOW",desc:"Search, scrape y crawl estructurado.",surfaces:["Web","API"],plans:[]},
+{id:"capcut",name:"CapCut",cls:"Tools",provider:"ByteDance",fn:"Media",usage:"UNKNOWN",verification:"UNVERIFIED",decision:"KEEP",priority:"NOW",desc:"Edición rápida de video social y finishing.",surfaces:["Desktop","Web","Mobile"],plans:["CapCut Pro"]},
+
+{id:"superpowers",name:"Superpowers",cls:"Skills",provider:"—",fn:"Engineering process",usage:"UNKNOWN",verification:"UNVERIFIED",decision:"KEEP",priority:"NOW",desc:"Proceso agentic estructurado para specs, planning, TDD y debugging.",surfaces:["Claude: configurado","ChatGPT: no desplegado"],plans:[]},
+{id:"frontend-design",name:"Frontend Design",cls:"Skills",provider:"—",fn:"Frontend",usage:"UNKNOWN",verification:"UNVERIFIED",decision:"KEEP",priority:"NOW",desc:"Workflow de implementación y composición frontend.",surfaces:["ChatGPT: no desplegado"],plans:[]},
+{id:"n8n-workflow-builder",name:"n8n Workflow Builder",cls:"Skills",provider:"n8n",fn:"Automatización",usage:"UNKNOWN",verification:"UNVERIFIED",decision:"TEST",priority:"NOW",desc:"Construir y modificar workflows de n8n.",surfaces:[],plans:[]},
+
+{id:"github-mcp",name:"GitHub MCP",cls:"MCPs",provider:"GitHub",fn:"Repositorios",usage:"UNKNOWN",verification:"UNVERIFIED",decision:"TEST",priority:"NOW",desc:"Operaciones de repos, issues, PRs y workflows.",surfaces:[],plans:[]},
+{id:"figma-mcp",name:"Figma MCP",cls:"MCPs",provider:"Figma",fn:"Diseño",usage:"UNKNOWN",verification:"UNVERIFIED",decision:"TEST",priority:"NOW",desc:"Contexto de diseño/dev y operaciones soportadas.",surfaces:[],plans:["Professional Full"]},
+{id:"n8n-mcp",name:"n8n MCP",cls:"MCPs",provider:"n8n",fn:"Automatización",usage:"UNKNOWN",verification:"UNVERIFIED",decision:"TEST",priority:"NOW",desc:"Crear, editar, validar y operar workflows n8n.",surfaces:[],plans:[]},
+
+{id:"chatgpt-github",name:"GitHub for ChatGPT",cls:"Plugins",provider:"GitHub",fn:"Repositorios",usage:"USED",verification:"VERIFIED",decision:"KEEP",priority:"NOW",desc:"Connector de GitHub para ChatGPT.",surfaces:["ChatGPT: conectado"],plans:[]},
+{id:"chatgpt-figma",name:"Figma for ChatGPT",cls:"Plugins",provider:"Figma",fn:"Diseño",usage:"USED",verification:"TESTED",decision:"KEEP",priority:"NOW",desc:"Connector de Figma para ChatGPT.",surfaces:["ChatGPT: conectado"],plans:["Professional Full"]},
+{id:"chatgpt-firecrawl",name:"Firecrawl for ChatGPT",cls:"Plugins",provider:"Firecrawl",fn:"Research",usage:"USED",verification:"VERIFIED",decision:"KEEP",priority:"NOW",desc:"Connector de Firecrawl para ChatGPT.",surfaces:["ChatGPT: conectado"],plans:[]}
+];
+
+const months={
+"2026-10":{paid:0,ref:1665,pending:2,plans:[
+{name:"ChatGPT Plus",price:"MX$399",payment:"Planeado",state:"Activo",id:"chatgpt-plus"},
+{name:"Cursor Pro",price:"≈MX$340",payment:"Planeado",state:"Activo",id:"cursor-pro"},
+{name:"Google AI Pro",price:"MX$395",payment:"Planeado",state:"Activo",id:"google-ai-pro"},
+{name:"CapCut Pro",price:"Pendiente",payment:"Planeado",state:"Activación pendiente",id:"capcut-pro"},
+{name:"Higgsfield",price:"≈MX$255",payment:"Planeado",state:"Activo",id:"higgsfield-current"},
+{name:"Figma Professional Full",price:"≈MX$276",payment:"Activación planeada",state:"Activación pendiente",id:"figma-professional-full"}]},
+"2026-09":{paid:794,ref:1389,pending:2,plans:[
+{name:"ChatGPT Plus",price:"MX$399",payment:"Pagado",state:"Activo",id:"chatgpt-plus"},
+{name:"Cursor Pro",price:"≈MX$340",payment:"Pendiente",state:"Activo",id:"cursor-pro"},
+{name:"Google AI Pro",price:"MX$395",payment:"Pagado",state:"Activo",id:"google-ai-pro"},
+{name:"CapCut Pro",price:"Pendiente",payment:"Activación pendiente",state:"Activación pendiente",id:"capcut-pro"},
+{name:"Higgsfield",price:"≈MX$255",payment:"Sin resolver",state:"Activo",id:"higgsfield-current"}]}
+};
+
+const candidates=[
+{id:"codex",name:"Codex",access:"GitHub",evidence:"Falta verificar",decision:"Mantener · Core",next:"Ejecutar workload de repo"},
+{id:"cursor",name:"Cursor",access:"GitHub · local",evidence:"Falta verificar",decision:"Mantener · Core",next:"Ejecutar workload de repo"},
+{id:"jules",name:"Jules",access:"GitHub",evidence:"Falta verificar",decision:"Mantener · Ahora",next:"Vincular uso histórico a workload"},
+{id:"google-antigravity",name:"Google Antigravity",access:"GitHub · local",evidence:"Falta verificar",decision:"Mantener · Ahora",next:"Ejecutar verificación formal"},
+{id:"opencode",name:"OpenCode",access:"Local",evidence:"No probado",decision:"Probar · Ahora",next:"Ejecutar primera prueba"},
+{id:"hermes-agent",name:"Hermes Agent",access:"Local",evidence:"No probado",decision:"Probar · Ahora",next:"Ejecutar primera prueba"}
+];
+
+const labels={
+ usage:{USED:"En uso",NOT_TRIED:"Por probar",UNKNOWN:"Sin registrar"},
+ verification:{UNVERIFIED:"Falta probar",TESTED:"Probado",VERIFIED:"Verificado"},
+ decision:{KEEP:"Mantener",TEST:"Probar",PARK:"En pausa",DROP:"Fuera"},
+ priority:{CORE:"Core",NOW:"Ahora",NEXT:"Siguiente",LATER:"Después",TRIGGER:"Trigger"}
+};
+let currentClass="Tools",returnFocus=null;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function go(page){
+  $$(".nav button").forEach(b=>{b.toggleAttribute("aria-current",b.dataset.page===page);if(b.dataset.page===page)b.setAttribute("aria-current","page")});
+  $$(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));
+  location.hash=page;
+  window.scrollTo(0,0);
+}
+$$(".nav button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
+$$("[data-go]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
+
+function primaryState(x){return labels.usage[x.usage]}
+function rowStatusClass(x){return x.usage==="USED"?"used":x.usage==="NOT_TRIED"?"tested":"unresolved"}
+function verificationClass(x){return x.verification==="VERIFIED"?"verified":x.verification==="TESTED"?"tested":"unverified"}
+
+function renderInventory(){
+  const q=$("#invSearch").value.toLowerCase().trim();
+  const sf=$("#invStatus").value,df=$("#invDecision").value,pf=$("#invPriority").value;
+  let rows=inventory.filter(x=>(currentClass==="Todo"||x.cls===currentClass));
+  rows=rows.filter(x=>{
+    const hay=[x.name,x.provider,x.fn,x.desc,x.id].join(" ").toLowerCase();
+    return (!q||hay.includes(q))&&(!sf||primaryState(x)===sf)&&(!df||labels.decision[x.decision]===df)&&(!pf||labels.priority[x.priority]===pf);
+  });
+  $("#inventoryBody").innerHTML=rows.length?rows.map(x=>`
+  <tr>
+    <td class="item-name"><strong>${esc(x.name)}</strong><small>${esc(x.provider)} · ${esc(x.fn)}${currentClass==="Todo"?" · "+esc(x.cls):""}</small></td>
+    <td><span class="status ${rowStatusClass(x)}">${esc(primaryState(x))}</span> <span class="tag">${esc(labels.verification[x.verification])}</span></td>
+    <td>${esc(labels.decision[x.decision])}</td>
+    <td>${esc(labels.priority[x.priority])}</td>
+    <td><button class="manage" data-inspect="${esc(x.id)}">Gestionar</button></td>
+  </tr>`).join(""):`<tr><td colspan="5" class="empty">No hay elementos que coincidan con estos filtros.</td></tr>`;
+  bindInspect();
+}
+$("#classSeg").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-class]");if(!b)return;
+  currentClass=b.dataset.class;
+  $$("#classSeg button").forEach(x=>x.classList.toggle("active",x===b));
+  renderInventory();
+});
+["invSearch","invStatus","invDecision","invPriority"].forEach(id=>$("#"+id).addEventListener(id==="invSearch"?"input":"change",renderInventory));
+
+function preview(command,subject,before,after,extra=""){
+  return `<div class="preview"><small>PREVIEW · R4 NO ESCRIBE EL CANON</small><strong>${esc(command)}</strong><p>${esc(subject)} · ${esc(before)} → ${esc(after)}</p>${extra?`<p>${esc(extra)}</p>`:""}<p class="prototype-only">R6 conectará este intent al change-set validado. Aquí sólo evaluamos interacción.</p></div>`;
+}
+function openDrawer(id,source){
+  const x=inventory.find(i=>i.id===id) || candidates.find(i=>i.id===id);
+  if(!x)return;
+  returnFocus=source||document.activeElement;
+  $("#drawerClass").textContent=(x.cls||"Benchmark")+" · "+(x.fn||"candidato");
+  $("#drawerTitle").textContent=x.name;
+  if(x.cls){
+    const surf=(x.surfaces||[]).length?x.surfaces.map(s=>`<span class="tag">${esc(s)}</span>`).join(" "):'<span class="tag">Sin configuración registrada</span>';
+    const plans=(x.plans||[]).length?x.plans.map(s=>`<span class="tag">${esc(s)}</span>`).join(" "):'<span class="tag">Sin plan directo</span>';
+    $("#drawerBody").innerHTML=`
+      <div class="drawer-section"><p>${esc(x.desc)}</p><div class="detail-grid">
+        <div class="detail-cell"><small>Uso</small><strong>${esc(labels.usage[x.usage])}</strong></div>
+        <div class="detail-cell"><small>Verificación</small><strong>${esc(labels.verification[x.verification])}</strong></div>
+        <div class="detail-cell"><small>Decisión</small><strong>${esc(labels.decision[x.decision])}</strong></div>
+        <div class="detail-cell"><small>Prioridad</small><strong>${esc(labels.priority[x.priority])}</strong></div>
+      </div></div>
+      <div class="drawer-section"><label>Uso</label><div class="action-grid">
+        <button class="action-btn primary" data-command="SET_USAGE" data-before="${esc(labels.usage[x.usage])}" data-after="En uso">Ya la uso</button>
+        <button class="action-btn" data-command="SET_USAGE" data-before="${esc(labels.usage[x.usage])}" data-after="Por probar">No la he probado</button>
+      </div></div>
+      <div class="drawer-section"><label>Decisión</label><div class="action-grid">
+        ${[["KEEP","Mantener"],["TEST","Probar"],["PARK","Poner en pausa"],["DROP","Sacar del stack"]].map(v=>`<button class="action-btn" data-command="SET_DECISION" data-before="${esc(labels.decision[x.decision])}" data-after="${v[1]}">${v[1]}</button>`).join("")}
+      </div></div>
+      <div class="drawer-section"><label>Prioridad</label><div class="action-grid">
+        ${[["CORE","Core"],["NOW","Ahora"],["NEXT","Siguiente"],["LATER","Después"],["TRIGGER","Trigger"]].map(v=>`<button class="action-btn" data-command="SET_PRIORITY" data-before="${esc(labels.priority[x.priority])}" data-after="${v[1]}">${v[1]}</button>`).join("")}
+      </div></div>
+      <div class="drawer-section"><label>Configuración / acceso</label><div class="action-grid">${surf}</div><p>CLI aparece aquí como superficie cuando aplica; no como clase de inventario.</p><button class="action-btn" data-command="SET_DEPLOYMENT" data-before="Estado actual" data-after="Registrar host/estado">Registrar configuración</button></div>
+      <div class="drawer-section"><label>Plan / acceso</label><div class="action-grid">${plans}</div></div>
+      <div class="drawer-section"><label>Verificación</label><p>${esc(labels.verification[x.verification])}. No existe un botón libre “Verificado”.</p><button class="action-btn" data-command="RECORD_TEST" data-before="${esc(labels.verification[x.verification])}" data-after="Registrar evidencia">Registrar prueba</button></div>
+      <div class="command-preview"></div>
+      <details class="tech drawer-section"><summary>Detalle técnico</summary><p>ID: ${esc(x.id)}</p><p>Clase: ${esc(x.cls)}</p><p>Proveedor: ${esc(x.provider)}</p><p>Superficies: ${esc((x.surfaces||[]).join(" · ")||"sin registrar")}</p></details>
+    `;
+  }else{
+    $("#drawerBody").innerHTML=`
+      <div class="drawer-section"><div class="detail-grid">
+        <div class="detail-cell"><small>Acceso</small><strong>${esc(x.access)}</strong></div>
+        <div class="detail-cell"><small>Evidencia</small><strong>${esc(x.evidence)}</strong></div>
+        <div class="detail-cell"><small>Estado</small><strong>${esc(x.decision)}</strong></div>
+        <div class="detail-cell"><small>Siguiente prueba</small><strong>${esc(x.next)}</strong></div>
+      </div></div>
+      <div class="drawer-section"><label>Acciones</label><div class="action-grid">
+        <button class="action-btn" data-command="SET_DECISION" data-before="${esc(x.decision)}" data-after="Cambiar decisión">Cambiar decisión</button>
+        <button class="action-btn" data-command="SET_PRIORITY" data-before="${esc(x.decision)}" data-after="Cambiar prioridad">Cambiar prioridad</button>
+        <button class="action-btn primary" data-command="RECORD_TEST" data-before="${esc(x.evidence)}" data-after="Registrar prueba">Registrar prueba</button>
+      </div></div>
+      <div class="command-preview"></div>
+      <details class="tech drawer-section"><summary>Noema / evidencia técnica</summary><p>Qualification actual: ${esc(x.evidence==="No probado"?"NOT_TRIED":"NEEDS_VERIFICATION")}</p><p>El prototipo no inventa score ni ganador.</p></details>
+    `;
+  }
+  $$("#drawerBody [data-command]").forEach(b=>b.addEventListener("click",()=>{
+    $("#drawerBody .command-preview").innerHTML=preview(b.dataset.command,x.name,b.dataset.before,b.dataset.after);
+  }));
+  $("#drawer").classList.add("open");$("#backdrop").classList.add("open");$("#drawer").setAttribute("aria-hidden","false");$("#drawerClose").focus();
+}
+function closeDrawer(){
+  const open=$("#drawer").classList.contains("open");
+  $("#drawer").classList.remove("open");$("#backdrop").classList.remove("open");$("#drawer").setAttribute("aria-hidden","true");
+  if(open&&returnFocus&&returnFocus.focus)returnFocus.focus();
+}
+$("#drawerClose").addEventListener("click",closeDrawer);$("#backdrop").addEventListener("click",closeDrawer);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer()});
+
+function bindInspect(){
+  $$("[data-inspect]").forEach(b=>{
+    if(b.dataset.bound)return;b.dataset.bound="1";
+    b.addEventListener("click",()=>openDrawer(b.dataset.inspect,b));
+  });
+}
+bindInspect();
+
+function openBudgetPreview(planId,source){
+  go("presupuesto");
+  setTimeout(()=>{
+    const row=$('[data-plan="'+planId+'"]');
+    if(row)row.scrollIntoView({behavior:"smooth",block:"center"});
+  },30);
+}
+$$("[data-budget]").forEach(b=>b.addEventListener("click",()=>openBudgetPreview(b.dataset.budget,b)));
+
+function renderBudget(){
+  const m=months[$("#monthSelect").value];
+  $("#budgetPaid").textContent="MX$"+m.paid.toLocaleString("en-US");
+  $("#budgetRef").textContent="MX$"+m.ref.toLocaleString("en-US");
+  $("#budgetPending").textContent=String(m.pending);
+  $("#planCount").textContent=m.plans.length+" filas";
+  $("#budgetBody").innerHTML=m.plans.map(p=>`
+    <tr data-plan="${esc(p.id)}">
+      <td class="item-name"><strong>${esc(p.name)}</strong></td>
+      <td>${esc(p.price)}</td><td>${esc(p.payment)}</td><td>${esc(p.state)}</td>
+      <td><button class="manage" data-plan-manage="${esc(p.id)}">Gestionar</button></td>
+    </tr>`).join("");
+  $$("[data-plan-manage]").forEach(b=>b.addEventListener("click",()=>{
+    const p=m.plans.find(x=>x.id===b.dataset.planManage);
+    returnFocus=b;
+    $("#drawerClass").textContent="PLAN · presupuesto";
+    $("#drawerTitle").textContent=p.name;
+    $("#drawerBody").innerHTML=`
+      <div class="drawer-section"><div class="detail-grid">
+      <div class="detail-cell"><small>Precio</small><strong>${esc(p.price)}</strong></div>
+      <div class="detail-cell"><small>Pago</small><strong>${esc(p.payment)}</strong></div>
+      <div class="detail-cell"><small>Estado</small><strong>${esc(p.state)}</strong></div>
+      <div class="detail-cell"><small>Mes</small><strong>${esc($("#monthSelect").value)}</strong></div>
+      </div></div>
+      <div class="drawer-section"><label>Resolver dato</label><button class="action-btn primary" id="resolveFact">Preview RESOLVE_ACCOUNT_FACT</button></div>
+      <div class="command-preview"></div>
+      <p class="prototype-only">R4 no persiste cambios.</p>
+    `;
+    $("#resolveFact").addEventListener("click",()=>$("#drawerBody .command-preview").innerHTML=preview("RESOLVE_ACCOUNT_FACT",p.name,p.payment,"Nuevo valor explícito","El adapter real se implementará en R6."));
+    $("#drawer").classList.add("open");$("#backdrop").classList.add("open");$("#drawer").setAttribute("aria-hidden","false");$("#drawerClose").focus();
+  }));
+}
+$("#monthSelect").addEventListener("change",renderBudget);
+renderBudget();
+
+$("#scenarioSeg").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-scenario]");if(!b)return;
+  $$("#scenarioSeg button").forEach(x=>x.classList.toggle("active",x===b));
+  const s=b.dataset.scenario;
+  const copy={
+    ACTUAL:"ACTUAL es el stack bloqueado de octubre. Es la única referencia vigente.",
+    LEAN:"LEAN es una propuesta. Hoy no elimina ningún plan; Higgsfield sólo sería candidato si el benchmark lo justifica.",
+    SCALE:"SCALE es una propuesta. No hay expansión pagada justificada hoy; todos los adds/upgrades siguen condicionados."
+  };
+  $("#scenarioNote").innerHTML="<strong>"+s+"</strong> · "+copy[s];
+});
+
+function renderBenchmark(lens="repo"){
+  const body=$("#benchmarkBody");
+  if(lens!=="repo"){
+    body.innerHTML=`<tr><td colspan="5" class="empty">Todavía no hay evidencia comparativa canónica suficiente para este lente en R4. El sistema no inventa un ranking.</td></tr>`;
+    return;
+  }
+  body.innerHTML=candidates.map(x=>`
+    <tr>
+      <td class="item-name"><strong>${esc(x.name)}</strong></td>
+      <td>${esc(x.access)}</td>
+      <td><span class="status ${x.evidence==="No probado"?"unresolved":"unverified"}">${esc(x.evidence)}</span></td>
+      <td>${esc(x.decision)}</td>
+      <td><div class="next-proof">${esc(x.next)}</div><button class="link-btn" data-candidate="${esc(x.id)}">Ver</button></td>
+    </tr>`).join("");
+  $$("[data-candidate]").forEach(b=>b.addEventListener("click",()=>openDrawer(b.dataset.candidate,b)));
+}
+$("#benchLens").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-lens]");if(!b)return;
+  $$("#benchLens button").forEach(x=>x.classList.toggle("active",x===b));
+  renderBenchmark(b.dataset.lens);
+});
+renderBenchmark();
+renderInventory();
+
+const initial=location.hash.replace("#","");if(["hoy","inventario","presupuesto","benchmark"].includes(initial))go(initial);
+</script>
+</body>
+</html>

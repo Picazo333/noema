@@ -1,0 +1,47 @@
+harvest_id: harvest-20260922-active-multimodal-reference-binding
+project_id: noema
+finding: >-
+  In multimodal generative workflows, a reference being retrievable or present in routed
+  context does not prove that it was actively bound to the downstream executor request.
+  Context authority therefore may need an execution-attestation layer that distinguishes
+  REFERENCE_AVAILABLE, REFERENCE_BOUND and REFERENCE_EFFECTIVE/VERIFIED.
+evidence_refs:
+  - scheme: github
+    locator: Picazo333/agency-foundation/blob/main/docs/03-brand/workbench/divinivid/generation/POSTMORTEM_2026-09-22_ACTIVE_VISUAL_CONDITIONING_FAILURE.md
+  - scheme: github
+    locator: Picazo333/agency-foundation/blob/main/docs/03-brand/workbench/divinivid/generation/CURRENT_GENERATION_STATE.yaml
+  - scheme: github
+    locator: Picazo333/agency-foundation/blob/main/docs/10-knowledge-harvest/records/HARVEST-20260922-divinivid-active-reference-binding.md
+scope: >-
+  Noema protocol candidate for executor-bound context attestation. The portable concern is
+  whether selected multimodal authority was actually passed to a capable executor, not the
+  source project's aesthetics, provider, design system or thresholds.
+portable_candidate:
+  states:
+    - REFERENCE_AVAILABLE
+    - REFERENCE_BOUND
+    - REFERENCE_EFFECTIVE_OR_VERIFIED
+  possible_attestation_fields:
+    - executor
+    - reference_locator
+    - authority_role
+    - attached_to_request
+    - conditioning_capability
+    - descendant_context_excluded
+  invariants:
+    - retrieval_does_not_imply_binding
+    - binding_does_not_imply_fidelity
+    - provider_substitution_requires_capability_compatibility
+    - domain_specific_quality_remains_project_owned
+recommended_evals:
+  - available_but_unbound_reference_must_not_be_reported_as_active
+  - incompatible_executor_adapter_must_fail_before_execution
+  - quarantined_descendant_must_not_enter_positive_reference_context
+  - explicit_root_reference_selection_must_survive_context_recovery
+confidence: high
+routes:
+  - noema
+  - eval
+  - context_routing
+confidentiality: INTERNAL
+status: CANDIDATE

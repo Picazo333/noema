@@ -6,7 +6,9 @@ import json
 from pathlib import Path
 import subprocess
 
-from ..loader import dump_yaml, load_yaml
+from jsonschema import Draft202012Validator, FormatChecker
+
+from ..loader import dump_yaml, load_json, load_yaml
 from ..manifest import load_manifest
 from ..schemas import schema_root, validation_errors
 from .compare import compare_execution
@@ -18,6 +20,13 @@ from .scan import scan_harvest
 from .trace import create_trace
 
 
+_RUNTIME_SCHEMAS = {
+    "host-capabilities": "host-capabilities.v0.schema.json",
+    "candidate-snapshot": "candidate-snapshot.v0.schema.json",
+    "runtime-pressure": "runtime-pressure.v0.schema.json",
+}
+
+
 def _write(data: dict, output: str | None, as_json: bool) -> None:
     rendered = json.dumps(data, indent=2) if as_json else dump_yaml(data)
     if output:
@@ -26,11 +35,38 @@ def _write(data: dict, output: str | None, as_json: bool) -> None:
         print(rendered, end="" if rendered.endswith("\n") else "\n")
 
 
+def _validate_runtime(kind: str, data: object, root: Path) -> None:
+    path = root / "experimental" / "execution-governance" / "runtime-contracts" / _RUNTIME_SCHEMAS[kind]
+    schema = load_json(path)
+    errors = sorted(
+        Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(data), key=str
+    )
+    if errors:
+        raise ValueError(f"Invalid {kind}: {errors[0].message}")
+
+
+def _optional_runtime(kind: str, value: str | None, root: Path) -> dict | None:
+    if not value:
+        return None
+    data = load_yaml(Path(value))
+    _validate_runtime(kind, data, root)
+    return data
+
+
+def _validate_profile(root: Path, profile: str) -> None:
+    path = root / "experimental" / "execution-governance" / "profiles" / f"{profile}.yaml"
+    if not path.exists():
+        raise ValueError(f"Unknown execution-governance profile: {profile}")
+
+
 def doctor(args) -> int:
     root = Path(args.root).resolve()
+    _validate_profile(root, args.profile)
     manifest = load_manifest(root)
-    host = load_host_capabilities(Path(args.host_capabilities) if args.host_capabilities else None, args.profile)
-    posture = classify_runtime_posture(load_yaml(Path(args.runtime_pressure)) if args.runtime_pressure else None)
+    host_data = _optional_runtime("host-capabilities", args.host_capabilities, root)
+    pressure = _optional_runtime("runtime-pressure", args.runtime_pressure, root)
+    host = load_host_capabilities(Path(args.host_capabilities) if host_data else None, args.profile)
+    posture = classify_runtime_posture(pressure)
     _write({
         "project_id": manifest["project"]["id"], "profile": args.profile,
         "protocol": manifest["noema"]["protocol"], "policy_status": "AVAILABLE",
@@ -43,12 +79,18 @@ def doctor(args) -> int:
 
 def plan(args) -> int:
     root = Path(args.root).resolve()
+    _validate_profile(root, args.profile)
     work_order_path = Path(args.work_order)
     work_order = load_yaml(work_order_path)
-    host = load_host_capabilities(Path(args.host_capabilities) if args.host_capabilities else None, args.profile)
-    candidates = load_yaml(Path(args.candidate_snapshot)) if args.candidate_snapshot else None
-    pressure = load_yaml(Path(args.runtime_pressure)) if args.runtime_pressure else None
+    errors = validation_errors("work-order", work_order, schema_root(root))
+    if errors:
+        raise ValueError("Invalid WorkOrder: " + errors[0].message)
+    host_data = _optional_runtime("host-capabilities", args.host_capabilities, root)
+    candidates = _optional_runtime("candidate-snapshot", args.candidate_snapshot, root)
+    pressure = _optional_runtime("runtime-pressure", args.runtime_pressure, root)
+    host = load_host_capabilities(Path(args.host_capabilities) if host_data else None, args.profile)
     receipts = [load_yaml(Path(item)) for item in args.resolver_receipt]
+    metadata = load_yaml(Path(args.task_metadata)) if args.task_metadata else None
     try:
         sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
     except (OSError, subprocess.CalledProcessError):
@@ -56,7 +98,8 @@ def plan(args) -> int:
     envelope = build_execution_envelope(
         root, work_order, work_order_ref={"scheme": "file", "locator": str(work_order_path)},
         profile=args.profile, host_capabilities=host, candidate_snapshot=candidates,
-        runtime_pressure=pressure, resolver_receipts=receipts, baseline_sha=sha,
+        runtime_pressure=pressure, resolver_receipts=receipts, task_metadata=metadata,
+        baseline_sha=sha,
     )
     errors = validation_errors("execution-envelope", envelope, schema_root(root))
     if errors:
@@ -74,7 +117,15 @@ def explain(args) -> int:
 def validate(args) -> int:
     data = load_yaml(Path(args.path))
     kind = args.kind or ("execution-trace" if "trace_id" in data else "execution-envelope")
-    errors = validation_errors(kind, data, schema_root())
+    if kind in _RUNTIME_SCHEMAS:
+        try:
+            _validate_runtime(kind, data, Path(args.root).resolve())
+        except ValueError as exc:
+            print("FAIL: " + str(exc))
+            return 1
+        print("PASS")
+        return 0
+    errors = validation_errors(kind, data, schema_root(Path(args.root).resolve()))
     if errors:
         print("FAIL: " + errors[0].message)
         return 1
@@ -100,12 +151,7 @@ def compare(args) -> int:
 
 def resume(args) -> int:
     envelope = load_yaml(Path(args.envelope))
-    current_sha = None
-    try:
-        current_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=Path(args.root), text=True).strip()
-    except (OSError, subprocess.CalledProcessError):
-        pass
-    report = resume_check(envelope, load_yaml(Path(args.handoff)), current_sha)
+    report = resume_check(envelope, load_yaml(Path(args.handoff)), load_yaml(Path(args.state)))
     _write(report, None, args.json)
     return 0 if report["status"] == "PASS" else 1
 

@@ -215,6 +215,7 @@ def build_parser() -> argparse.ArgumentParser:
     command.add_argument("--host-capabilities")
     command.add_argument("--candidate-snapshot")
     command.add_argument("--runtime-pressure")
+    command.add_argument("--task-metadata")
     command.add_argument("--resolver-receipt", action="append", default=[])
     command.add_argument("--out")
     command.add_argument("--json", action="store_true")
@@ -227,7 +228,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     command = eg_sub.add_parser("validate")
     command.add_argument("path")
-    command.add_argument("--kind", choices=["execution-envelope", "execution-trace"])
+    command.add_argument(
+        "--kind",
+        choices=[
+            "execution-envelope",
+            "execution-trace",
+            "host-capabilities",
+            "candidate-snapshot",
+            "runtime-pressure",
+        ],
+    )
+    command.add_argument("--root", default=".")
     command.set_defaults(func=eg_cli.validate)
 
     command = eg_sub.add_parser("record")
@@ -246,7 +257,7 @@ def build_parser() -> argparse.ArgumentParser:
     command = eg_sub.add_parser("resume-check")
     command.add_argument("envelope")
     command.add_argument("handoff")
-    command.add_argument("--root", default=".")
+    command.add_argument("--state", required=True)
     command.add_argument("--json", action="store_true")
     command.set_defaults(func=eg_cli.resume)
 

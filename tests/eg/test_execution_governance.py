@@ -60,8 +60,21 @@ def test_read_set_and_runtime_pressure_are_conservative():
 
 
 def test_resume_rejects_stale_sha():
-    envelope = build_execution_envelope(ROOT, work_order(), work_order_ref="repo://tests/eg/work-order.yaml", baseline_sha="old")
-    report = resume_check(envelope, {"work_order_ref": envelope["work_order_ref"], "status": "partial"}, "new")
+    envelope = build_execution_envelope(
+        ROOT,
+        work_order(),
+        work_order_ref="repo://tests/eg/work-order.yaml",
+        baseline_sha="old",
+        task_metadata={"role_id": "builder", "branch": "topic", "workspace": "work", "frontier_ref": {"scheme": "git", "locator": "node"}},
+    )
+    state = {
+        "project_id": "noema", "role_id": "builder", "branch": "topic", "workspace": "work",
+        "sha": "new", "frontier_ref": {"scheme": "git", "locator": "node"},
+        "closed_claims": ["contract-conformance"], "closed_evidence_refs": [{"scheme": "repo", "locator": "evidence.md"}],
+        "active_blockers": [], "outstanding_human_gates": [], "prohibited_scope": [],
+        "next_action": "continue", "next_action_kind": "EXECUTE",
+    }
+    report = resume_check(envelope, {"work_order_ref": "repo://tests/eg/work-order.yaml", "status": "partial"}, state)
     assert report["status"] == "FAIL"
     assert "STALE_SHA" in report["reason_codes"]
 
@@ -69,7 +82,8 @@ def test_resume_rejects_stale_sha():
 def test_trace_marks_missing_telemetry_unavailable():
     envelope = build_execution_envelope(ROOT, work_order(), work_order_ref="repo://tests/eg/work-order.yaml")
     trace = create_trace(envelope, {"metrics": {"context_units": 12}})
-    assert trace["metrics"]["context_units"]["status"] == "OBSERVED"
+    assert trace["metrics"]["context_units"]["status"] == "MEASURED"
+    assert trace["metrics"]["provider_tokens"] == {"status": "UNAVAILABLE", "value": None}
     assert not validation_errors("execution-trace", trace, ROOT)
 
 

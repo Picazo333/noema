@@ -45,3 +45,40 @@ def derive_resource_policy(
     if topology == TopologyMode.PARALLEL_ISOLATED and posture is RuntimePosture.NORMAL:
         values["parallelism_ceiling"] = 2
     return values
+
+
+def resource_disposition_constraint(
+    posture: RuntimePosture,
+    snapshot: dict | None,
+    task_metadata: dict | None,
+    candidate_snapshot: dict | None,
+) -> dict | None:
+    """Return a terminal runtime constraint only for a blocked required resource.
+
+    A generic blocked host signal must not stop pure/local work. The caller must
+    declare or supply a concrete required resource before EG constrains execution.
+    """
+    if posture not in {RuntimePosture.BLOCKED, RuntimePosture.THROTTLED}:
+        return None
+    snapshot = snapshot or {}
+    metadata = task_metadata or {}
+    candidates = candidate_snapshot or {}
+    blocked = set(snapshot.get("blocked_resources", []))
+    blocked.update(snapshot.get("blocked_interfaces", []))
+    required = set(metadata.get("required_resources", []))
+    required.update(metadata.get("tool_requirements", {}).get("interfaces", []))
+    required.update(metadata.get("executor_requirements", {}).get("interfaces", []))
+    for tool in candidates.get("tools", []):
+        if tool.get("required"):
+            required.update(tool.get("interfaces", []))
+            required.add(tool.get("id", ""))
+    if metadata.get("requires_external"):
+        required.add("external")
+    matches = bool(blocked & required) or (
+        bool(required) and bool(snapshot.get("block_all_external"))
+    )
+    if not matches:
+        return None
+    if posture is RuntimePosture.BLOCKED:
+        return {"disposition": "BLOCKED", "reason_code": "REQUIRED_RESOURCE_BLOCKED"}
+    return {"disposition": "DEFER", "reason_code": "REQUIRED_RESOURCE_THROTTLED"}

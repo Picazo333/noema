@@ -1,0 +1,9 @@
+schema: stackia/monthly-stack-index@0.1
+status: canonical
+months:
+  - month: "2026-09"
+    path: state/months/2026-09.yaml
+    status: locked
+  - month: "2026-10"
+    path: state/months/2026-10.yaml
+    status: locked

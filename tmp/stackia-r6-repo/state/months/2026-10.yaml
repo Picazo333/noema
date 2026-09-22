@@ -1,0 +1,146 @@
+schema: stackia/monthly-stack@0.3
+status: locked
+month: "2026-10"
+scenario: ACTUAL
+decision_ref: decisions/0002-september-october-stack-lock.md
+
+budget:
+  paid_plans:
+    - subscription_id: chatgpt-plus
+      payment_state: PLANNED
+      confirmed_mxn: 399
+    - subscription_id: cursor-pro
+      payment_state: PLANNED
+      reference_mxn: 340
+    - subscription_id: google-ai-pro
+      payment_state: PLANNED
+      confirmed_mxn: 395
+    - subscription_id: capcut-pro
+      payment_state: PLANNED
+      confirmed_mxn: null
+    - subscription_id: higgsfield-current
+      payment_state: PLANNED
+      reference_mxn: 255
+    - subscription_id: figma-professional-full
+      payment_state: PLANNED_ACTIVATION
+      reference_mxn: 276
+  totals:
+    reference_active_stack_mxn_excluding_capcut: 1665
+    unresolved_items: [capcut-pro, higgsfield-current]
+    note: "Reference total uses USD->MXN working estimates for Cursor, Higgsfield and Figma; exact October cash-out will be reconciled from actual charges."
+
+entitlements:
+  zero_monthly_cash_out:
+    - subscription_id: canva-free
+      basis: FREE
+    - subscription_id: runway-free
+      basis: FREE
+    - subscription_id: coursera-plus
+      basis: PREPAID
+    - subscription_id: nordpass-prepaid
+      basis: PREPAID
+
+active_tools:
+  core: [chatgpt, codex, cursor, gemini]
+  agentic: [google-antigravity, jules]
+  media: [capcut, higgsfield, google-flow]
+  design: [figma]
+  knowledge: [obsidian, notebooklm]
+  automation: [n8n]
+  developer: [google-ai-studio]
+
+included_capabilities_to_use:
+  - chatgpt-work
+  - cursor-agent
+  - cursor-cloud-agents
+  - cursor-projects
+  - grok-bot-cursor
+  - gemini-deep-research
+  - gemini-spark
+  - figma-dev-mode
+
+activation_policy:
+  free_first:
+    - canva
+    - firecrawl
+    - context7
+    - supabase
+    - vercel
+    - elevenlabs
+    - runway
+    - v0
+    - attio
+    - google-analytics-4
+    - microsoft-clarity
+
+parked_tools: [claude, claude-code, gemini-cli]
+dropped_tools: [grok, perplexity]
+
+agent_lab:
+  - hermes-agent
+  - opencode
+  - openhands
+  - manus
+  - openclaw
+  - google-ai-studio
+  - notebooklm
+  - google-flow
+
+integration_targets:
+  skills:
+    - superpowers
+    - ponytail
+    - skill-creator
+    - mcp-builder
+    - webapp-testing
+    - impeccable
+    - taste
+    - frontend-design
+    - react-best-practices
+    - vercel-composition-patterns
+    - playwright-skills
+    - secure-coding
+    - semgrep-code-security
+    - semgrep-llm-security
+    - planning-with-files
+    - caveman
+    - repomix-skill
+    - web-design-guidelines
+    - coderabbit-code-review
+    - openai-docs
+    - n8n-official
+    - n8n-workflow-builder
+    - n8n-debugging-executions
+    - n8n-credential-security
+    - n8n-agent-builder
+    - remotion-best-practices
+    - runway-skill
+    - elevenlabs-tts
+    - elevenlabs-stt
+    - product-marketing
+    - copywriting
+    - analytics
+    - seo-audit
+
+  mcps:
+    - github-mcp
+    - playwright-mcp
+    - chrome-devtools-mcp
+    - context7-mcp
+    - firecrawl-mcp
+    - figma-mcp
+    - google-developer-knowledge-mcp
+    - supabase-mcp
+    - vercel-mcp
+    - n8n-mcp
+    - serena-mcp
+    - obsidian-mcp
+    - 21st-dev-mcp
+    - elevenlabs-mcp
+    - motion-mcp
+
+notes:
+  - "October is STABILIZE + capability expansion, not a no-change month."
+  - "Figma Professional Full is the only pre-approved paid expansion."
+  - "Other paid upgrades require later capacity/economic triggers."
+  - "Monthly membership does not assert host deployment or VERIFIED status."

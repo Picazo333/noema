@@ -1,0 +1,59 @@
+{
+  "status": "PASS",
+  "page_errors": [],
+  "navigation": [
+    "Hoy",
+    "Inventario",
+    "Presupuesto",
+    "Benchmark"
+  ],
+  "attention_items": 7,
+  "registry": {
+    "total": 183,
+    "tools": 91,
+    "skills": 49,
+    "mcps": 29,
+    "plugins": 14
+  },
+  "budget": {
+    "october": {
+      "confirmed": 0,
+      "reference": 1665,
+      "plans": 6
+    },
+    "september": {
+      "confirmed": 794,
+      "reference": 1389,
+      "plans": 5
+    }
+  },
+  "scenarios": [
+    "ACTUAL",
+    "LEAN",
+    "SCALE"
+  ],
+  "benchmark": {
+    "repo_candidates": 6,
+    "lenses": 4
+  },
+  "desktop": {
+    "innerWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "inventoryTableScroll": 0,
+    "inventoryTableClient": 0
+  },
+  "mobile": {
+    "innerWidth": 390,
+    "bodyScrollWidth": 390,
+    "activePageWidth": 358
+  },
+  "screenshots": [
+    "01-hoy-full.jpg",
+    "02-inventario-tools-full.jpg",
+    "03-drawer-full.jpg",
+    "04-presupuesto-full.jpg",
+    "05-benchmark-full.jpg",
+    "06-hoy-mobile-full.jpg",
+    "07-inventario-mobile-full.jpg"
+  ]
+}

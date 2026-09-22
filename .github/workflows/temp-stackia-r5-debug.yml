@@ -1,0 +1,43 @@
+name: Temp StackIA R5 Runtime Debug
+
+on:
+  push:
+    branches:
+      - "temp/stackia-r5-human-ui-20260921"
+
+jobs:
+  debug-r5:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Runtime debug
+        run: |
+          mkdir -p /tmp/r5dbg && cd /tmp/r5dbg
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer-core@24 >/dev/null 2>&1
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          cp "$GITHUB_WORKSPACE/tmp/stackia-r5/human-v2-r5-full.html" /tmp/r5dbg/app.html
+          cat > debug.mjs <<'NODE'
+          import puppeteer from 'puppeteer-core';
+          const browser=await puppeteer.launch({executablePath:process.env.CHROME_BIN,args:['--no-sandbox'],headless:true});
+          const page=await browser.newPage();
+          const errors=[];
+          const consoles=[];
+          page.on('pageerror',e=>errors.push(String(e)));
+          page.on('console',m=>consoles.push(m.type()+': '+m.text()));
+          await page.goto('file:///tmp/r5dbg/app.html',{waitUntil:'load'});
+          await new Promise(r=>setTimeout(r,800));
+          const state=await page.evaluate(()=>({
+            title:document.title,
+            dataScript:!!document.getElementById('stackia-data'),
+            hoyMoney:document.getElementById('hoyMoney')?.innerHTML?.slice(0,300)||null,
+            moneyPrimary:!!document.querySelector('.money-primary strong'),
+            inventoryRows:document.querySelectorAll('#inventoryBody tr').length,
+            scenarioButtons:document.querySelectorAll('#scenarioSeg button').length,
+            bodyText:document.body.innerText.slice(0,800)
+          }));
+          console.log(JSON.stringify({errors,consoles,state},null,2));
+          if(errors.length) process.exit(2);
+          await browser.close();
+          NODE
+          CHROME_BIN="$CHROME_BIN" node debug.mjs

@@ -29,8 +29,8 @@ jobs:
         run: |
           python scripts/build_stackia.py \
             --month 2026-10 \
-            --source-commit ce94a5eaeb0020cc7fdde67844866a52cb298ea5 \
-            --source-timestamp 2026-09-22T01:48:14Z \
+            --source-commit 1eb88bc812bbf82d4f47279ea2a28f28daff49f8 \
+            --source-timestamp 2026-09-22T01:49:50Z \
             --source-ref audit/final-html-integration-reconciliation \
             --snapshot-out /tmp/stackia-a.json \
             --capacity-out /tmp/capacity-a.json
@@ -40,8 +40,8 @@ jobs:
         run: |
           python scripts/build_stackia.py \
             --month 2026-10 \
-            --source-commit ce94a5eaeb0020cc7fdde67844866a52cb298ea5 \
-            --source-timestamp 2026-09-22T01:48:14Z \
+            --source-commit 1eb88bc812bbf82d4f47279ea2a28f28daff49f8 \
+            --source-timestamp 2026-09-22T01:49:50Z \
             --source-ref audit/final-html-integration-reconciliation \
             --snapshot-out /tmp/stackia-b.json \
             --capacity-out /tmp/capacity-b.json

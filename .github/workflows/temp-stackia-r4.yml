@@ -1,0 +1,181 @@
+name: Temp StackIA R4 Human UI Audit
+
+on:
+  push:
+    branches:
+      - "temp/stackia-r4-human-ui-20260921"
+    paths-ignore:
+      - "tmp/stackia-r4/out/**"
+
+permissions:
+  contents: write
+
+jobs:
+  audit-r4:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install browser harness
+        run: |
+          mkdir -p /tmp/stackia-r4
+          cd /tmp/stackia-r4
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer-core@24 >/dev/null 2>&1
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN"
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+          "$CHROME_BIN" --version
+
+      - name: Run human UI browser audit
+        run: |
+          cp tmp/stackia-r4/human-v2-r4.html /tmp/stackia-r4.html
+          cat > /tmp/stackia-r4/audit.mjs <<'NODE'
+          import puppeteer from 'puppeteer-core';
+          import fs from 'fs';
+
+          const browser=await puppeteer.launch({
+            executablePath:process.env.CHROME_BIN,
+            headless:true,
+            args:['--no-sandbox','--disable-dev-shm-usage']
+          });
+          const page=await browser.newPage();
+          const errors=[];
+          page.on('pageerror',e=>errors.push(String(e)));
+          const assert=(cond,msg)=>{if(!cond)throw new Error(msg)};
+          const txt=sel=>page.$eval(sel,el=>el.textContent.trim());
+          const shots='/tmp/stackia-r4-shots';fs.mkdirSync(shots,{recursive:true});
+          const shot=async name=>page.screenshot({path:shots+'/'+name+'.jpg',type:'jpeg',quality:60,fullPage:true});
+          const nav=async id=>{
+            await page.click('.nav button[data-page="'+id+'"]');
+            await page.waitForFunction(x=>document.querySelector('#page-'+x)?.classList.contains('active'),{},id);
+          };
+
+          await page.setViewport({width:1440,height:1000,deviceScaleFactor:1});
+          await page.goto('file:///tmp/stackia-r4.html',{waitUntil:'load'});
+
+          assert((await page.$$('.nav button[data-page]')).length===4,'primary navigation must be exactly four');
+          const navLabels=await page.$$eval('.nav button[data-page]',els=>els.map(x=>x.textContent.trim()));
+          assert(JSON.stringify(navLabels)===JSON.stringify(['Hoy','Inventario','Presupuesto','Benchmark']),'wrong nav/order');
+          assert((await page.$$('aside')).length===1,'drawer expected');
+          assert((await page.$$('.page')).length===4,'page count != 4');
+          assert(!(await page.evaluate(()=>document.body.innerText.includes('183 identities')||document.body.innerText.includes('90 actions'))),'technical cardinality leaked');
+          assert((await txt('.money-primary strong'))==='MX$1,665','Hoy reference spend');
+          assert((await txt('.money-side strong'))==='MX$0','Hoy confirmed spend');
+          assert((await page.$$('.attention .simple-row')).length===4,'attention not concise');
+          await shot('01-hoy-desktop');
+
+          await nav('inventario');
+          assert((await page.$$('#classSeg button')).length===5,'inventory class segments');
+          assert((await page.$eval('#classSeg button.active',el=>el.dataset.class))==='Tools','Tools must be default');
+          assert((await page.$$('#inventoryBody tr')).length===9,'tool sample count');
+          assert((await page.$$('thead th')).length>=5,'table structure');
+          await shot('02-inventario-tools');
+
+          await page.click('#classSeg button[data-class="Skills"]');
+          assert((await page.$$('#inventoryBody tr')).length===3,'skills sample count');
+          await shot('03-inventario-skills');
+
+          await page.click('#classSeg button[data-class="MCPs"]');
+          assert((await page.$$('#inventoryBody tr')).length===3,'mcp sample count');
+          await page.click('#classSeg button[data-class="Plugins"]');
+          assert((await page.$$('#inventoryBody tr')).length===3,'plugin sample count');
+          await page.click('#classSeg button[data-class="Tools"]');
+
+          const n8nBtn=await page.$('#inventoryBody [data-inspect="n8n"]');
+          assert(!!n8nBtn,'n8n manage missing');
+          await n8nBtn.click();
+          await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open'));
+          const drawer=await txt('#drawerBody');
+          assert(drawer.includes('Ya la uso'),'usage human action missing');
+          assert(drawer.includes('No la he probado'),'untried human action missing');
+          assert(drawer.includes('Registrar configuración'),'deployment action missing');
+          assert(drawer.includes('Registrar prueba'),'test action missing');
+          assert(!drawer.includes('Mark VERIFIED'),'generic verified leaked');
+          await page.click('#drawerBody [data-command="SET_USAGE"]');
+          const preview=await txt('#drawerBody .command-preview');
+          assert(preview.includes('SET_USAGE'),'command preview missing');
+          assert(preview.includes('R4 NO ESCRIBE EL CANON'),'prototype boundary missing');
+          await shot('04-inventario-drawer-command');
+          await page.keyboard.press('Escape');
+
+          await nav('presupuesto');
+          assert((await txt('#budgetPaid'))==='MX$0','October confirmed spend');
+          assert((await txt('#budgetRef'))==='MX$1,665','October reference spend');
+          assert((await page.$$('#budgetBody tr')).length===6,'October plan rows');
+          await page.select('#monthSelect','2026-09');
+          assert((await txt('#budgetPaid'))==='MX$794','September confirmed spend');
+          assert((await txt('#budgetRef'))==='MX$1,389','September reference spend');
+          assert((await page.$$('#budgetBody tr')).length===5,'September plan rows');
+          await page.select('#monthSelect','2026-10');
+          await page.click('#scenarioSeg button[data-scenario="LEAN"]');
+          assert((await txt('#scenarioNote')).includes('propuesta'),'LEAN proposal language');
+          await shot('05-presupuesto');
+
+          await nav('benchmark');
+          assert((await page.$$('#benchLens button')).length===4,'benchmark lenses');
+          assert((await page.$$('#benchmarkBody tr')).length===6,'repo candidates');
+          await page.click('#benchLens button[data-lens="research"]');
+          assert((await txt('#benchmarkBody')).includes('no hay evidencia comparativa'),'research must not invent ranking');
+          await page.click('#benchLens button[data-lens="repo"]');
+          await shot('06-benchmark');
+
+          const desktop=await page.evaluate(()=>({
+            innerWidth:window.innerWidth,
+            bodyScrollWidth:document.body.scrollWidth,
+            topWidth:document.querySelector('.top').getBoundingClientRect().width
+          }));
+          assert(desktop.bodyScrollWidth<=desktop.innerWidth+1,'desktop body overflow');
+
+          await page.setViewport({width:390,height:844,deviceScaleFactor:1});
+          await nav('hoy');
+          const mobileNav=await page.$$eval('.nav button[data-page]',els=>els.map(e=>({text:e.textContent.trim(),rect:e.getBoundingClientRect().toJSON()})));
+          assert(mobileNav.length===4,'mobile nav count');
+          assert(await page.$eval('.top',el=>getComputedStyle(el).position)==='sticky','mobile top not sticky');
+          assert((await page.$$('.sidebar')).length===0,'sidebar exists');
+          const mobile=await page.evaluate(()=>({
+            innerWidth:window.innerWidth,
+            bodyScrollWidth:document.body.scrollWidth,
+            pageWidth:document.querySelector('.page.active').scrollWidth
+          }));
+          assert(mobile.bodyScrollWidth<=mobile.innerWidth+1,'mobile body overflow');
+          await shot('07-hoy-mobile');
+
+          await nav('inventario');
+          assert((await page.$eval('#classSeg button.active',el=>el.dataset.class))==='Tools','mobile class default changed');
+          const tableScroll=await page.$eval('.table-wrap',el=>el.scrollWidth>=el.clientWidth);
+          assert(tableScroll,'inventory comparison container invalid');
+          await shot('08-inventario-mobile');
+
+          assert(errors.length===0,'page errors: '+errors.join(' | '));
+
+          const result={
+            status:'PASS',
+            page_errors:errors,
+            desktop,
+            mobile,
+            nav:navLabels,
+            inventory:{tools:9,skills:3,mcps:3,plugins:3,default:'Tools'},
+            attention_items:4,
+            budget:{october:{confirmed:0,reference:1665,plans:6},september:{confirmed:794,reference:1389,plans:5}},
+            benchmark:{repo_candidates:6,lenses:4},
+            screenshots:fs.readdirSync(shots).sort()
+          };
+          fs.writeFileSync('/tmp/stackia-r4-audit.json',JSON.stringify(result,null,2)+'\n');
+          await browser.close();
+          NODE
+          node /tmp/stackia-r4/audit.mjs
+          cat /tmp/stackia-r4-audit.json
+
+      - name: Persist audit outputs
+        run: |
+          mkdir -p tmp/stackia-r4/out/screens
+          cp /tmp/stackia-r4-audit.json tmp/stackia-r4/out/browser-audit.json
+          cp /tmp/stackia-r4-shots/* tmp/stackia-r4/out/screens/
+          git config user.name "stackia-r4-runner"
+          git config user.email "stackia-r4-runner@users.noreply.github.com"
+          git add tmp/stackia-r4/out
+          if ! git diff --cached --quiet; then
+            git commit -m "temp: persist StackIA R4 browser audit"
+            git push origin HEAD:temp/stackia-r4-human-ui-20260921
+          fi

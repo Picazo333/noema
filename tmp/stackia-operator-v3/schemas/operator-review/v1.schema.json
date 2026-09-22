@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stackia/operator-review@1",
+  "title": "StackIA Operator Review State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "status",
+    "records"
+  ],
+  "properties": {
+    "schema": {
+      "const": "stackia/operator-review@1"
+    },
+    "status": {
+      "const": "canonical"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subject_id",
+          "subject_class",
+          "reviewed",
+          "urgency",
+          "note",
+          "updated_at"
+        ],
+        "properties": {
+          "subject_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "subject_class": {
+            "enum": [
+              "TOOL",
+              "SKILL",
+              "MCP",
+              "PLUGIN"
+            ]
+          },
+          "reviewed": {
+            "type": "boolean"
+          },
+          "urgency": {
+            "enum": [
+              "URGENT",
+              "NON_URGENT"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2000
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  }
+}

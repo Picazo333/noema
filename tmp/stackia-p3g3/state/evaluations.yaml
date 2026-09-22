@@ -282,6 +282,38 @@ tool_evaluations:
       - state/verification-evidence.yaml
     notes: "Read-only search path succeeded from ChatGPT; useful document retrieval remains pending."
 
+  - subject_id: v0
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0017-agency-immediate-incorporation-delta.md]
+    notes: "Approved FREE NOW for AGENCY-WEB; requires a real frontend acceleration workload before TESTED/VERIFIED."
+
+  - subject_id: attio
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0017-agency-immediate-incorporation-delta.md]
+    notes: "Approved FREE NOW for AGENCY-REVOPS; account/configuration and representative CRM automation remain unverified."
+
+  - subject_id: google-analytics-4
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0017-agency-immediate-incorporation-delta.md]
+    notes: "Approved FREE NOW for acquisition/conversion analytics; no property or production event instrumentation is inferred."
+
+  - subject_id: microsoft-clarity
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0017-agency-immediate-incorporation-delta.md]
+    notes: "Approved FREE NOW for behavior analytics; no site installation, recording or heatmap evidence is inferred."
+
 skill_evaluations:
   - subject_id: superpowers
     usage: UNKNOWN

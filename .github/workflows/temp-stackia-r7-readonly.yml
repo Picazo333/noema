@@ -1,0 +1,60 @@
+name: Temp StackIA R7 Readonly Gate
+
+on:
+  push:
+    branches:
+      - "temp/stackia-r6-writeback-20260921"
+
+jobs:
+  readonly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install browser
+        run: |
+          mkdir -p /tmp/r7ro && cd /tmp/r7ro
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer-core@24 >/dev/null 2>&1
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN"
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+      - name: Readonly human gate
+        run: |
+          cat > /tmp/r7ro/audit.mjs <<'NODE'
+          import puppeteer from 'puppeteer-core';
+          const browser=await puppeteer.launch({executablePath:process.env.CHROME_BIN,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+          const page=await browser.newPage();
+          const errors=[];
+          page.on('pageerror',e=>errors.push(String(e)));
+          await page.setViewport({width:1440,height:1000});
+          await page.goto('file://' + process.cwd() + '/tmp/stackia-r6-repo/ui/prototypes/human-v2-r6-writeback.html',{waitUntil:'load'});
+          await new Promise(r=>setTimeout(r,250));
+          const assert=(c,m)=>{if(!c)throw new Error(m)};
+          const txt=s=>page.$eval(s,e=>e.textContent.trim());
+          assert((await txt('#writebackStatus'))==='Solo lectura','readonly status not humanized');
+          const nav=await page.$$eval('.nav button[data-page]',els=>els.map(e=>e.textContent.trim()));
+          assert(JSON.stringify(nav)===JSON.stringify(['Hoy','Inventario','Presupuesto','Benchmark']),'nav drift');
+          assert((await txt('.money-primary strong'))==='MX$1,665','Hoy money unavailable');
+          await page.click('.nav button[data-page="inventario"]');
+          await page.waitForFunction(()=>document.querySelector('#page-inventario')?.classList.contains('active'));
+          await page.$eval('#invSearch',el=>{el.value='n8n';el.dispatchEvent(new Event('input',{bubbles:true}))});
+          assert((await txt('#inventoryBody')).includes('Sin registrar'),'human state missing');
+          await page.click('#inventoryBody [data-inspect="n8n"]');
+          await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open'));
+          await page.click('#drawerBody [data-command="SET_USAGE"]');
+          await page.waitForFunction(()=>document.querySelector('.command-feedback')?.textContent.includes('Modo solo lectura'));
+          const feedback=await txt('.command-feedback');
+          assert(feedback.includes('Modo solo lectura'),'readonly mutation feedback missing');
+          assert(!/Traceback|PREVIEW_BLOCKED|UNKNOWN|UNVERIFIED/.test(feedback),'technical jargon leaked');
+          await page.keyboard.press('Escape');
+          assert(!await page.$eval('#drawer',d=>d.classList.contains('open')),'Escape failed');
+          await page.setViewport({width:390,height:844});
+          await page.click('.nav button[data-page="hoy"]');
+          const mobile=await page.evaluate(()=>({inner:innerWidth,body:document.body.scrollWidth,nav:document.querySelectorAll('.nav button[data-page]').length}));
+          assert(mobile.body<=mobile.inner+1,'mobile readonly overflow');
+          assert(mobile.nav===4,'mobile readonly nav');
+          assert(errors.length===0,'page errors '+errors.join(' | '));
+          console.log(JSON.stringify({status:'PASS',mode:'Solo lectura',nav,mobile,page_errors:errors},null,2));
+          await browser.close();
+          NODE
+          CHROME_BIN="$CHROME_BIN" node /tmp/r7ro/audit.mjs

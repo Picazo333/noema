@@ -23,7 +23,7 @@ def _print_report(report, as_json=False, details=None):
 
     print(f"{report.status}: {report.project_id or '-'}")
     for check in report.checks:
-        marker = {"PASS": "✓", "FAIL": "✗", "UNASSESSED": "?"}.get(
+        marker = {"PASS": "OK", "FAIL": "FAIL", "UNASSESSED": "?"}.get(
             check.result, "-"
         )
         print(f"{marker} [{check.severity}] {check.rule_id}: {check.message}")

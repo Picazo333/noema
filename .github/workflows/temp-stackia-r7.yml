@@ -190,7 +190,7 @@ jobs:
           await (await page.$('#inventoryBody [data-inspect="superpowers"]')).click();await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open'));await new Promise(r=>setTimeout(r,250));
           const afterVerify=await page.$eval('#drawerBody .detail-cell:nth-child(2) strong',e=>e.textContent.trim());
           assert(beforeVerify===afterVerify,'H6 deployment altered verification');
-          assert((await txt('#drawerBody')).includes('Chatgpt: Configured')||(await txt('#drawerBody')).includes('Chatgpt: Configurado'),'H6 host deployment not visible');
+          assert((await txt('#drawerBody')).includes('ChatGPT: Configurado'),'H6 host deployment not visible/humanized');
           await page.keyboard.press('Escape');
 
           // H7: representative test records TESTED, not VERIFIED; no free VERIFIED action.

@@ -90,6 +90,7 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
     dep_doc = load_yaml("state/deployments.yaml")
     subs_doc = load_yaml("state/subscriptions.yaml")
     month_doc = load_yaml(f"state/months/{month}.yaml")
+    month_index_doc = load_yaml("state/months/index.yaml")
     needs_doc = load_yaml(f"state/needs/{month}.yaml")
     scaling_doc = load_yaml(f"state/scaling/{month}.yaml")
     media_doc = load_yaml("state/media-factory.yaml")
@@ -144,55 +145,105 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
                 raise SystemExit(f"broken subscription tool ref: {tid}")
             plan_rel[tid].append(sub["id"])
 
-    # Budget.
-    paid_rows = []
-    for row in month_doc["budget"]["paid_plans"]:
-        sid = row["subscription_id"]
-        if sid not in sub_by_id:
-            raise SystemExit(f"broken month subscription ref: {sid}")
-        sub = sub_by_id[sid]
-        billing = sub.get("billing", {})
-        native_currency = billing.get("currency", "UNKNOWN")
-        native_amount = billing.get("amount")
-        native_certainty = billing.get("certainty", "UNKNOWN")
+    # Budget + monthly comparison context.
+    def compile_paid_rows(month_state):
+        rows = []
+        for row in month_state["budget"]["paid_plans"]:
+            sid = row["subscription_id"]
+            if sid not in sub_by_id:
+                raise SystemExit(f"broken month subscription ref: {sid}")
+            sub = sub_by_id[sid]
+            billing = sub.get("billing", {})
+            native_currency = billing.get("currency", "UNKNOWN")
+            native_amount = billing.get("amount")
+            native_certainty = billing.get("certainty", "UNKNOWN")
 
-        ref_mxn = None
-        ref_certainty = "UNKNOWN"
-        if row.get("confirmed_mxn") is not None:
-            ref_mxn = row["confirmed_mxn"]
-            ref_certainty = "CONFIRMED"
-        elif row.get("reference_mxn") is not None:
-            ref_mxn = row["reference_mxn"]
-            ref_certainty = "REFERENCE_ESTIMATE"
-        elif native_currency == "MXN" and native_amount is not None:
-            ref_mxn = native_amount
-            ref_certainty = native_certainty
-        elif billing.get("reference_mxn") is not None:
-            ref_mxn = billing["reference_mxn"]
-            ref_certainty = billing.get("reference_certainty", "REFERENCE_ESTIMATE")
+            ref_mxn = None
+            ref_certainty = "UNKNOWN"
+            if row.get("confirmed_mxn") is not None:
+                ref_mxn = row["confirmed_mxn"]
+                ref_certainty = "CONFIRMED"
+            elif row.get("reference_mxn") is not None:
+                ref_mxn = row["reference_mxn"]
+                ref_certainty = "REFERENCE_ESTIMATE"
+            elif native_currency == "MXN" and native_amount is not None:
+                ref_mxn = native_amount
+                ref_certainty = native_certainty
+            elif billing.get("reference_mxn") is not None:
+                ref_mxn = billing["reference_mxn"]
+                ref_certainty = billing.get("reference_certainty", "REFERENCE_ESTIMATE")
 
-        paid_rows.append({
-            "subscription_id": sid,
-            "provider": sub["provider"],
-            "plan_name": sub["plan_name"],
-            "payment_state": row["payment_state"],
-            "subscription_state": sub["subscription_state"],
-            "amount": {
-                "currency": native_currency,
-                "native_amount": native_amount,
-                "native_certainty": native_certainty,
-                "reference_mxn": ref_mxn,
-                "reference_mxn_certainty": ref_certainty,
+            rows.append({
+                "subscription_id": sid,
+                "provider": sub["provider"],
+                "plan_name": sub["plan_name"],
+                "payment_state": row["payment_state"],
+                "subscription_state": sub["subscription_state"],
+                "billing_period": sub.get("billing_period", "UNKNOWN"),
+                "amount": {
+                    "currency": native_currency,
+                    "native_amount": native_amount,
+                    "native_certainty": native_certainty,
+                    "reference_mxn": ref_mxn,
+                    "reference_mxn_certainty": ref_certainty,
+                },
+                "covers_tools": list(sub.get("covers_tools", []) or []),
+                "includes_capabilities": list(sub.get("includes_capabilities", []) or []),
+            })
+        return rows
+
+    def compile_month_state(month_state):
+        paid = compile_paid_rows(month_state)
+        entitlements = list((month_state.get("entitlements", {}) or {}).get("zero_monthly_cash_out", []) or [])
+        exiting = [
+            x["subscription_id"] if isinstance(x, dict) else x
+            for x in ((month_state.get("entitlements", {}) or {}).get("exiting", []) or [])
+        ]
+        known_exact = sum((r.get("confirmed_mxn") or 0) for r in month_state["budget"]["paid_plans"])
+        paid_confirmed = sum(
+            (r.get("confirmed_mxn") or 0)
+            for r in month_state["budget"]["paid_plans"]
+            if r.get("payment_state") in ("PAID", "CHARGED", "SETTLED")
+        )
+        reference_total = (month_state["budget"].get("totals", {}) or {}).get("reference_active_stack_mxn_excluding_capcut")
+        unresolved = list((month_state.get("budget", {}).get("totals", {}) or {}).get("unresolved_items", []) or [])
+        reference_excludes = ["capcut-pro"] if reference_total is not None and "capcut-pro" in unresolved else []
+        active_tools = {str(k): list(v or []) for k, v in (month_state.get("active_tools", {}) or {}).items()}
+        targets = month_state.get("integration_targets", {}) or {}
+        return {
+            "paid_plans": paid,
+            "entitlements": entitlements,
+            "exiting": exiting,
+            "active_tools": active_tools,
+            "included_capabilities_to_use": list(month_state.get("included_capabilities_to_use", []) or []),
+            "integration_targets": {
+                "skills": list(targets.get("skills", []) or []),
+                "mcps": list(targets.get("mcps", []) or []),
             },
-            "covers_tools": list(sub.get("covers_tools", []) or []),
-            "includes_capabilities": list(sub.get("includes_capabilities", []) or []),
-        })
+            "agent_lab": list(month_state.get("agent_lab", []) or []),
+            "spend": {
+                "known_exact_mxn": known_exact,
+                "paid_confirmed_mxn": paid_confirmed,
+                "reference_mxn": reference_total,
+                "reference_excludes": reference_excludes,
+                "unresolved_subscription_ids": unresolved,
+            },
+        }
 
+    paid_rows = compile_paid_rows(month_doc)
     entitlement_rows = list((month_doc.get("entitlements", {}) or {}).get("zero_monthly_cash_out", []) or [])
     exiting_rows = [
         x["subscription_id"] if isinstance(x, dict) else x
         for x in ((month_doc.get("entitlements", {}) or {}).get("exiting", []) or [])
     ]
+
+    available_months = []
+    monthly_states = {}
+    for month_meta in month_index_doc.get("months", []) or []:
+        mid = month_meta["month"]
+        mdoc = load_yaml(month_meta["path"])
+        available_months.append(mid)
+        monthly_states[mid] = compile_month_state(mdoc)
 
     # Unified registry.
     registry = []
@@ -271,15 +322,33 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
         workloads.extend(doc.get("workloads", []) or [])
     assert_unique(workloads, lambda x: x["id"], "workload id")
     workload_text = defaultdict(list)
+    stage_workload_ids = defaultdict(list)
+    workload_rows = []
     for w in workloads:
         ids = []
         if w.get("subject_id"):
             ids.append(w["subject_id"])
+        ids.extend(w.get("subject_group", []) or [])
         ids.extend(w.get("subjects", []) or [])
+        ids.extend(w.get("related_subjects", []) or [])
         ids.extend(w.get("integration_ids", []) or [])
         ids.extend(w.get("skill_ids", []) or [])
+        ids = sorted(set(ids))
         for sid in ids:
             workload_text[sid].append(w["id"])
+        if w.get("stage"):
+            stage_workload_ids[w["stage"]].append(w["id"])
+        workload_rows.append({
+            "id": w["id"],
+            "subjects": ids,
+            "stage": w.get("stage"),
+            "category": w.get("category"),
+            "target_level": w.get("target_level"),
+            "result": w.get("result", "UNKNOWN"),
+            "objective": w.get("objective", ""),
+            "blocker": w.get("blocker"),
+        })
+    workload_rows.sort(key=lambda x: x["id"])
 
     # Action ledger.
     actions = []
@@ -346,6 +415,9 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
             "plan_ref": n.get("plan_ref"),
             "subjects": list(n.get("subjects", []) or []),
             "events": events,
+            "completed_cycles_observed": int(n.get("completed_cycles_observed", 0) or 0),
+            "blocked_workloads": int(n.get("blocked_workloads", 0) or 0),
+            "workaround_minutes": int(n.get("workaround_minutes", 0) or 0),
             "depletion_class": n.get("depletion_class", "UNKNOWN"),
             "scaling_status": status,
             "reroute_result": s.get("reroute_result", "NOT_RUN"),
@@ -419,6 +491,7 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
             "fallback_subjects": stage_subjects(stage.get("fallbacks")),
             "verification_state": stage_verification(sid),
             "human_gate_ids": sorted(human_by_after.get(sid, [])),
+            "workload_ids": sorted(stage_workload_ids.get(sid, [])),
         })
 
     # Scenarios.
@@ -427,6 +500,16 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
     # Evidence summary.
     result_counts = Counter(w.get("result", "UNKNOWN") for w in workloads)
     eligible = list((qual_doc.get("stable_projection", {}) or {}).get("eligible_now", []) or [])
+    executor_candidates = []
+    for row in qual_doc.get("candidates", []) or []:
+        executor_candidates.append({
+            "subject_id": row["subject_id"],
+            "intended_capabilities": list(row.get("intended_capabilities", []) or []),
+            "intended_interfaces": list(row.get("intended_interfaces", []) or []),
+            "qualification": row.get("qualification", "UNKNOWN"),
+            "workload_ref": row.get("workload_ref"),
+            "reason": row.get("reason"),
+        })
     published = len(noema_doc.get("executors", []) or [])
 
     # Overview.
@@ -456,7 +539,7 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
             "source_commit": source_commit,
             "derived_only": True,
         },
-        "selection": {"month": month, "scenario": "ACTUAL"},
+        "selection": {"month": month, "scenario": "ACTUAL", "available_months": available_months},
         "overview": {
             "counts": {
                 "registry_items": len(registry),
@@ -484,6 +567,7 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
             "entitlements": entitlement_rows,
             "exiting": exiting_rows,
         },
+        "monthly": monthly_states,
         "registry": {"items": registry},
         "integrations": {"hosts": hosts, "matrix": matrix},
         "actions": actions,
@@ -496,6 +580,8 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
         "evidence": {
             "workload_summary": dict(sorted(result_counts.items())),
             "executor_projection": {"eligible_now": eligible, "published_count": published},
+            "executor_candidates": executor_candidates,
+            "workloads": workload_rows,
         },
     }
 

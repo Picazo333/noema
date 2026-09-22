@@ -1,0 +1,188 @@
+name: Temp StackIA R5 Full Data Audit Corrected
+
+on:
+  push:
+    branches:
+      - "temp/stackia-r5-human-ui-20260921"
+    paths-ignore:
+      - "tmp/stackia-r5/out/**"
+
+permissions:
+  contents: write
+
+jobs:
+  audit-r5:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install browser harness
+        run: |
+          mkdir -p /tmp/stackia-r5
+          cd /tmp/stackia-r5
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer-core@24 >/dev/null 2>&1
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN"
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+          "$CHROME_BIN" --version
+
+      - name: Run full-data browser audit
+        run: |
+          cp tmp/stackia-r5/human-v2-r5-full.html /tmp/stackia-r5.html
+          cat > /tmp/stackia-r5/audit.mjs <<'NODE'
+          import puppeteer from 'puppeteer-core';
+          import fs from 'fs';
+
+          const browser=await puppeteer.launch({
+            executablePath:process.env.CHROME_BIN,
+            headless:true,
+            args:['--no-sandbox','--disable-dev-shm-usage']
+          });
+          const page=await browser.newPage();
+          const errors=[];
+          page.on('pageerror',e=>errors.push(String(e)));
+          const assert=(cond,msg)=>{if(!cond)throw new Error(msg)};
+          const txt=sel=>page.$eval(sel,el=>el.textContent.trim());
+          const shots='/tmp/stackia-r5-shots';fs.mkdirSync(shots,{recursive:true});
+          const shot=async name=>page.screenshot({path:shots+'/'+name+'.jpg',type:'jpeg',quality:58,fullPage:true});
+          const nav=async id=>{
+            await page.click('.nav button[data-page="'+id+'"]');
+            await page.waitForFunction(x=>document.querySelector('#page-'+x)?.classList.contains('active'),{},id);
+          };
+          const countRows=()=>page.$$('#inventoryBody tr').then(x=>x.length);
+
+          await page.setViewport({width:1440,height:1000,deviceScaleFactor:1});
+          await page.goto('file:///tmp/stackia-r5.html',{waitUntil:'load'});
+
+          const navLabels=await page.$$eval('.nav button[data-page]',els=>els.map(x=>x.textContent.trim()));
+          assert(JSON.stringify(navLabels)===JSON.stringify(['Hoy','Inventario','Presupuesto','Benchmark']),'wrong primary nav');
+          assert((await page.$$('.page')).length===4,'wrong page count');
+          assert((await page.$$('.sidebar')).length===0,'sidebar exists');
+          assert((await txt('.money-primary strong'))==='MX$1,665','Hoy October reference');
+          assert((await txt('.money-side strong'))==='MX$0','Hoy October confirmed');
+          const attentionCount=(await page.$$('#hoyAttention .simple-row')).length;
+          assert(attentionCount<=7,'attention exceeds 7');
+          assert(attentionCount>0,'attention empty unexpectedly');
+          assert((await page.$$('#hoyIncluded .simple-row')).length<=4,'included exceeds 4');
+          assert(!(await page.evaluate(()=>document.querySelector('#page-hoy').innerText.includes('183')||document.querySelector('#page-hoy').innerText.includes('90'))),'raw technical cardinality leaked into Hoy');
+          await shot('01-hoy-full');
+
+          await nav('inventario');
+          assert((await page.$eval('#classSeg button.active',el=>el.dataset.class))==='Tools','Tools not default');
+          assert((await countRows())===91,'Tools full count mismatch');
+          assert((await txt('#inventoryCount')).startsWith('91 visibles'),'Tools count label');
+          await shot('02-inventario-tools-full');
+
+          await page.click('#classSeg button[data-class="Skills"]');
+          assert((await countRows())===49,'Skills count mismatch');
+          await page.click('#classSeg button[data-class="MCPs"]');
+          assert((await countRows())===29,'MCP count mismatch');
+          await page.click('#classSeg button[data-class="Plugins"]');
+          assert((await countRows())===14,'Plugin count mismatch');
+          await page.click('#classSeg button[data-class="Todo"]');
+          assert((await countRows())===183,'Todo count mismatch');
+
+          await page.type('#invSearch','n8n');
+          const searchRows=await countRows();
+          assert(searchRows>=4 && searchRows<183,'cross-class search failed');
+          const mixedText=await txt('#inventoryBody');
+          assert(mixedText.includes('Tools')||mixedText.includes('Skills')||mixedText.includes('MCPs'),'Todo search loses class context');
+          await page.click('#classSeg button[data-class="Tools"]');
+          await page.$eval('#invSearch',el=>{el.value='';el.dispatchEvent(new Event('input',{bubbles:true}))});
+          assert((await countRows())===91,'Tools reset failed');
+
+          const n8n=await page.$('#inventoryBody [data-inspect="n8n"]');
+          assert(!!n8n,'n8n manage missing');
+          await n8n.click();
+          await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open'));
+          const drawer=await txt('#drawerBody');
+          assert(drawer.includes('Ya la uso'),'human usage command missing');
+          assert(drawer.includes('Registrar configuración'),'deployment action missing');
+          assert(drawer.includes('Registrar prueba'),'test action missing');
+          assert(!drawer.includes('Mark VERIFIED'),'generic verified leaked');
+          await page.click('#drawerBody [data-command="SET_USAGE"]');
+          assert((await txt('#drawerBody .command-preview')).includes('R5 AÚN NO ESCRIBE EL CANON'),'R5 command boundary missing');
+          await shot('03-drawer-full');
+          await page.keyboard.press('Escape');
+
+          await nav('presupuesto');
+          assert((await txt('#budgetPaid'))==='MX$0','Oct confirmed mismatch');
+          assert((await txt('#budgetRef'))==='MX$1,665','Oct ref mismatch');
+          assert((await page.$$('#budgetBody tr')).length===6,'Oct plan count');
+          assert((await page.$$('#scenarioSeg button')).length===3,'scenario count');
+          const scenarioLabels=await page.$$eval('#scenarioSeg button',els=>els.map(x=>x.textContent.trim()));
+          assert(JSON.stringify(scenarioLabels)===JSON.stringify(['ACTUAL','LEAN','SCALE']),'scenario labels');
+          await page.select('#monthSelect','2026-09');
+          assert((await txt('#budgetPaid'))==='MX$794','Sep confirmed mismatch');
+          assert((await txt('#budgetRef'))==='MX$1,389','Sep ref mismatch');
+          assert((await page.$$('#budgetBody tr')).length===5,'Sep plan count');
+          await page.select('#monthSelect','2026-10');
+          await shot('04-presupuesto-full');
+
+          await nav('benchmark');
+          assert((await page.$$('#benchLens button')).length===4,'benchmark lens count');
+          assert((await page.$$('#benchmarkBody tr')).length===6,'repo candidate count');
+          await page.click('#benchLens button[data-lens="research"]');
+          assert((await txt('#benchmarkBody')).includes('No hay evidencia comparativa canónica suficiente'),'research invents ranking');
+          await page.click('#benchLens button[data-lens="repo"]');
+          await shot('05-benchmark-full');
+
+          const desktop=await page.evaluate(()=>({
+            innerWidth:innerWidth,
+            bodyScrollWidth:document.body.scrollWidth,
+            inventoryTableScroll:document.querySelector('#page-inventario .table-wrap').scrollWidth,
+            inventoryTableClient:document.querySelector('#page-inventario .table-wrap').clientWidth
+          }));
+          assert(desktop.bodyScrollWidth<=desktop.innerWidth+1,'desktop body overflow');
+
+          await page.setViewport({width:390,height:844,deviceScaleFactor:1});
+          await nav('hoy');
+          const mobile=await page.evaluate(()=>({
+            innerWidth:innerWidth,
+            bodyScrollWidth:document.body.scrollWidth,
+            activePageWidth:document.querySelector('.page.active').scrollWidth
+          }));
+          assert(mobile.bodyScrollWidth<=mobile.innerWidth+1,'mobile body overflow');
+          assert((await page.$$('.nav button[data-page]')).length===4,'mobile nav count');
+          await shot('06-hoy-mobile-full');
+
+          await nav('inventario');
+          assert((await page.$eval('#classSeg button.active',el=>el.dataset.class))==='Tools','mobile class default');
+          assert((await countRows())===91,'mobile full Tools count');
+          const invOverflow=await page.$eval('#page-inventario .table-wrap',el=>({scroll:el.scrollWidth,client:el.clientWidth}));
+          assert(invOverflow.scroll>=invOverflow.client,'inventory scroll container invalid');
+          await shot('07-inventario-mobile-full');
+
+          assert(errors.length===0,'page errors: '+errors.join(' | '));
+
+          const result={
+            status:'PASS',
+            page_errors:errors,
+            navigation:navLabels,
+            attention_items:attentionCount,
+            registry:{total:183,tools:91,skills:49,mcps:29,plugins:14},
+            budget:{october:{confirmed:0,reference:1665,plans:6},september:{confirmed:794,reference:1389,plans:5}},
+            scenarios:scenarioLabels,
+            benchmark:{repo_candidates:6,lenses:4},
+            desktop,mobile,
+            screenshots:fs.readdirSync(shots).sort()
+          };
+          fs.writeFileSync('/tmp/stackia-r5-audit.json',JSON.stringify(result,null,2)+'\n');
+          await browser.close();
+          NODE
+          node /tmp/stackia-r5/audit.mjs
+          cat /tmp/stackia-r5-audit.json
+
+      - name: Persist audit outputs
+        run: |
+          mkdir -p tmp/stackia-r5/out/screens
+          cp /tmp/stackia-r5-audit.json tmp/stackia-r5/out/browser-audit.json
+          cp /tmp/stackia-r5-shots/* tmp/stackia-r5/out/screens/
+          git config user.name "stackia-r5-runner"
+          git config user.email "stackia-r5-runner@users.noreply.github.com"
+          git add tmp/stackia-r5/out
+          if ! git diff --cached --quiet; then
+            git commit -m "temp: persist StackIA R5 browser audit"
+            git push origin HEAD:temp/stackia-r5-human-ui-20260921
+          fi

@@ -74,7 +74,7 @@ def test_resume_rejects_stale_sha():
         "active_blockers": [], "outstanding_human_gates": [], "prohibited_scope": [], "effective_allowed_writes": [],
         "next_action": "continue", "next_action_kind": "EXECUTE",
     }
-    report = resume_check(envelope, {"work_order_ref": "repo://tests/eg/work-order.yaml", "status": "partial"}, state)
+    report = resume_check(envelope, {"work_order_ref": envelope["work_order_ref"], "status": "partial"}, state)
     assert report["status"] == "FAIL"
     assert "STALE_SHA" in report["reason_codes"]
 
@@ -97,7 +97,7 @@ def test_security_controls_are_orthogonal_and_conservative():
 
 
 def test_receipt_topology_model_and_executor_boundaries():
-    receipt = validate_resolver_receipt({"resolver": "project:skill-foundry", "status": "RESOLVED", "result_ref": {"scheme": "repo", "locator": "fixture.yaml"}})
+    receipt = validate_resolver_receipt({"resolver": "project:skill-foundry", "status": "RESOLVED", "resolution_ref": {"scheme": "repo", "locator": "fixture.yaml"}})
     assert receipt["resolver"] == "project:skill-foundry"
     assert derive_topology({}, {"independent_review_required": True})["mode"] == "AUDITED_SINGLE"
     try:

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import posixpath
 
+from .semantics import raise_for_issues, validate_envelope_semantics, validate_resume_semantics
+
 
 def recovery_requirements(
     work_order: dict,
@@ -38,6 +40,7 @@ def resume_check(
     current_state: dict | None = None,
 ) -> dict:
     """Return PASS/FAIL/INCOMPLETE without rewriting historical evidence."""
+    raise_for_issues(validate_envelope_semantics(envelope))
     state = current_state or {}
     requirements = envelope.get("recovery", {})
     failures: list[str] = []
@@ -93,9 +96,9 @@ def resume_check(
         failures.append("CLOSED_CLAIMS_INCOMPLETE")
     if requirements.get("required_closed_claims") and not state["closed_evidence_refs"]:
         failures.append("CLOSED_EVIDENCE_INCOMPLETE")
-    required_prohibitions = _scope_set(requirements.get("prohibited_scope", []))
     state_prohibitions = _scope_set(state["prohibited_scope"])
-    if not required_prohibitions.issubset(state_prohibitions):
+    semantic_issues = validate_resume_semantics(envelope, state)
+    if any(item.code == "EG-RESUME-PROHIBITION" for item in semantic_issues):
         failures.append("PROHIBITED_SCOPE_DROPPED")
     allowed_boundaries = _scope_set(requirements.get("allowed_writes", []))
     effective_writes = _scope_set(state["effective_allowed_writes"])

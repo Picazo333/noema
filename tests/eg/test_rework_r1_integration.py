@@ -62,7 +62,7 @@ def test_routed_pipeline_uses_model_router_and_tool_fallback():
     }
     routed_work_order = work_order()
     routed_work_order["capability_requirements"] = [{"id": "external-resolution"}]
-    env = build_execution_envelope(ROOT, routed_work_order, work_order_ref="repo://tests/eg/work-order.yaml", task_metadata=metadata, candidate_snapshot=candidate_snapshot, resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED"}])
+    env = build_execution_envelope(ROOT, routed_work_order, work_order_ref="repo://tests/eg/work-order.yaml", task_metadata=metadata, candidate_snapshot=candidate_snapshot, resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED", "resolution_ref": {"scheme": "repo", "locator": "resolution.yaml"}}])
     assert env["disposition"] == "ROUTED"
     assert [item["decision"] for item in env["tool_decisions"]] == ["HARD_DENY", "CALL"]
     assert env["model"]["selected_model"] == "runtime-model"
@@ -86,7 +86,7 @@ def test_blocked_runtime_and_resolver_are_terminal_only_when_required():
 def test_no_verified_executor_blocks_integrated_pipeline():
     routed = work_order()
     routed["capability_requirements"] = [{"id": "route"}]
-    env = build_execution_envelope(ROOT, routed, work_order_ref="repo://tests/eg/work-order.yaml", task_metadata={"executor_requirements": {"capabilities": ["repository-work"]}}, resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED"}])
+    env = build_execution_envelope(ROOT, routed, work_order_ref="repo://tests/eg/work-order.yaml", task_metadata={"executor_requirements": {"capabilities": ["repository-work"]}}, resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED", "resolution_ref": {"scheme": "repo", "locator": "resolution.yaml"}}])
     assert env["disposition"] == "BLOCKED"
     assert env["executor"]["status"] == "BLOCKED_NO_VERIFIED_EXECUTOR"
 
@@ -123,9 +123,9 @@ def test_trace_is_structured_and_explicit_about_unavailable_metrics():
 def test_estimated_metric_requires_methodology_evidence():
     env = envelope()
     with pytest.raises(ValueError, match="methodology_ref"):
-        create_trace(env, {"metrics": {"monetary_cost": {"status": "ESTIMATED_LABELED", "value": 2}}})
+        create_trace(env, {"metrics": {"monetary_cost": {"status": "ESTIMATED", "value": 2}}})
     trace = create_trace(env, {"metrics": {"monetary_cost": {
-        "status": "ESTIMATED_LABELED", "value": 2,
+        "status": "ESTIMATED", "value": 2,
         "methodology_ref": {"scheme": "repo", "locator": "validation/cost-method.md"},
     }}})
     assert trace["metrics"]["monetary_cost"]["methodology_ref"]["locator"] == "validation/cost-method.md"
@@ -161,7 +161,7 @@ def test_context_promotion_and_resume_contract():
     raw_chat = next(item for item in env["context"]["refs"] if item["ref"]["locator"] == "raw-chat.md")
     assert history["load_tier"] == "HOT"
     assert raw_chat["load_tier"] == "NEVER_PRELOAD"
-    handoff = {"work_order_ref": "repo://tests/eg/work-order.yaml", "status": "partial"}
+    handoff = {"work_order_ref": env["work_order_ref"], "status": "partial"}
     assert resume_check(env, handoff, resume_state(env))["status"] == "PASS"
     assert resume_check(env, handoff, resume_state(env, branch="wrong"))["status"] == "FAIL"
     assert resume_check(env, handoff, {"project_id": "noema"})["status"] == "INCOMPLETE"

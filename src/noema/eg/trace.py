@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import math
 import re
 from datetime import datetime, timezone
 from uuid import uuid4
 
 from .context_plan import ReadSet
 from .enums import MetricStatus
+from .semantics import raise_for_issues, validate_envelope_semantics, validate_trace_semantics
 
 
 _METRIC_NAMES = (
@@ -84,10 +86,10 @@ def metric(
         raise ValueError(f"Unknown metric status: {status}")
     if status == MetricStatus.UNAVAILABLE.value:
         value = None
-    elif value is None:
-        raise ValueError(f"Metric `{status}` requires a value")
-    if status == MetricStatus.ESTIMATED_LABELED.value and methodology_ref is None:
-        raise ValueError("ESTIMATED_LABELED metrics require methodology_ref")
+    elif not isinstance(value, (int, float)) or isinstance(value, bool) or not math.isfinite(value):
+        raise ValueError(f"Metric `{status}` requires a finite numeric value")
+    if status == MetricStatus.ESTIMATED.value and methodology_ref is None:
+        raise ValueError("ESTIMATED metrics require methodology_ref")
     result = {"status": status, "value": value}
     if methodology_ref is not None:
         result["methodology_ref"] = _storage_ref(methodology_ref, "metric methodology_ref")
@@ -197,6 +199,7 @@ def create_trace(
     finished_at: str | None = None,
 ) -> dict:
     """Create a trace from explicit observations, never raw tool payloads."""
+    raise_for_issues(validate_envelope_semantics(envelope))
     _require_known_mapping(actual, _ACTUAL_KEYS, "actual execution")
     tool_events = _structured_events(actual, "tool_events", _TOOL_EVENT_KEYS)
     permission_events = _structured_events(actual, "permission_events", _PERMISSION_EVENT_KEYS)
@@ -226,11 +229,12 @@ def create_trace(
             "ref": ref,
             "result": result["reason_code"],
             "identity_kind": result["identity_kind"],
+            "identity_fingerprint": result["identity_fingerprint"],
         })
         if result["read"]:
             context_refs.append(ref)
     started_at = started_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    return {
+    trace = {
         "trace_id": f"trace-{uuid4().hex}",
         "execution_id": envelope["execution_id"],
         "envelope_ref": envelope_ref,
@@ -253,6 +257,8 @@ def create_trace(
         "retries": _observed_count(actual, "retries"),
         "rework_cycles": _observed_count(actual, "rework_cycles"),
     }
+    raise_for_issues(validate_trace_semantics(trace))
+    return trace
 
 
 def _observed_count(actual: dict, key: str) -> int | None:

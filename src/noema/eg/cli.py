@@ -10,14 +10,16 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 from ..loader import dump_yaml, load_json, load_yaml
 from ..manifest import load_manifest
-from ..schemas import schema_root, validation_errors
+from ..schemas import schema_root
 from .compare import compare_execution
 from .plan import build_execution_envelope
+from .provenance import load_work_order
 from .profiles import load_host_capabilities
 from .recovery import resume_check
 from .runtime import classify_runtime_posture
 from .scan import scan_harvest
 from .trace import create_trace
+from .semantics import contract_issues, raise_for_issues, validate_runtime_pressure_semantics
 
 
 _RUNTIME_SCHEMAS = {
@@ -43,6 +45,8 @@ def _validate_runtime(kind: str, data: object, root: Path) -> None:
     )
     if errors:
         raise ValueError(f"Invalid {kind}: {errors[0].message}")
+    if kind == "runtime-pressure":
+        raise_for_issues(validate_runtime_pressure_semantics(data))
 
 
 def _optional_runtime(kind: str, value: str | None, root: Path) -> dict | None:
@@ -81,10 +85,9 @@ def plan(args) -> int:
     root = Path(args.root).resolve()
     _validate_profile(root, args.profile)
     work_order_path = Path(args.work_order)
-    work_order = load_yaml(work_order_path)
-    errors = validation_errors("work-order", work_order, schema_root(root))
-    if errors:
-        raise ValueError("Invalid WorkOrder: " + errors[0].message)
+    loaded_work_order = load_work_order(work_order_path)
+    work_order = loaded_work_order.data
+    raise_for_issues(contract_issues("work-order", work_order, schema_root(root)))
     host_data = _optional_runtime("host-capabilities", args.host_capabilities, root)
     candidates = _optional_runtime("candidate-snapshot", args.candidate_snapshot, root)
     pressure = _optional_runtime("runtime-pressure", args.runtime_pressure, root)
@@ -96,14 +99,12 @@ def plan(args) -> int:
     except (OSError, subprocess.CalledProcessError):
         sha = None
     envelope = build_execution_envelope(
-        root, work_order, work_order_ref={"scheme": "file", "locator": str(work_order_path)},
+        root, work_order, loaded_work_order=loaded_work_order,
         profile=args.profile, host_capabilities=host, candidate_snapshot=candidates,
         runtime_pressure=pressure, resolver_receipts=receipts, task_metadata=metadata,
         baseline_sha=sha,
     )
-    errors = validation_errors("execution-envelope", envelope, schema_root(root))
-    if errors:
-        raise ValueError("Generated invalid ExecutionEnvelope: " + errors[0].message)
+    raise_for_issues(contract_issues("execution-envelope", envelope, schema_root(root)))
     _write(envelope, args.out, args.json)
     return 0
 
@@ -125,9 +126,9 @@ def validate(args) -> int:
             return 1
         print("PASS")
         return 0
-    errors = validation_errors(kind, data, schema_root(Path(args.root).resolve()))
-    if errors:
-        print("FAIL: " + errors[0].message)
+    issues = contract_issues(kind, data, schema_root(Path(args.root).resolve()))
+    if issues:
+        print("FAIL: " + issues[0].message)
         return 1
     print("PASS")
     return 0
@@ -136,10 +137,9 @@ def validate(args) -> int:
 def record(args) -> int:
     envelope = load_yaml(Path(args.envelope))
     actual = load_yaml(Path(args.actual))
+    raise_for_issues(contract_issues("execution-envelope", envelope, schema_root()))
     trace = create_trace(envelope, actual)
-    errors = validation_errors("execution-trace", trace, schema_root())
-    if errors:
-        raise ValueError("Generated invalid ExecutionTrace: " + errors[0].message)
+    raise_for_issues(contract_issues("execution-trace", trace, schema_root()))
     _write(trace, args.out, args.json)
     return 0
 
@@ -151,6 +151,7 @@ def compare(args) -> int:
 
 def resume(args) -> int:
     envelope = load_yaml(Path(args.envelope))
+    raise_for_issues(contract_issues("execution-envelope", envelope, schema_root()))
     report = resume_check(envelope, load_yaml(Path(args.handoff)), load_yaml(Path(args.state)))
     _write(report, None, args.json)
     return 0 if report["status"] == "PASS" else 1

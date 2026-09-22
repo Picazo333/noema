@@ -1,27 +1,17 @@
-# Execution Governance R2 dogfood evidence
+# Execution Governance R3 dogfood evidence
 
-Status: `READY_FOR_REAUDIT`. This matrix supersedes the R1 canary labels.
-`R2_SOURCE_SHA` is `7507cd03ab4cf4747fb6571bb8a8908635ae6916`, the exact
-source commit tested below.
+Generated from `CANARY_RESULTS.json`; do not edit this report manually.
+Audited starting SHA: `5d54a1dcc8a6a9550bea138d0ce1899a75e0b437`.
 
-| ID | Scenario | Level | Public entrypoint | Test path | Behavior asserted | Expected / observed | Evidence | SHA | Status |
-|---|---|---|---|---|---|---|---|---|---|
-| R2-C01 | WorkOrder → DIRECT → Trace | END_TO_END | `noema eg plan` → `record` | `tests/eg/test_rework_r1_e2e.py::test_e2e_01_cli_valid_work_order_direct_to_trace` | validates both generated artifacts | direct + valid trace / PASS | CLI YAML + schema | R2_SOURCE_SHA | PASS |
-| R2-C02 | WorkOrder → ROUTED → tool/model → Trace | END_TO_END | `noema eg plan` → `record` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_07_public_routed_tool_fallback_and_trace` | routed model and fallback tool are bound then traced | ROUTED + valid trace / PASS | CLI YAML + schema | R2_SOURCE_SHA | PASS |
-| R2-C03 | Invalid WorkOrder | END_TO_END | `noema eg plan` | `tests/eg/test_rework_r1_e2e.py::test_e2e_03_cli_rejects_each_invalid_work_order_before_planning` | every primary required field rejects before planning | CLI code 2 / PASS | parametrized CLI assertions | R2_SOURCE_SHA | PASS |
-| R2-C04 | Required blocked runtime resource/interface/global block | END_TO_END | `noema eg plan --runtime-pressure` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_02_runtime_pressure_public_contract_to_envelope` | runtime schema reaches final disposition | DEFER/BLOCKED as applicable / PASS | public runtime files + envelope | R2_SOURCE_SHA | PASS |
-| R2-C05 | Resolver BLOCKED | END_TO_END | `noema eg plan --resolver-receipt` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_01_resolver_participation_is_explicit_and_terminal` | required blocked receipt is terminal | BLOCKED / PASS | CLI envelope | R2_SOURCE_SHA | PASS |
-| R2-C06 | No verified executor | END_TO_END | `noema eg plan --task-metadata` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_07_public_no_verified_executor_and_topology_rejection` | RC0 router status survives public planning | `BLOCKED_NO_VERIFIED_EXECUTOR` / PASS | CLI envelope | R2_SOURCE_SHA | PASS |
-| R2-C07 | Denied authority tool → allowed fallback | END_TO_END | `noema eg plan --candidate-snapshot` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_07_public_routed_tool_fallback_and_trace` | denial cannot suppress eligible fallback | HARD_DENY + CALL / PASS | CLI envelope | R2_SOURCE_SHA | PASS |
-| R2-C08 | Parallel isolation rejection | END_TO_END | `noema eg plan --task-metadata` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_07_public_no_verified_executor_and_topology_rejection` | overlapping scopes reject before envelope | CLI code 2 / PASS | CLI failure assertion | R2_SOURCE_SHA | PASS |
-| R2-C09 | Context promotion + ReadSet | END_TO_END | `noema eg plan` → `record` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_07_public_context_trace_resume_secret_and_harvest` | promotion and same-integrity suppression persist | transition + suppression / PASS | CLI envelope + trace | R2_SOURCE_SHA | PASS |
-| R2-C10 | Resume success | END_TO_END | `noema eg resume-check` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_07_public_context_trace_resume_secret_and_harvest` | matching continuation state resumes | CLI code 0 / PASS | CLI report | R2_SOURCE_SHA | PASS |
-| R2-C11 | Resume failure | END_TO_END | `noema eg resume-check` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_07_public_context_trace_resume_secret_and_harvest` | removed inherited prohibition fails | CLI code 1 / PASS | CLI report | R2_SOURCE_SHA | PASS |
-| R2-C12 | Secret-bearing trace | END_TO_END | `noema eg record` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_07_public_context_trace_resume_secret_and_harvest` | secret input never produces trace | CLI code 2 / PASS | CLI failure assertion | R2_SOURCE_SHA | PASS |
-| R2-C13 | Unavailable metrics | END_TO_END | `noema eg record` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_08_missing_metrics_stay_unavailable_through_public_record_cli` | absent telemetry remains explicit unavailable | null + UNAVAILABLE / PASS | CLI trace + schema | R2_SOURCE_SHA | PASS |
-| R2-C14 | Harvest applicability | END_TO_END | `noema eg scan-harvest` | `tests/eg/test_rework_r2_contract_seams.py::test_r2_07_public_context_trace_resume_secret_and_harvest` | public scan remains read-only | read_only true / PASS | CLI report | R2_SOURCE_SHA | PASS |
-
-Supporting integration coverage for strict trace structures, ReadSet identity,
-resume effective binding, topology schema/runtime parity, and resolver receipt
-semantics is in `tests/eg/test_rework_r2_contract_seams.py`. No helper-only
-test is labelled END_TO_END in this table.
+| ID | Scenario | Level | Public entrypoint | Test/evidence | Expected / observed | SHA | Status |
+|---|---|---|---|---|---|---|---|
+| R3-C01 | WorkOrder to direct trace | END_TO_END | noema eg plan -> record | test_rework_r1_e2e.py::test_e2e_01_cli_valid_work_order_direct_to_trace | valid direct envelope and trace / PASS | 5d54a1d | PASS |
+| R3-C02 | Routed tool and model binding | END_TO_END | noema eg plan -> record | test_rework_r2_contract_seams.py::test_r2_07_public_routed_tool_fallback_and_trace | model selected and traced; fallback called / PASS | 5d54a1d | PASS |
+| R3-C03 | Runtime dependency matrix | INTEGRATION | planner + semantic kernel | test_r3_structural_closure.py::test_r3_runtime_dependency_matrix | blocked mandatory external dependency is terminal / PASS | 5d54a1d | PASS |
+| R3-C04 | Resolver state matrix | INTEGRATION | planner + semantic kernel | test_r3_structural_closure.py::test_r3_resolver_state_matrix | successful states require usable resolution / PASS | 5d54a1d | PASS |
+| R3-C05 | Parallel semantic public rejection | END_TO_END | noema eg validate | test_r3_structural_closure.py::test_r3_public_validation_rejects_unprovable_parallel_topology | schema-valid unsafe topology fails / PASS | 5d54a1d | PASS |
+| R3-C06 | Metric state matrix | INTEGRATION | trace + semantic kernel | test_r3_structural_closure.py::test_r3_metric_state_matrix | only finite measured/estimated values persist / PASS | 5d54a1d | PASS |
+| R3-C07 | Derived provenance and ReadSet evidence | INTEGRATION | planner -> trace | test_r3_structural_closure.py::test_r3_provenance_is_derived_and_trace_preserves_read_evidence | caller ref is ignored; fingerprint persists / PASS | 5d54a1d | PASS |
+| R3-C08 | Resume prohibition non-escalation | END_TO_END | noema eg resume-check | test_rework_r2_contract_seams.py::test_r2_07_public_context_trace_resume_secret_and_harvest | preserved passes and removed prohibition fails / PASS | 5d54a1d | PASS |
+| R3-C09 | Secret trace protection | END_TO_END | noema eg record | test_rework_r2_contract_seams.py::test_r2_07_public_context_trace_resume_secret_and_harvest | secret input rejected / PASS | 5d54a1d | PASS |
+| R3-C10 | Harvest read-only applicability | END_TO_END | noema eg scan-harvest | test_rework_r2_contract_seams.py::test_r2_07_public_context_trace_resume_secret_and_harvest | read_only report / PASS | 5d54a1d | PASS |

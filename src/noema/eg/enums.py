@@ -67,8 +67,7 @@ class TopologyMode(StrEnum):
 
 class MetricStatus(StrEnum):
     MEASURED = "MEASURED"
-    PROVIDED = "PROVIDED"
-    ESTIMATED_LABELED = "ESTIMATED_LABELED"
+    ESTIMATED = "ESTIMATED"
     UNAVAILABLE = "UNAVAILABLE"
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .enums import RuntimePosture, TopologyMode
+from .needs import ExecutionNeeds, derive_execution_needs
 
 
 def classify_runtime_posture(snapshot: dict | None) -> RuntimePosture:
@@ -52,6 +53,7 @@ def resource_disposition_constraint(
     snapshot: dict | None,
     task_metadata: dict | None,
     candidate_snapshot: dict | None,
+    needs: ExecutionNeeds | None = None,
 ) -> dict | None:
     """Return a terminal runtime constraint only for a blocked required resource.
 
@@ -63,22 +65,16 @@ def resource_disposition_constraint(
     snapshot = snapshot or {}
     metadata = task_metadata or {}
     candidates = candidate_snapshot or {}
+    needs = needs or derive_execution_needs({"capability_requirements": []}, metadata)
     blocked = {str(value).casefold() for value in snapshot.get("blocked_resources", [])}
     blocked.update(str(value).casefold() for value in snapshot.get("blocked_interfaces", []))
-    required = {str(value).casefold() for value in metadata.get("required_resources", [])}
-    required.update(
-        str(value).casefold()
-        for value in metadata.get("tool_requirements", {}).get("interfaces", [])
-    )
-    required.update(
-        str(value).casefold()
-        for value in metadata.get("executor_requirements", {}).get("interfaces", [])
-    )
+    required = {str(value).casefold() for value in needs.required_resources}
+    required.update(str(value).casefold() for value in needs.required_interfaces)
     for tool in candidates.get("tools", []):
         if tool.get("required"):
             required.update(str(value).casefold() for value in tool.get("interfaces", []))
             required.add(str(tool.get("id", "")).casefold())
-    if metadata.get("requires_external"):
+    if needs.external_required:
         required.add("external")
     matches = bool(blocked & required) or (
         bool(required) and bool(snapshot.get("block_all_external"))

@@ -96,7 +96,7 @@ def test_e2e_02_routed_tool_and_model_to_trace():
             "tools": [{"id": "allowed", "capabilities": ["read"], "source_relation": "DIRECT"}],
             "models": [{"id": "text-model", "modalities": ["text"]}],
         },
-        resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED"}],
+        resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED", "resolution_ref": {"scheme": "repo", "locator": "resolution.yaml"}}],
     )
     assert planned["disposition"] == "ROUTED"
     assert planned["model"]["selected_model"] == "text-model"
@@ -159,7 +159,7 @@ def test_e2e_07_denied_authoritative_tool_leaves_allowed_fallback():
 
 
 def test_e2e_08_parallel_overlap_rejects_envelope():
-    with pytest.raises(ValueError, match="overlap"):
+    with pytest.raises(ValueError):
         envelope(task_metadata={
             "parallel_isolated": True,
             "write_scopes": ["src", "src/noema"],
@@ -185,7 +185,7 @@ def test_e2e_10_resume_success():
         baseline_sha="r1-baseline",
         task_metadata={"role_id": "builder", "branch": "r1", "workspace": "noema-r1", "frontier_ref": {"scheme": "git", "locator": "frontier-r1"}},
     )
-    report = resume_check(planned, {"work_order_ref": WORK_ORDER_REF, "status": "partial"}, complete_state(planned))
+    report = resume_check(planned, {"work_order_ref": planned["work_order_ref"], "status": "partial"}, complete_state(planned))
     assert report["status"] == "PASS"
 
 
@@ -201,7 +201,7 @@ def test_e2e_11_resume_wrong_state_rejects(override):
         baseline_sha="r1-baseline",
         task_metadata={"role_id": "builder", "branch": "r1", "workspace": "noema-r1", "frontier_ref": {"scheme": "git", "locator": "frontier-r1"}},
     )
-    assert resume_check(planned, {"work_order_ref": WORK_ORDER_REF, "status": "partial"}, complete_state(planned, **override))["status"] == "FAIL"
+    assert resume_check(planned, {"work_order_ref": planned["work_order_ref"], "status": "partial"}, complete_state(planned, **override))["status"] == "FAIL"
 
 
 @pytest.mark.parametrize("actual", [

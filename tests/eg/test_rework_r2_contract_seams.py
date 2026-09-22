@@ -78,7 +78,7 @@ def test_r2_01_resolver_participation_is_explicit_and_terminal(tmp_path):
     assert blocked["disposition"] == "BLOCKED"
     resolved = build_execution_envelope(
         ROOT, required, work_order_ref=WORK_ORDER_REF,
-        resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED"}],
+        resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED", "resolution_ref": {"scheme": "repo", "locator": "resolution.yaml"}}],
     )
     assert resolved["disposition"] == "ROUTED"
     with pytest.raises(ValueError):
@@ -173,7 +173,7 @@ def test_r2_04_resume_preserves_constraints_and_uses_effective_executor(monkeypa
     )
     assert planned["executor"]["selected_executor"] == "effective-executor"
     assert planned["recovery"]["expected_executor"] == "effective-executor"
-    handoff = {"work_order_ref": WORK_ORDER_REF, "status": "partial"}
+    handoff = {"work_order_ref": planned["work_order_ref"], "status": "partial"}
     assert resume_check(planned, handoff, resume_state(planned))["status"] == "PASS"
     assert resume_check(planned, handoff, resume_state(planned, prohibited_scope=[]))["status"] == "FAIL"
     assert resume_check(planned, handoff, resume_state(planned, prohibited_scope=["secrets", "private"]))["status"] == "PASS"
@@ -236,16 +236,18 @@ def test_r2_07_public_routed_tool_fallback_and_trace(tmp_path):
         ],
         "models": [{"id": "text-model", "modalities": ["text"]}],
     }), encoding="utf-8")
-    actual_path.write_text(dump_yaml({"tool_events": [{
+    actual_path.write_text(dump_yaml({"model": "text-model", "tool_events": [{
         "candidate": "allowed-fallback", "action": "CALL", "result": "SUCCESS",
         "reason_codes": [], "evidence_refs": [],
     }]}), encoding="utf-8")
     assert main(["eg", "plan", str(work_order_path), "--root", str(ROOT), "--task-metadata", str(metadata_path), "--candidate-snapshot", str(candidates_path), "--out", str(envelope_path)]) == 0
     planned = load_yaml(envelope_path)
     assert planned["disposition"] == "ROUTED"
+    assert planned["model"]["selected_model"] == "text-model"
     assert [item["decision"] for item in planned["tool_decisions"]] == ["HARD_DENY", "CALL"]
     assert main(["eg", "record", str(envelope_path), str(actual_path), "--out", str(trace_path)]) == 0
     assert not validation_errors("execution-trace", load_yaml(trace_path), ROOT)
+    assert load_yaml(trace_path)["actual"]["model"] == "text-model"
 
 
 def test_r2_07_public_no_verified_executor_and_topology_rejection(tmp_path):
@@ -290,7 +292,7 @@ def test_r2_07_public_context_trace_resume_secret_and_harvest(tmp_path):
     assert main(["eg", "record", str(envelope_path), str(actual_path), "--out", str(trace_path)]) == 0
     assert load_yaml(trace_path)["actual"]["context_events"][1]["result"] == "DUPLICATE_READ_SUPPRESSED"
 
-    handoff_path.write_text(dump_yaml({"work_order_ref": {"scheme": "file", "locator": str(work_order_path)}, "status": "partial"}), encoding="utf-8")
+    handoff_path.write_text(dump_yaml({"work_order_ref": planned["work_order_ref"], "status": "partial"}), encoding="utf-8")
     state = resume_state(
         planned,
         branch=None,

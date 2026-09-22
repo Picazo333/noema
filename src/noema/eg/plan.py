@@ -7,7 +7,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from ..loader import load_yaml
-from ..schemas import schema_root, validation_errors
+from ..schemas import schema_root
 from .classification import (
     classify_action_effect,
     classify_authority_scope,
@@ -19,6 +19,7 @@ from .decision import decide_disposition
 from .evaluation import derive_evaluation_constraints
 from .executor import filter_model_candidates, select_existing_executor
 from .interop import validate_resolver_receipt
+from .needs import derive_execution_needs
 from .permissions import evaluate_control
 from .profiles import flattened_capabilities
 from .recovery import recovery_requirements
@@ -27,21 +28,14 @@ from .runtime import (
     derive_resource_policy,
     resource_disposition_constraint,
 )
+from .provenance import LoadedWorkOrder, programmatic_work_order
+from .semantics import contract_issues, raise_for_issues, validate_envelope_semantics
 from .tooling import decide_tools
 from .topology import derive_topology
 
 
-def _storage_ref(value: str | dict) -> dict:
-    if isinstance(value, dict):
-        return value
-    if "://" not in value:
-        raise ValueError("WorkOrder reference must be a StorageRef or URI")
-    scheme, locator = value.split("://", 1)
-    return {"scheme": scheme, "locator": locator}
-
-
 def _validate_work_order(work_order: dict, root: Path) -> None:
-    errors = validation_errors("work-order", work_order, schema_root(root))
+    errors = contract_issues("work-order", work_order, schema_root(root))
     if errors:
         rendered = "; ".join(error.message for error in errors[:3])
         raise ValueError(f"Invalid WorkOrder: {rendered}")
@@ -55,7 +49,8 @@ def build_execution_envelope(
     root: Path,
     work_order: dict,
     *,
-    work_order_ref: str | dict,
+    work_order_ref: str | dict | None = None,
+    loaded_work_order: LoadedWorkOrder | None = None,
     profile: str = "eg.repo-agent.v0",
     host_capabilities: dict | None = None,
     candidate_snapshot: dict | None = None,
@@ -66,7 +61,14 @@ def build_execution_envelope(
 ) -> dict:
     """Create derived governance state; no tool call or host action occurs here."""
     root = root.resolve()
-    _validate_work_order(work_order, root)
+    # `work_order_ref` is retained only for source compatibility.  It is not
+    # authoritative: programmatic input receives a content-bound identity and
+    # CLI input supplies LoadedWorkOrder from the file it actually read.
+    loaded = loaded_work_order or programmatic_work_order(work_order)
+    if loaded.data != work_order:
+        raise ValueError("LoadedWorkOrder data must be the WorkOrder being planned")
+    _validate_work_order(loaded.data, root)
+    work_order = loaded.data
     manifest = load_yaml(root / "noema.project.yaml")
     work_order_project_id = work_order["project_id"]
     metadata = task_metadata or {}
@@ -80,16 +82,14 @@ def build_execution_envelope(
     evaluation = derive_evaluation_constraints(work_order, metadata)
     topology = derive_topology(metadata, evaluation)
     receipts = [validate_resolver_receipt(item) for item in resolver_receipts or []]
+    needs = derive_execution_needs(work_order, metadata)
     executor_requirements = metadata.get("executor_requirements", {})
     model_requirements = metadata.get("model_requirements", {})
     tool_requirements = metadata.get("tool_requirements", {})
-    resolver_required = bool(work_order.get("capability_requirements") or metadata.get("resolver_required"))
+    resolver_required = needs.resolution_required
     unexpected_receipts = bool(receipts) and not resolver_required
     needs_resolution = bool(
-        resolver_required
-        or tool_requirements
-        or executor_requirements
-        or model_requirements
+        resolver_required or bool(needs.tool_capabilities) or needs.executor_required or needs.model_required
     )
     decision = decide_disposition(
         control["control"],
@@ -130,7 +130,7 @@ def build_execution_envelope(
         final = _terminal("DEFER", "HUMAN_GATE_UNENFORCEABLE")
 
     runtime_constraint = resource_disposition_constraint(
-        posture, runtime_pressure, metadata, candidates
+        posture, runtime_pressure, metadata, candidates, needs
     )
     if runtime_constraint is not None:
         final = _terminal(runtime_constraint["disposition"], runtime_constraint["reason_code"])
@@ -170,9 +170,9 @@ def build_execution_envelope(
             + (["RESOLVER_RECEIPT_NOT_REQUIRED"] if unexpected_receipts else [])
         )
     )
-    return {
+    envelope = {
         "execution_id": f"exec-{uuid4().hex}",
-        "work_order_ref": _storage_ref(work_order_ref),
+        "work_order_ref": loaded.canonical_source_ref,
         "work_order_id": work_order["work_order_id"],
         "project_id": work_order_project_id,
         "profile": profile,
@@ -205,3 +205,5 @@ def build_execution_envelope(
         ),
         "evidence_refs": [],
     }
+    raise_for_issues(validate_envelope_semantics(envelope))
+    return envelope

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from hashlib import sha256
 from pathlib import Path
+import posixpath
 
 from ..context import context_stats, optional_context_refs, resolve_context_paths
 from ..refs import parse_ref, safe_project_path
@@ -106,42 +109,61 @@ class ReadSet:
         self.thrash_events = 0
 
     def record(self, ref: dict, freshness: str | None = None, *, low_signal: bool = False) -> dict:
-        identity_kind, identity_value = self._identity(ref, freshness)
-        if identity_kind == "UNKNOWN":
-            return self._read_required(identity_kind, low_signal)
-        key = (ref.get("scheme", ""), ref.get("locator", ""), identity_kind, identity_value)
+        identity = self._identity(ref, freshness)
+        if identity.kind == "UNKNOWN":
+            return self._read_required(identity, low_signal)
+        key = (identity.scheme, identity.locator, identity.kind, identity.fingerprint)
         if key in self._seen:
             self.suppressed += 1
             return {
                 "read": False,
                 "reason_code": "DUPLICATE_READ_SUPPRESSED",
-                "identity_kind": identity_kind,
+                "identity_kind": identity.kind,
+                "identity_fingerprint": identity.fingerprint,
             }
         self._seen.add(key)
-        return self._read_required(identity_kind, low_signal)
+        return self._read_required(identity, low_signal)
 
     @staticmethod
-    def _identity(ref: dict, freshness: str | None) -> tuple[str, str]:
+    def _identity(ref: dict, freshness: str | None) -> "ReadIdentity":
+        scheme = str(ref.get("scheme", "")).casefold()
+        locator = str(ref.get("locator", "")).replace("\\", "/").strip()
+        locator = posixpath.normpath(locator) if locator else locator
         integrity = ref.get("integrity")
         if isinstance(integrity, str) and integrity:
-            return "INTEGRITY", integrity
+            return ReadIdentity.from_evidence(scheme, locator, "INTEGRITY", integrity)
         version = ref.get("version")
         if isinstance(version, (str, int)) and str(version):
-            return "VERSION", str(version)
+            return ReadIdentity.from_evidence(scheme, locator, "VERSION", str(version))
         if isinstance(freshness, str) and freshness:
-            return "FRESHNESS", freshness
-        return "UNKNOWN", ""
+            return ReadIdentity.from_evidence(scheme, locator, "FRESHNESS", freshness)
+        return ReadIdentity(scheme, locator, "UNKNOWN", None)
 
-    def _read_required(self, identity_kind: str, low_signal: bool) -> dict:
+    def _read_required(self, identity: "ReadIdentity", low_signal: bool) -> dict:
         if low_signal:
             self.thrash_events += 1
             return {
                 "read": True,
                 "reason_code": "CONTEXT_THRASH",
-                "identity_kind": identity_kind,
+                "identity_kind": identity.kind,
+                "identity_fingerprint": identity.fingerprint,
             }
         return {
             "read": True,
             "reason_code": "READ_REQUIRED",
-            "identity_kind": identity_kind,
+            "identity_kind": identity.kind,
+            "identity_fingerprint": identity.fingerprint,
         }
+
+
+@dataclass(frozen=True)
+class ReadIdentity:
+    scheme: str
+    locator: str
+    kind: str
+    fingerprint: str | None
+
+    @classmethod
+    def from_evidence(cls, scheme: str, locator: str, kind: str, evidence: str) -> "ReadIdentity":
+        fingerprint = sha256(f"{kind}:{evidence}".encode("utf-8")).hexdigest()
+        return cls(scheme, locator, kind, fingerprint)

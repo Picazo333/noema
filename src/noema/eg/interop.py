@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from .semantics import raise_for_issues, validate_resolver_receipt_semantics
+
 
 _STATUSES = {"RESOLVED", "PARTIAL", "UNRESOLVED", "NOT_REQUIRED", "BLOCKED"}
 
@@ -15,16 +17,19 @@ def validate_resolver_receipt(receipt: dict) -> dict:
         raise ValueError("Resolver receipt requires resolver")
     if receipt.get("status") not in _STATUSES:
         raise ValueError("Resolver receipt has unknown status")
-    result_ref = receipt.get("result_ref") or receipt.get("resolution_ref")
-    if result_ref is not None and (not isinstance(result_ref, dict) or "scheme" not in result_ref or "locator" not in result_ref):
-        raise ValueError("Resolver result_ref must be a StorageRef")
+    resolution_ref = receipt.get("resolution_ref")
+    if resolution_ref is not None and (not isinstance(resolution_ref, dict) or "scheme" not in resolution_ref or "locator" not in resolution_ref):
+        raise ValueError("Resolver resolution_ref must be a StorageRef")
     observed = receipt.get("observed_at")
     if observed:
         datetime.fromisoformat(observed.replace("Z", "+00:00"))
-    return {
+    normalized = {
         "resolver": receipt["resolver"],
         "status": receipt["status"],
-        "result_ref": result_ref,
+        "resolution_ref": resolution_ref,
+        "unresolved_capabilities": list(receipt.get("unresolved_capabilities", [])),
         "integrity": receipt.get("integrity"),
         "observed_at": observed,
     }
+    raise_for_issues(validate_resolver_receipt_semantics(normalized))
+    return normalized

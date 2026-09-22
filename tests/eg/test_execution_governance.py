@@ -1,6 +1,9 @@
 from pathlib import Path
 
 from noema.eg.context_plan import ReadSet
+from noema.eg.context_plan import build_context_plan
+from noema.eg.classification import classify_deliberation
+from noema.eg.decision import decide_disposition
 from noema.eg.executor import filter_model_candidates, select_existing_executor
 from noema.eg.interop import validate_resolver_receipt
 from noema.eg.plan import build_execution_envelope
@@ -113,3 +116,19 @@ def test_throttled_and_blocked_runtime_do_not_expand_work():
         policy = derive_resource_policy(posture)
         assert policy["parallelism_ceiling"] == 1
         assert policy["optional_external_calls"] == "DEFER"
+
+
+def test_remaining_direct_context_and_control_canaries():
+    manifest = load_yaml(ROOT / "noema.project.yaml")
+    scoped = evaluate_control(
+        ActionEffect.WRITE_REVERSIBLE, DataSensitivity.INTERNAL, AuthorityScope.LOCAL_PROJECT,
+        {**work_order(), "allowed_writes": ["src/noema"]}, {"repo_write_reversible": True},
+    )
+    assert scoped["control"] == "ALLOW_SCOPED"  # C02
+    assert classify_deliberation({**work_order(), "objective": "architecture analysis"}).value == "DEEP"  # C03
+    assert decide_disposition("ALLOW", already_complete=True)["disposition"] == "NO_ACTION"  # C05
+    assert build_execution_envelope(ROOT, work_order(), work_order_ref="repo://tests/eg/work-order.yaml")["resolver_receipts"] == []  # C10
+    patch = build_context_plan(ROOT, manifest, work_order())
+    assert all(item["load_tier"] == "HOT" for item in patch["refs"])  # C17
+    recover = build_context_plan(ROOT, manifest, {**work_order(), "context_mode": "recover"}, recovery_refs=[{"scheme": "repo", "locator": "handoff.yaml"}])
+    assert any(item["ref"]["locator"] == "handoff.yaml" and item["load_tier"] == "HOT" for item in recover["refs"])  # C18

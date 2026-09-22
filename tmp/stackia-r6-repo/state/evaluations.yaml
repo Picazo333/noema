@@ -1,0 +1,747 @@
+schema: stackia/evaluations@0.2
+status: canonical
+
+semantics:
+  absent_entry: "No durable evaluation has been recorded yet. Do not infer NOT_TRIED, DROP or NOT_DEPLOYED from absence."
+  usage:
+    allowed: [UNKNOWN, NOT_TRIED, USED]
+    meaning: "Whether the user has actually used the subject."
+  verification:
+    allowed: [UNVERIFIED, TESTED, VERIFIED]
+    meaning: "Evidence quality for a defined real workload. Deployment never upgrades this axis automatically."
+  decision:
+    allowed: [KEEP, TEST, PARK, DROP]
+    meaning: "Current StackIA disposition."
+  priority:
+    allowed: [CORE, NOW, NEXT, LATER, TRIGGER]
+    meaning: "Current action priority. May be omitted when not meaningful, for example DROP."
+  evidence:
+    rule: "USED, TESTED and VERIFIED should carry durable evidence or an explicit audit source. VERIFIED requires workload evidence."
+
+tool_evaluations:
+  - subject_id: chatgpt
+    usage: USED
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: CORE
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: codex
+    usage: USED
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: CORE
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: cursor
+    usage: USED
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: CORE
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: gemini
+    usage: USED
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: CORE
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: google-antigravity
+    usage: USED
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - docs/handoffs/2026-09-20-stackia-audit-baseline.md
+      - decisions/0002-september-october-stack-lock.md
+
+  - subject_id: jules
+    usage: USED
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+    notes: "Used in repository work; formal StackIA workload evidence is still required before VERIFIED/export."
+
+  - subject_id: google-ai-studio
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: notebooklm
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: google-flow
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: claude
+    usage: USED
+    verification: UNVERIFIED
+    decision: PARK
+    priority: TRIGGER
+    evidence: [decisions/0002-september-october-stack-lock.md]
+    notes: "Removed from the active paid stack because current token/productivity economics are not compelling."
+
+  - subject_id: claude-code
+    usage: USED
+    verification: UNVERIFIED
+    decision: PARK
+    priority: TRIGGER
+    evidence:
+      - docs/handoffs/2026-09-20-stackia-audit-baseline.md
+      - decisions/0002-september-october-stack-lock.md
+
+  - subject_id: grok
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: DROP
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: perplexity
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: DROP
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: gemini-cli
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: PARK
+    priority: LATER
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: hermes-agent
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: opencode
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: openhands
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: manus
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: openclaw
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: ollama
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NEXT
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: firecrawl
+    usage: USED
+    verification: VERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - docs/handoffs/2026-09-20-stackia-audit-baseline.md
+      - validation/verification-workloads.yaml#firecrawl-chatgpt-developer-search-v1
+      - state/verification-evidence.yaml
+    notes: "VERIFIED for the representative ChatGPT developer-search workload. This does not imply every Firecrawl integration/host deployment is verified."
+
+  - subject_id: figma
+    usage: USED
+    verification: TESTED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - decisions/0002-september-october-stack-lock.md
+      - validation/verification-workloads.yaml#figma-chatgpt-auth-readiness-v1
+      - state/verification-evidence.yaml
+    notes: "Authenticated plan/team visibility succeeded from ChatGPT. Design-file read/write remains pending, so Figma is TESTED rather than VERIFIED."
+
+  - subject_id: canva
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NEXT
+    evidence: [decisions/0002-september-october-stack-lock.md]
+    notes: "Free-first. Paid tier requires demonstrated value."
+
+  - subject_id: runway
+    usage: USED
+    verification: TESTED
+    decision: TEST
+    priority: NOW
+    evidence: [validation/media-factory-workloads.yaml#runway-chatgpt-capability-discovery-v1]
+    notes: "Connected free workspace verified for capability discovery; image generation available, video currently plan-gated."
+
+  - subject_id: elevenlabs
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [validation/media-factory-workloads.yaml#elevenlabs-voice-v1]
+
+  - subject_id: remotion
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence:
+      - validation/media-factory-workloads.yaml#instavar-remotion-planning-v1
+      - validation/media-factory-workloads.yaml#remotion-render-v1
+    notes: "Planning/scaffolding through the ChatGPT connector is verified; the Remotion render runtime itself is not."
+
+  - subject_id: ffmpeg
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [validation/media-factory-workloads.yaml#ffmpeg-assembly-v1]
+
+  - subject_id: buffer
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NEXT
+    evidence:
+      - validation/media-factory-workloads.yaml#buffer-publish-v1
+      - validation/media-factory-workloads.yaml#media-metrics-v1
+
+  - subject_id: davinci-resolve
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: TRIGGER
+    evidence: [state/media-factory.yaml]
+    notes: "Manual/pro finishing fallback; do not add complexity unless CapCut cannot meet the workload."
+
+  - subject_id: capcut
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: higgsfield
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+    notes: "Retained during media benchmark; exact deployment/integration state is separate."
+
+  - subject_id: obsidian
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+    notes: "Retained as part of the future Noema knowledge structure."
+
+  - subject_id: n8n
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: google-drive
+    usage: USED
+    verification: TESTED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - validation/verification-workloads.yaml#google-drive-chatgpt-search-v1
+      - state/verification-evidence.yaml
+    notes: "Read-only search path succeeded from ChatGPT; useful document retrieval remains pending."
+
+  - subject_id: v0
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0017-agency-immediate-incorporation-delta.md]
+    notes: "Approved FREE NOW for AGENCY-WEB; requires a real frontend acceleration workload before TESTED/VERIFIED."
+
+  - subject_id: attio
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0017-agency-immediate-incorporation-delta.md]
+    notes: "Approved FREE NOW for AGENCY-REVOPS; account/configuration and representative CRM automation remain unverified."
+
+  - subject_id: google-analytics-4
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0017-agency-immediate-incorporation-delta.md]
+    notes: "Approved FREE NOW for acquisition/conversion analytics; no property or production event instrumentation is inferred."
+
+  - subject_id: microsoft-clarity
+    usage: NOT_TRIED
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0017-agency-immediate-incorporation-delta.md]
+    notes: "Approved FREE NOW for behavior analytics; no site installation, recording or heatmap evidence is inferred."
+
+skill_evaluations:
+  - subject_id: superpowers
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: ponytail
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: skill-creator
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: mcp-builder
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: webapp-testing
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: impeccable
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: taste
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: frontend-design
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: react-best-practices
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: vercel-composition-patterns
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: playwright-skills
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: secure-coding
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: semgrep-code-security
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: semgrep-llm-security
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: planning-with-files
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: caveman
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: repomix-skill
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: web-design-guidelines
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: coderabbit-code-review
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: openai-docs
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: n8n-official
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: n8n-workflow-builder
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: n8n-debugging-executions
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: n8n-credential-security
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: n8n-agent-builder
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: remotion-best-practices
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: runway-skill
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: elevenlabs-tts
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: elevenlabs-stt
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: product-marketing
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: copywriting
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: analytics
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: seo-audit
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+mcp_evaluations:
+  - subject_id: github-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: playwright-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: chrome-devtools-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: context7-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: firecrawl-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: figma-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: google-developer-knowledge-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: supabase-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: vercel-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: n8n-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: serena-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: obsidian-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: 21st-dev-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: elevenlabs-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NOW
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+  - subject_id: motion-mcp
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: TRIGGER
+    evidence: [decisions/0002-september-october-stack-lock.md]
+
+plugin_connector_evaluations:
+  - subject_id: chatgpt-github
+    usage: USED
+    verification: VERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - docs/handoffs/2026-09-20-stackia-audit-baseline.md
+      - validation/verification-workloads.yaml#github-chatgpt-repo-ops-v1
+      - state/verification-evidence.yaml
+    notes: "VERIFIED through repeated private-repository read/write/branch/PR/merge/readback operations across StackIA Rounds 1-6."
+
+  - subject_id: chatgpt-google-drive
+    usage: USED
+    verification: TESTED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - docs/handoffs/2026-09-20-stackia-audit-baseline.md
+      - validation/verification-workloads.yaml#google-drive-chatgpt-search-v1
+      - state/verification-evidence.yaml
+    notes: "Search request succeeded; no matching StackIA file was returned, so useful retrieval is not yet VERIFIED."
+
+  - subject_id: chatgpt-figma
+    usage: USED
+    verification: TESTED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - docs/handoffs/2026-09-20-stackia-audit-baseline.md
+      - validation/verification-workloads.yaml#figma-chatgpt-auth-readiness-v1
+      - state/verification-evidence.yaml
+    notes: "Authentication and plan visibility succeeded. File/node read or write workload remains pending."
+
+  - subject_id: chatgpt-firecrawl
+    usage: USED
+    verification: VERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - docs/handoffs/2026-09-20-stackia-audit-baseline.md
+      - validation/verification-workloads.yaml#firecrawl-chatgpt-developer-search-v1
+      - state/verification-evidence.yaml
+    notes: "VERIFIED for developer-index research from the current ChatGPT host."
+
+  - subject_id: chatgpt-canva
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-mobbin
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-product-design
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+
+  - subject_id: chatgpt-runway
+    usage: USED
+    verification: TESTED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - docs/handoffs/2026-09-20-stackia-audit-baseline.md
+      - validation/media-factory-workloads.yaml#runway-chatgpt-capability-discovery-v1
+    notes: "Authenticated and capability-discovered. Image models are available; video is currently plan-gated. No generation workload has yet passed."
+
+  - subject_id: chatgpt-instavar-remotion
+    usage: USED
+    verification: VERIFIED
+    decision: KEEP
+    priority: NOW
+    evidence:
+      - docs/handoffs/2026-09-20-stackia-audit-baseline.md
+      - validation/media-factory-workloads.yaml#instavar-remotion-planning-v1
+    notes: "VERIFIED for account-free template discovery, storyboard planning and deterministic VideoSpec scaffolding; render/publish remain separate workloads."
+
+  - subject_id: chatgpt-higgsfield
+    usage: UNKNOWN
+    verification: UNVERIFIED
+    decision: TEST
+    priority: NEXT
+    evidence: [docs/handoffs/2026-09-20-stackia-audit-baseline.md]
+    notes: "Connection was unresolved; do not infer deployment."

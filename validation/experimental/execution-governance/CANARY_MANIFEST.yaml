@@ -1,0 +1,23 @@
+canaries:
+  - {id: C01, scenario: direct-read, expected: DIRECT_EXECUTION}
+  - {id: C02, scenario: reversible-write, expected: ALLOW_SCOPED}
+  - {id: C03, scenario: architecture-read, expected: DEEP}
+  - {id: C04, scenario: direct-vs-broad-tool, expected: SOFT_SUPPRESS}
+  - {id: C05, scenario: completed-work, expected: NO_ACTION}
+  - {id: C06, scenario: secret-trace, expected: DENY}
+  - {id: C07, scenario: canonical-mutation, expected: REQUIRE_HUMAN}
+  - {id: C08, scenario: foreign-mutation, expected: ROUTE_ELSEWHERE}
+  - {id: C09, scenario: resolver-receipt, expected: opaque-reference}
+  - {id: C10, scenario: resolver-not-required, expected: no-forced-call}
+  - {id: C11, scenario: no-verified-executor, expected: BLOCKED_NO_VERIFIED_EXECUTOR}
+  - {id: C12, scenario: model-candidates, expected: deterministic-filter}
+  - {id: C13, scenario: independent-audit, expected: AUDITED_SINGLE}
+  - {id: C14, scenario: shared-canon-parallel, expected: reject}
+  - {id: C15, scenario: stale-resume, expected: FAIL}
+  - {id: C16, scenario: harvest-scan, expected: read-only}
+  - {id: C17, scenario: patch-context, expected: HOT-required}
+  - {id: C18, scenario: recover-context, expected: HOT-recovery}
+  - {id: C19, scenario: duplicate-read, expected: DUPLICATE_READ_SUPPRESSED}
+  - {id: C20, scenario: conserve-pressure, expected: optional-suppressed}
+  - {id: C21, scenario: throttle-pressure, expected: no-busy-retry}
+  - {id: C22, scenario: blocked-platform, expected: no-circumvention}

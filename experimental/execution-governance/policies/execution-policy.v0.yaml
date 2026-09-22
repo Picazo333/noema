@@ -1,0 +1,5 @@
+policy_version: eg-policy-v0
+retry_cap: 1
+defaults:
+  topology: SINGLE
+  runtime_pressure_without_snapshot: UNKNOWN

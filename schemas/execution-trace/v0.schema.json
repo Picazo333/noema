@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:noema:schema:execution-trace:0", "type": "object",
+  "required": ["trace_id", "execution_id", "envelope_ref", "project_id", "started_at", "finished_at", "outcome", "actual", "metrics", "retries", "rework_cycles"],
+  "properties": {
+    "trace_id": {"type": "string", "pattern": "^trace-[a-z0-9-]+$"}, "execution_id": {"type": "string", "pattern": "^exec-[a-z0-9-]+$"}, "envelope_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"}, "project_id": {"$ref": "urn:noema:schema:common:1#/$defs/identifier"}, "started_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"}, "finished_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"}, "outcome": {"enum": ["SUCCESS", "PARTIAL", "BLOCKED", "FAILED", "ABORTED", "NO_ACTION"]},
+    "actual": {"type": "object", "required": ["role_bindings", "executor", "model", "context_refs", "tool_events", "eval_refs", "artifact_refs", "permission_events"], "properties": {"role_bindings": {"type": "array", "items": {"type": "object"}}, "executor": {"type": ["string", "null"]}, "model": {"type": ["string", "null"]}, "context_refs": {"type": "array", "items": {"type": "object"}}, "tool_events": {"type": "array", "items": {"type": "object"}}, "eval_refs": {"type": "array", "items": {"type": "object"}}, "artifact_refs": {"type": "array", "items": {"type": "object"}}, "permission_events": {"type": "array", "items": {"type": "object"}}}, "additionalProperties": false},
+    "metrics": {"type": "object", "additionalProperties": {"type": "object", "required": ["status", "value"], "properties": {"status": {"enum": ["OBSERVED", "PROVIDED", "ESTIMATED_LABELED", "UNAVAILABLE"]}, "value": {}}, "additionalProperties": false}}, "retries": {"type": "integer", "minimum": 0}, "rework_cycles": {"type": "integer", "minimum": 0}
+  }, "patternProperties": {"(?i)(token|password|secret|credential)": false}, "additionalProperties": false
+}

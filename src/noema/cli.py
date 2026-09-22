@@ -194,6 +194,68 @@ def build_parser() -> argparse.ArgumentParser:
     command = harvest_sub.add_parser("validate")
     command.add_argument("path")
     command.set_defaults(func=cmd_harvest_validate)
+
+    from .eg import cli as eg_cli
+
+    eg = sub.add_parser("eg", help="Experimental execution-governance commands")
+    eg_sub = eg.add_subparsers(dest="eg_command", required=True)
+
+    command = eg_sub.add_parser("doctor")
+    command.add_argument("root", nargs="?", default=".")
+    command.add_argument("--profile", default="eg.repo-agent.v0")
+    command.add_argument("--host-capabilities")
+    command.add_argument("--runtime-pressure")
+    command.add_argument("--json", action="store_true")
+    command.set_defaults(func=eg_cli.doctor)
+
+    command = eg_sub.add_parser("plan")
+    command.add_argument("work_order")
+    command.add_argument("--root", default=".")
+    command.add_argument("--profile", default="eg.repo-agent.v0")
+    command.add_argument("--host-capabilities")
+    command.add_argument("--candidate-snapshot")
+    command.add_argument("--runtime-pressure")
+    command.add_argument("--resolver-receipt", action="append", default=[])
+    command.add_argument("--out")
+    command.add_argument("--json", action="store_true")
+    command.set_defaults(func=eg_cli.plan)
+
+    command = eg_sub.add_parser("explain")
+    command.add_argument("envelope")
+    command.add_argument("--json", action="store_true")
+    command.set_defaults(func=eg_cli.explain)
+
+    command = eg_sub.add_parser("validate")
+    command.add_argument("path")
+    command.add_argument("--kind", choices=["execution-envelope", "execution-trace"])
+    command.set_defaults(func=eg_cli.validate)
+
+    command = eg_sub.add_parser("record")
+    command.add_argument("envelope")
+    command.add_argument("actual")
+    command.add_argument("--out")
+    command.add_argument("--json", action="store_true")
+    command.set_defaults(func=eg_cli.record)
+
+    command = eg_sub.add_parser("compare")
+    command.add_argument("envelope")
+    command.add_argument("trace")
+    command.add_argument("--json", action="store_true")
+    command.set_defaults(func=eg_cli.compare)
+
+    command = eg_sub.add_parser("resume-check")
+    command.add_argument("envelope")
+    command.add_argument("handoff")
+    command.add_argument("--root", default=".")
+    command.add_argument("--json", action="store_true")
+    command.set_defaults(func=eg_cli.resume)
+
+    command = eg_sub.add_parser("scan-harvest")
+    command.add_argument("harvest")
+    command.add_argument("manifests", nargs="+")
+    command.add_argument("--out")
+    command.add_argument("--json", action="store_true")
+    command.set_defaults(func=eg_cli.harvest_scan)
     return parser
 
 

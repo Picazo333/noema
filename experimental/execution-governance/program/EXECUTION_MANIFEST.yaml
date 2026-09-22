@@ -1,0 +1,15 @@
+program_id: noema-vnext-execution-governance-v0
+status: DOGFOOD_READY_AWAITING_JULES_AUDIT
+baseline:
+  reference_sha: 0e49538c24e51af98a3f3c12706afdbe2e8d812d
+  drift: D0
+contracts: [execution-envelope/v0, execution-trace/v0]
+gates: [G0, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12]
+forbidden:
+  - second-context-router
+  - second-executor-router
+  - capability-resolution-schema
+  - tool-model-catalog
+  - agent-runtime
+  - cross-repo-write
+  - persisted-runtime-quotas

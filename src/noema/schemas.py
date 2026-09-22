@@ -17,6 +17,8 @@ SCHEMA_FILES = {
     "decision": "schemas/decision/v1.schema.json",
     "harvest-candidate": "schemas/harvest-candidate/v1.schema.json",
     "ecosystem-index": "schemas/ecosystem-index/v1.schema.json",
+    "execution-envelope": "schemas/execution-envelope/v0.schema.json",
+    "execution-trace": "schemas/execution-trace/v0.schema.json",
 }
 
 

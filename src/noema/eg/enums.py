@@ -1,0 +1,80 @@
+"""Execution-governance vocabulary; behaviour belongs in the sibling modules."""
+
+from enum import StrEnum
+
+
+class Disposition(StrEnum):
+    DIRECT_EXECUTION = "DIRECT_EXECUTION"
+    ROUTED = "ROUTED"
+    NO_ACTION = "NO_ACTION"
+    DEFER = "DEFER"
+    ROUTE_ELSEWHERE = "ROUTE_ELSEWHERE"
+    BLOCKED = "BLOCKED"
+
+
+class Deliberation(StrEnum):
+    MINIMAL = "MINIMAL"
+    STANDARD = "STANDARD"
+    DEEP = "DEEP"
+
+
+class ActionEffect(StrEnum):
+    REASON = "REASON"
+    READ = "READ"
+    WRITE_REVERSIBLE = "WRITE_REVERSIBLE"
+    WRITE_DESTRUCTIVE = "WRITE_DESTRUCTIVE"
+    CANONICAL_MUTATION = "CANONICAL_MUTATION"
+    EXTERNAL_COMMITMENT = "EXTERNAL_COMMITMENT"
+    PUBLICATION = "PUBLICATION"
+
+
+class DataSensitivity(StrEnum):
+    PUBLIC = "PUBLIC"
+    INTERNAL = "INTERNAL"
+    CONFIDENTIAL = "CONFIDENTIAL"
+    SECRET = "SECRET"
+    UNKNOWN = "UNKNOWN"
+
+
+class AuthorityScope(StrEnum):
+    LOCAL_PROJECT = "LOCAL_PROJECT"
+    DECLARED_RELATION = "DECLARED_RELATION"
+    FOREIGN = "FOREIGN"
+    UNKNOWN = "UNKNOWN"
+
+
+class ControlDecision(StrEnum):
+    ALLOW = "ALLOW"
+    ALLOW_SCOPED = "ALLOW_SCOPED"
+    REQUIRE_HUMAN = "REQUIRE_HUMAN"
+    DENY = "DENY"
+    DEFER = "DEFER"
+    ROUTE_ELSEWHERE = "ROUTE_ELSEWHERE"
+
+
+class ToolDecision(StrEnum):
+    CALL = "CALL"
+    SOFT_SUPPRESS = "SOFT_SUPPRESS"
+    HARD_DENY = "HARD_DENY"
+    DEFER = "DEFER"
+
+
+class TopologyMode(StrEnum):
+    SINGLE = "SINGLE"
+    AUDITED_SINGLE = "AUDITED_SINGLE"
+    PARALLEL_ISOLATED = "PARALLEL_ISOLATED"
+
+
+class MetricStatus(StrEnum):
+    OBSERVED = "OBSERVED"
+    PROVIDED = "PROVIDED"
+    ESTIMATED_LABELED = "ESTIMATED_LABELED"
+    UNAVAILABLE = "UNAVAILABLE"
+
+
+class RuntimePosture(StrEnum):
+    NORMAL = "NORMAL"
+    CONSERVE = "CONSERVE"
+    THROTTLED = "THROTTLED"
+    BLOCKED = "BLOCKED"
+    UNKNOWN = "UNKNOWN"

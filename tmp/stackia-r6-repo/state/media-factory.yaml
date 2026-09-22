@@ -1,0 +1,310 @@
+schema: stackia/media-factory@0.1
+status: canonical
+name: Media Factory
+month_basis: "2026-10"
+
+purpose: "Canonical current workflow for turning researched ideas into publishable media while reusing existing entitlements before adding paid tools."
+
+authority:
+  owner: stack-ia
+  orchestration_runtime: n8n
+  governance_protocol: noema
+  human_authority: required
+  rules:
+    - "Noema defines contracts/governance; it is not the media orchestration runtime."
+    - "n8n orchestrates repeatable API/file/publishing steps after approved creative gates."
+    - "A stage may use more than one tool, but cost is counted only through subscription state."
+    - "Fallback choice follows existing-entitlement/free-first principles before paid expansion."
+    - "Publication is not fully autonomous until a separate approval decision explicitly permits it."
+
+human_gates:
+  - id: MF-G1
+    after_stage: research
+    decision: APPROVE_BRIEF_AND_CLAIMS
+  - id: MF-G2
+    after_stage: script
+    decision: APPROVE_SCRIPT_AND_NARRATION
+  - id: MF-G3
+    after_stage: visual_generation
+    decision: APPROVE_VISUAL_DIRECTION_AND_ASSETS
+  - id: MF-G4
+    after_stage: edit_finish
+    decision: APPROVE_FINAL_MASTER
+  - id: MF-G5
+    before_stage: publish
+    decision: APPROVE_PUBLICATION
+  - id: MF-G6
+    after_stage: metrics
+    decision: REVIEW_PERFORMANCE_AND_FEED_LEARNINGS_BACK
+
+stages:
+  - id: research
+    order: 1
+    objective: "Ground topic, claims, audience and references."
+    primary:
+      - subject_id: chatgpt
+        role: synthesis_and_direction
+        cost_posture: CURRENT_PAID_CORE
+      - subject_id: firecrawl
+        integration_id: chatgpt-firecrawl
+        role: web_and_developer_research
+        cost_posture: CURRENT_OR_FREE_TIER
+        verification: VERIFIED
+    fallbacks:
+      - subject_id: gemini
+        capability_id: gemini-deep-research
+        cost_posture: INCLUDED_GOOGLE_AI_PRO
+      - subject_id: notebooklm
+        cost_posture: INCLUDED_GOOGLE_AI_PRO
+    skills:
+      - product-marketing
+      - analytics
+    exit_criteria:
+      - "claims have source/evidence path where material"
+      - "audience and communication job are explicit"
+      - "MF-G1 approved"
+
+  - id: script
+    order: 2
+    objective: "Produce concise script, beat structure, CTA and narration text."
+    primary:
+      - subject_id: chatgpt
+        cost_posture: CURRENT_PAID_CORE
+    fallbacks:
+      - subject_id: gemini
+        cost_posture: INCLUDED_GOOGLE_AI_PRO
+    skills:
+      - copywriting
+      - product-marketing
+    integrations:
+      - chatgpt-instavar-remotion
+    exit_criteria:
+      - "script matches approved claims"
+      - "scene/beat structure exists"
+      - "MF-G2 approved"
+
+  - id: voice
+    order: 3
+    objective: "Create narration/audio when the format requires it."
+    primary:
+      - subject_id: elevenlabs
+        cost_posture: FREE_FIRST_THEN_TRIGGER
+        state: NEEDS_VERIFICATION
+    fallbacks:
+      - subject_id: remotion
+        integration_id: chatgpt-instavar-remotion
+        role: "Instavar free on-device or self-recorded narration path"
+        cost_posture: FREE
+        verification: TESTED_CAPABILITY_DISCOVERY
+    skills:
+      - elevenlabs-tts
+      - elevenlabs-stt
+    mcps:
+      - elevenlabs-mcp
+    exit_criteria:
+      - "voice quality acceptable for channel"
+      - "timing manifest or final audio asset exists"
+      - "no paid voice escalation unless free-first path fails materially"
+
+  - id: visual_generation
+    order: 4
+    objective: "Generate/select images and video assets for the approved storyboard."
+    primary:
+      - subject_id: higgsfield
+        media: [image, video]
+        cost_posture: CURRENT_PAID
+        state: BENCHMARK_REQUIRED
+      - subject_id: google-flow
+        media: [image, video]
+        cost_posture: INCLUDED_GOOGLE_AI_PRO
+        state: TEST_REQUIRED
+    fallbacks:
+      - subject_id: runway
+        integration_id: chatgpt-runway
+        media: [image]
+        cost_posture: CURRENT_FREE_CONNECTED
+        verification: TESTED
+        notes: "Connected workspace currently exposes image generation but no video models."
+      - subject_id: runway
+        integration_id: chatgpt-runway
+        media: [video]
+        cost_posture: TRIGGER_PAID
+        state: PLAN_FEATURE_BLOCKED
+        notes: "Video generation is gated on the currently connected Runway free workspace."
+    skills:
+      - runway-skill
+    exit_criteria:
+      - "assets match approved visual direction"
+      - "provenance/asset source is known"
+      - "MF-G3 approved"
+
+  - id: composition
+    order: 5
+    objective: "Assemble deterministic scenes, captions, timing, overlays and programmatic motion."
+    primary:
+      - subject_id: remotion
+        cost_posture: FREE_OSS
+        state: NEEDS_RENDER_VERIFICATION
+      - subject_id: ffmpeg
+        cost_posture: FREE_OSS
+        state: NEEDS_VERIFICATION
+    integrations:
+      - chatgpt-instavar-remotion
+    skills:
+      - remotion-best-practices
+    fallbacks:
+      - subject_id: capcut
+        role: manual_composition
+        cost_posture: CURRENT_OR_PLANNED_PAID
+    exit_criteria:
+      - "render spec/project is reproducible"
+      - "audio/video timing is valid"
+      - "output meets target aspect and codec"
+
+  - id: edit_finish
+    order: 6
+    objective: "Human-facing editing, captions, cleanup, color/audio polish and final master."
+    primary:
+      - subject_id: capcut
+        cost_posture: CURRENT_OR_PLANNED_PAID
+        state: NOW
+    fallbacks:
+      - subject_id: davinci-resolve
+        cost_posture: FREE_AVAILABLE
+        state: TRIGGER
+    exit_criteria:
+      - "final master passes visual/audio QA"
+      - "channel-safe framing/captions"
+      - "MF-G4 approved"
+
+  - id: orchestration
+    order: 7
+    objective: "Move approved assets/specs through repeatable API/file jobs and publication preparation."
+    primary:
+      - subject_id: n8n
+        cost_posture: EXISTING_OR_FREE_FIRST
+        state: NEEDS_WORKFLOW_VERIFICATION
+    skills:
+      - n8n-official
+      - n8n-workflow-builder
+      - n8n-debugging-executions
+      - n8n-credential-security
+      - n8n-agent-builder
+    mcps:
+      - n8n-mcp
+    manual_fallback: true
+    forbidden:
+      - "Noema as workflow runtime"
+      - "new custom orchestrator without measured n8n limitation"
+    exit_criteria:
+      - "workflow can resume/retry safely"
+      - "credentials are external to repository"
+      - "human publication gate remains intact"
+
+  - id: publish
+    order: 8
+    objective: "Schedule or publish approved media to target channels."
+    primary:
+      - subject_id: buffer
+        cost_posture: TEST_FREE_OR_CURRENT_BEFORE_PAID
+        state: NOT_YET_VERIFIED
+    fallbacks:
+      - role: manual_native_platform_publish
+        cost_posture: FREE
+    entry_criteria:
+      - "MF-G5 approved"
+    exit_criteria:
+      - "published/scheduled URL or platform receipt exists"
+      - "publication metadata is retained"
+
+  - id: metrics
+    order: 9
+    objective: "Capture performance signals and feed them into the next research/creative cycle."
+    primary:
+      - subject_id: buffer
+        role: social_performance_when_supported
+        cost_posture: TEST_FREE_OR_CURRENT_BEFORE_PAID
+    fallbacks:
+      - role: native_platform_metrics
+        cost_posture: FREE
+    skills:
+      - analytics
+    exit_criteria:
+      - "minimum performance metrics captured"
+      - "creative/format learnings recorded"
+      - "MF-G6 completed"
+
+routing_rules:
+  visual_video:
+    current_order:
+      - higgsfield
+      - google-flow
+      - runway
+    runway_condition: "Runway video remains unavailable until a plan feature/capacity trigger plus economic gate justifies paid activation."
+  visual_image:
+    current_order:
+      - higgsfield
+      - runway
+      - google-flow
+  voice:
+    current_order:
+      - elevenlabs
+      - instavar_on_device_or_self_recorded
+  composition:
+    current_order:
+      - remotion
+      - ffmpeg
+      - capcut_manual
+  publish:
+    current_order:
+      - buffer_after_verification
+      - manual_native_platform_publish
+
+cost_posture:
+  already_paid_or_planned:
+    - chatgpt-plus
+    - google-ai-pro
+    - higgsfield-current
+    - capcut-pro
+  included:
+    - gemini-deep-research
+    - google-flow
+    - notebooklm
+  free_or_oss:
+    - runway-free
+    - remotion
+    - ffmpeg
+    - "Instavar account-free planning/scaffolding"
+    - "Instavar on-device/self-recorded narration"
+    - "manual native-platform publishing"
+  trigger_based_paid:
+    - "Runway paid plan for video"
+    - "ElevenLabs paid tier after free-first exhaustion/quality need"
+    - "Buffer paid tier if free/current capability is insufficient"
+    - "additional Higgsfield capacity only after capacity/economic gate"
+
+verification_status:
+  verified:
+    - chatgpt-firecrawl
+    - chatgpt-instavar-remotion
+  tested:
+    - chatgpt-runway
+  pending:
+    - google-flow
+    - higgsfield
+    - elevenlabs
+    - remotion
+    - ffmpeg
+    - capcut
+    - n8n
+    - buffer
+
+end_to_end_definition_of_done:
+  - "brief/claims approved"
+  - "script/narration approved"
+  - "visual assets approved"
+  - "reproducible composition/render or documented manual edit"
+  - "final master approved"
+  - "publication approved and evidenced"
+  - "metrics captured after publication"
+  - "cost/quality learnings feed the next cycle"

@@ -1,0 +1,803 @@
+schema: stackia/tools@0.2
+status: canonical
+identity_rules:
+  plans_are_tools: false
+  capabilities_are_peer_tools_by_default: false
+  surfaces_are_peer_tools_by_default: false
+  identity_test:
+    - distinct_capability_boundary
+    - distinct_configuration_or_state
+    - distinct_verification_workload
+    - distinct_runtime_or_release_lifecycle
+functional_categories:
+  - CORE_AI
+  - CODING_AGENT
+  - AGENTIC_ENVIRONMENT
+  - RESEARCH_KNOWLEDGE
+  - MEMORY_CONTEXT
+  - DEVELOPER_QA
+  - DESIGN_VISUAL
+  - MEDIA_FACTORY
+  - AUTOMATION_ORCHESTRATION
+  - INFRA_BACKEND
+  - LOCAL_INFERENCE
+  - SECURITY_UTILITY
+  - LEARNING
+  - DEV_UTILITY
+
+tools:
+  - id: chatgpt
+    name: ChatGPT
+    kind: TOOL
+    category: CORE_AI
+    provider: OpenAI
+    description: "General AI workspace for reasoning, research, multimodal work and connected apps."
+    capabilities:
+      - id: chatgpt-work
+        name: Work
+        kind: CAPABILITY
+      - id: chatgpt-projects
+        name: Projects
+        kind: CAPABILITY
+    surfaces: [WEB, DESKTOP, MOBILE]
+
+  - id: codex
+    name: Codex
+    kind: TOOL
+    category: CODING_AGENT
+    provider: OpenAI
+    description: "OpenAI coding agent spanning cloud tasks, repository work, review and local/CLI workflows."
+    surfaces: [WEB, CLOUD_AGENT, CLI, IDE_EXTENSION]
+
+  - id: cursor
+    name: Cursor
+    kind: TOOL
+    category: CODING_AGENT
+    provider: Cursor
+    description: "Primary agentic engineering environment."
+    capabilities:
+      - id: cursor-agent
+        name: Cursor Agent
+        kind: CAPABILITY
+      - id: cursor-cloud-agents
+        name: Cloud Agents
+        kind: CAPABILITY
+      - id: cursor-projects
+        name: Projects
+        kind: CAPABILITY
+      - id: grok-bot-cursor
+        name: Grok Bot via Cursor
+        kind: CAPABILITY
+    surfaces: [DESKTOP, IDE, CLI, CLOUD_AGENT]
+
+  - id: gemini
+    name: Gemini
+    kind: TOOL
+    category: CORE_AI
+    provider: Google
+    description: "Google general AI workspace and primary entry point to the Google AI ecosystem."
+    capabilities:
+      - id: gemini-deep-research
+        name: Deep Research
+        kind: CAPABILITY
+      - id: gemini-spark
+        name: Spark
+        kind: CAPABILITY
+      - id: gemini-gmail
+        name: Gemini in Gmail
+        kind: CAPABILITY
+      - id: gemini-docs
+        name: Gemini in Docs
+        kind: CAPABILITY
+      - id: gemini-sheets
+        name: Gemini in Sheets
+        kind: CAPABILITY
+    surfaces: [WEB, MOBILE]
+
+  - id: gemini-cli
+    name: Gemini CLI
+    kind: TOOL
+    category: CODING_AGENT
+    provider: Google
+    description: "Distinct terminal/headless Gemini agent runtime retained as an auditable PARK identity."
+    surfaces: [CLI]
+
+  - id: google-antigravity
+    name: Google Antigravity
+    kind: TOOL
+    category: AGENTIC_ENVIRONMENT
+    provider: Google
+    description: "Google agent-first engineering environment with multi-agent workflows."
+    surfaces: [DESKTOP, IDE, CLI]
+
+  - id: jules
+    name: Jules
+    kind: TOOL
+    category: CODING_AGENT
+    provider: Google
+    description: "Asynchronous GitHub worker that plans, edits, tests and proposes repository changes."
+    surfaces: [WEB, CLOUD_AGENT]
+
+  - id: google-ai-studio
+    name: Google AI Studio
+    kind: TOOL
+    category: DEV_UTILITY
+    provider: Google
+    description: "Gemini model and API prototyping surface."
+    surfaces: [WEB, API]
+
+  - id: notebooklm
+    name: NotebookLM
+    kind: TOOL
+    category: RESEARCH_KNOWLEDGE
+    provider: Google
+    description: "Source-grounded research and synthesis over bounded corpora."
+    surfaces: [WEB, MOBILE]
+
+  - id: google-flow
+    name: Google Flow
+    kind: TOOL
+    category: MEDIA_FACTORY
+    provider: Google
+    description: "Google creative studio for generative image/video workflows."
+    surfaces: [WEB]
+
+  - id: claude
+    name: Claude
+    kind: TOOL
+    category: CORE_AI
+    provider: Anthropic
+    description: "Anthropic general AI workspace."
+    surfaces: [WEB, DESKTOP, MOBILE]
+
+  - id: claude-code
+    name: Claude Code
+    kind: TOOL
+    category: CODING_AGENT
+    provider: Anthropic
+    description: "Anthropic agentic coding harness."
+    surfaces: [CLI, IDE_EXTENSION]
+
+  - id: deepseek
+    name: DeepSeek
+    kind: TOOL
+    category: CORE_AI
+    provider: DeepSeek
+    description: "General/reasoning AI and API option for alternative or lower-cost model workloads."
+    surfaces: [WEB, API]
+
+  - id: grok
+    name: Grok
+    kind: TOOL
+    category: CORE_AI
+    provider: xAI
+    description: "xAI general AI product retained in the catalog so DROP history can be represented without treating SuperGrok as a separate tool."
+    surfaces: [WEB, MOBILE, API]
+
+  - id: perplexity
+    name: Perplexity
+    kind: TOOL
+    category: RESEARCH_KNOWLEDGE
+    provider: Perplexity
+    description: "Search-with-answers product retained for audited DROP history."
+    surfaces: [WEB, MOBILE, API]
+
+  - id: hermes-agent
+    name: Hermes Agent
+    kind: TOOL
+    category: AGENTIC_ENVIRONMENT
+    provider: Nous Research
+    description: "Provider-agnostic persistent agent runtime with memory, Skills, MCP, subagents and scheduling."
+    surfaces: [CLI, LOCAL_RUNTIME]
+
+  - id: manus
+    name: Manus
+    kind: TOOL
+    category: AGENTIC_ENVIRONMENT
+    provider: Manus
+    description: "General cloud agent for multi-app research, artifacts and operational workflows."
+    surfaces: [WEB, CLOUD_AGENT]
+
+  - id: openhands
+    name: OpenHands
+    kind: TOOL
+    category: AGENTIC_ENVIRONMENT
+    provider: OpenHands
+    description: "Open coding-agent environment/control plane for reproducible repository tasks."
+    surfaces: [WEB, LOCAL_RUNTIME, CLOUD_AGENT]
+
+  - id: openclaw
+    name: OpenClaw
+    kind: TOOL
+    category: AGENTIC_ENVIRONMENT
+    provider: OpenClaw
+    description: "Persistent agent runtime/gateway capable of hosting or dispatching external coding harnesses."
+    surfaces: [LOCAL_RUNTIME, CLI]
+
+  - id: opencode
+    name: OpenCode
+    kind: TOOL
+    category: CODING_AGENT
+    provider: OpenCode
+    description: "Open provider-agnostic coding agent and harness."
+    surfaces: [CLI, DESKTOP, IDE]
+
+  - id: ollama
+    name: Ollama
+    kind: TOOL
+    category: LOCAL_INFERENCE
+    provider: Ollama
+    description: "Local and optional cloud model serving/inference runtime."
+    surfaces: [LOCAL_RUNTIME, CLI, API]
+
+  - id: firecrawl
+    name: Firecrawl
+    kind: SERVICE
+    category: RESEARCH_KNOWLEDGE
+    provider: Firecrawl
+    description: "Search, scrape and crawl service for structured web research."
+    surfaces: [WEB, API]
+
+  - id: obsidian
+    name: Obsidian
+    kind: TOOL
+    category: RESEARCH_KNOWLEDGE
+    provider: Obsidian
+    description: "Local Markdown knowledge base intended to participate in the wider Noema knowledge structure."
+    surfaces: [DESKTOP, MOBILE, CLI]
+
+  - id: repomix
+    name: Repomix
+    kind: TOOL
+    category: MEMORY_CONTEXT
+    provider: Repomix
+    description: "Repository packaging and compression for AI-friendly code context."
+    surfaces: [CLI]
+
+  - id: context7
+    name: Context7
+    kind: SERVICE
+    category: RESEARCH_KNOWLEDGE
+    provider: Upstash
+    description: "Version-aware technical documentation service for agents."
+    surfaces: [API]
+
+  - id: serena
+    name: Serena
+    kind: TOOL
+    category: MEMORY_CONTEXT
+    provider: Community
+    description: "Semantic symbol-level code navigation/editing capability."
+    surfaces: [LOCAL_RUNTIME]
+
+  - id: claude-mem
+    name: Claude-Mem
+    kind: TOOL
+    category: MEMORY_CONTEXT
+    provider: Community
+    description: "Persistent/compressed context layer for Claude Code."
+    surfaces: [LOCAL_RUNTIME]
+
+  - id: beads
+    name: Beads
+    kind: TOOL
+    category: MEMORY_CONTEXT
+    provider: Community
+    description: "Persistent issue/task dependency graph for agents."
+    surfaces: [LOCAL_RUNTIME, CLI]
+
+  - id: codebasegraph
+    name: CodebaseGraph
+    kind: TOOL
+    category: MEMORY_CONTEXT
+    provider: Community
+    description: "Code dependency/change-impact graph capability for complex repositories."
+    surfaces: [CLI, LOCAL_RUNTIME]
+
+  - id: coursera
+    name: Coursera
+    kind: SERVICE
+    category: LEARNING
+    provider: Coursera
+    description: "Structured learning and professional course platform."
+    surfaces: [WEB, MOBILE]
+
+  - id: github
+    name: GitHub
+    kind: SERVICE
+    category: DEV_UTILITY
+    provider: GitHub
+    description: "Repository, pull request, issue, Actions and package source of truth."
+    surfaces: [WEB, API, CLI]
+
+  - id: git
+    name: Git
+    kind: TOOL
+    category: DEV_UTILITY
+    provider: Git
+    description: "Distributed version control foundation."
+    surfaces: [CLI]
+
+  - id: vscode
+    name: Visual Studio Code
+    kind: TOOL
+    category: DEV_UTILITY
+    provider: Microsoft
+    description: "General-purpose code editor and fallback engineering surface."
+    surfaces: [DESKTOP, IDE]
+
+  - id: github-copilot
+    name: GitHub Copilot
+    kind: TOOL
+    category: CODING_AGENT
+    provider: GitHub
+    description: "Code completion/chat/agent tooling available through existing entitlement."
+    surfaces: [IDE_EXTENSION, WEB]
+
+  - id: node
+    name: Node.js
+    kind: TOOL
+    category: DEV_UTILITY
+    provider: OpenJS
+    description: "JavaScript runtime used across the engineering stack."
+    surfaces: [CLI, LOCAL_RUNTIME]
+
+  - id: ripgrep
+    name: ripgrep
+    kind: TOOL
+    category: DEV_UTILITY
+    provider: Community
+    description: "Fast repository text search."
+    surfaces: [CLI]
+
+  - id: fd
+    name: fd
+    kind: TOOL
+    category: DEV_UTILITY
+    provider: Community
+    description: "Fast filesystem search."
+    surfaces: [CLI]
+
+  - id: jq
+    name: jq
+    kind: TOOL
+    category: DEV_UTILITY
+    provider: Community
+    description: "Command-line JSON processing."
+    surfaces: [CLI]
+
+  - id: uv
+    name: uv
+    kind: TOOL
+    category: DEV_UTILITY
+    provider: Astral
+    description: "Python environment/package workflow utility."
+    surfaces: [CLI]
+
+  - id: playwright
+    name: Playwright
+    kind: LIBRARY
+    category: DEVELOPER_QA
+    provider: Microsoft
+    description: "Browser automation and end-to-end testing."
+    surfaces: [CLI, LIBRARY]
+
+  - id: chrome-devtools
+    name: Chrome DevTools
+    kind: TOOL
+    category: DEVELOPER_QA
+    provider: Google
+    description: "Browser debugging, network and performance instrumentation."
+    surfaces: [DESKTOP]
+
+  - id: agent-browser
+    name: Agent Browser
+    kind: TOOL
+    category: DEVELOPER_QA
+    provider: Community
+    description: "Persistent browser automation environment for agent workflows."
+    surfaces: [CLI, LOCAL_RUNTIME]
+
+  - id: posthog
+    name: PostHog
+    kind: SERVICE
+    category: DEVELOPER_QA
+    provider: PostHog
+    description: "Product analytics and instrumentation platform."
+    surfaces: [WEB, API]
+
+  - id: google-analytics-4
+    name: Google Analytics 4
+    kind: SERVICE
+    category: DEVELOPER_QA
+    provider: Google
+    description: "Web and app acquisition, conversion and event analytics platform."
+    surfaces: [WEB, API]
+
+  - id: microsoft-clarity
+    name: Microsoft Clarity
+    kind: SERVICE
+    category: DEVELOPER_QA
+    provider: Microsoft
+    description: "Behavior analytics platform for session recordings, heatmaps and interaction diagnostics."
+    surfaces: [WEB]
+
+  - id: sentry
+    name: Sentry
+    kind: SERVICE
+    category: DEVELOPER_QA
+    provider: Sentry
+    description: "Application errors, traces, replays and AI-assisted root-cause analysis."
+    capabilities:
+      - id: seer
+        name: Seer
+        kind: CAPABILITY
+    surfaces: [WEB, API]
+
+  - id: ccusage
+    name: ccusage
+    kind: TOOL
+    category: DEVELOPER_QA
+    provider: Community
+    description: "Local token and cost inspection for compatible coding-agent logs."
+    surfaces: [CLI]
+
+  - id: skills-sh
+    name: skills.sh
+    kind: SERVICE
+    category: DEV_UTILITY
+    provider: Vercel
+    description: "Agent Skill discovery/distribution registry and CLI ecosystem."
+    surfaces: [WEB, CLI]
+
+  - id: n8n
+    name: n8n
+    kind: TOOL
+    category: AUTOMATION_ORCHESTRATION
+    provider: n8n
+    description: "Workflow automation, webhooks, APIs and agent orchestration."
+    surfaces: [WEB, LOCAL_RUNTIME, API]
+
+  - id: attio
+    name: Attio
+    kind: SERVICE
+    category: AUTOMATION_ORCHESTRATION
+    provider: Attio
+    description: "CRM and RevOps workspace for lead, contact, pipeline and workflow operations."
+    surfaces: [WEB, API]
+
+  - id: langflow
+    name: Langflow
+    kind: TOOL
+    category: AUTOMATION_ORCHESTRATION
+    provider: Langflow
+    description: "Visual agent/workflow/MCP composition environment."
+    surfaces: [WEB, LOCAL_RUNTIME]
+
+  - id: trigger-dev
+    name: Trigger.dev
+    kind: SERVICE
+    category: AUTOMATION_ORCHESTRATION
+    provider: Trigger.dev
+    description: "Durable code-first background jobs and scheduled execution candidate."
+    surfaces: [WEB, API, SDK]
+
+  - id: notion
+    name: Notion
+    kind: SERVICE
+    category: RESEARCH_KNOWLEDGE
+    provider: Notion
+    description: "Workspace/database platform retained as a conditional integration target."
+    surfaces: [WEB, DESKTOP, MOBILE, API]
+
+  - id: v0
+    name: v0
+    kind: TOOL
+    category: DESIGN_VISUAL
+    provider: Vercel
+    description: "AI frontend acceleration surface for generating editable web application UI and code."
+    surfaces: [WEB]
+
+  - id: figma
+    name: Figma
+    kind: TOOL
+    category: DESIGN_VISUAL
+    provider: Figma
+    description: "Product/UI design source of truth with Dev Mode and MCP integration."
+    capabilities:
+      - id: figma-dev-mode
+        name: Dev Mode
+        kind: CAPABILITY
+    surfaces: [WEB, DESKTOP]
+
+  - id: canva
+    name: Canva
+    kind: TOOL
+    category: DESIGN_VISUAL
+    provider: Canva
+    description: "Brand, collateral, presentations and social-design platform."
+    surfaces: [WEB, DESKTOP, MOBILE]
+
+  - id: mobbin
+    name: Mobbin
+    kind: SERVICE
+    category: DESIGN_VISUAL
+    provider: Mobbin
+    description: "UI/UX product-design reference library."
+    surfaces: [WEB]
+
+  - id: shadcn-ui
+    name: shadcn/ui
+    kind: LIBRARY
+    category: DESIGN_VISUAL
+    provider: shadcn
+    description: "Installable UI component primitives and registries."
+    surfaces: [LIBRARY, CLI]
+
+  - id: 21st-dev
+    name: 21st.dev
+    kind: SERVICE
+    category: DESIGN_VISUAL
+    provider: 21st.dev
+    description: "Search/install workflow for production UI components."
+    surfaces: [WEB, CLI]
+
+  - id: blender
+    name: Blender
+    kind: TOOL
+    category: DESIGN_VISUAL
+    provider: Blender Foundation
+    description: "3D DCC for modeling, shading, rendering and procedural workflows."
+    surfaces: [DESKTOP, CLI]
+
+  - id: gsap
+    name: GSAP
+    kind: LIBRARY
+    category: DESIGN_VISUAL
+    provider: GreenSock
+    description: "Advanced web animation and timeline library."
+    surfaces: [LIBRARY]
+
+  - id: motion
+    name: Motion
+    kind: LIBRARY
+    category: DESIGN_VISUAL
+    provider: Motion
+    description: "Production animation library for React/web interfaces."
+    surfaces: [LIBRARY]
+
+  - id: threejs
+    name: Three.js
+    kind: LIBRARY
+    category: DESIGN_VISUAL
+    provider: Community
+    description: "Web 3D rendering engine."
+    surfaces: [LIBRARY]
+
+  - id: react-three-fiber
+    name: React Three Fiber
+    kind: LIBRARY
+    category: DESIGN_VISUAL
+    provider: pmndrs
+    description: "React renderer for Three.js."
+    surfaces: [LIBRARY]
+
+  - id: rive
+    name: Rive
+    kind: TOOL
+    category: DESIGN_VISUAL
+    provider: Rive
+    description: "Interactive animation and state-machine design/runtime."
+    surfaces: [WEB, DESKTOP, LIBRARY]
+
+  - id: spline
+    name: Spline
+    kind: TOOL
+    category: DESIGN_VISUAL
+    provider: Spline
+    description: "Interactive 3D design and web publishing platform."
+    surfaces: [WEB, DESKTOP]
+
+  - id: theatrejs
+    name: Theatre.js
+    kind: LIBRARY
+    category: DESIGN_VISUAL
+    provider: Theatre.js
+    description: "Sequencing and motion design for programmatic 3D/web scenes."
+    surfaces: [LIBRARY]
+
+  - id: higgsfield
+    name: Higgsfield
+    kind: TOOL
+    category: MEDIA_FACTORY
+    provider: Higgsfield
+    description: "Generative image/video platform focused on cinematic and advertising workflows."
+    surfaces: [WEB, API, CLI]
+
+  - id: runway
+    name: Runway
+    kind: TOOL
+    category: MEDIA_FACTORY
+    provider: Runway
+    description: "Generative image/video creation and editing platform."
+    surfaces: [WEB, API]
+
+  - id: elevenlabs
+    name: ElevenLabs
+    kind: SERVICE
+    category: MEDIA_FACTORY
+    provider: ElevenLabs
+    description: "Voice, speech, audio and related generative-media services."
+    surfaces: [WEB, API]
+
+  - id: capcut
+    name: CapCut
+    kind: TOOL
+    category: MEDIA_FACTORY
+    provider: ByteDance
+    description: "Fast social-video editing, captions and finishing."
+    surfaces: [DESKTOP, WEB, MOBILE]
+
+  - id: davinci-resolve
+    name: DaVinci Resolve
+    kind: TOOL
+    category: MEDIA_FACTORY
+    provider: Blackmagic Design
+    description: "Professional editing, color, audio and finishing."
+    capabilities:
+      - id: fusion
+        name: Fusion
+        kind: CAPABILITY
+    surfaces: [DESKTOP]
+
+  - id: motion-canvas
+    name: Motion Canvas
+    kind: LIBRARY
+    category: MEDIA_FACTORY
+    provider: Community
+    description: "Programmatic animation framework for explainers and system visuals."
+    surfaces: [LIBRARY]
+
+  - id: after-effects
+    name: Adobe After Effects
+    kind: TOOL
+    category: MEDIA_FACTORY
+    provider: Adobe
+    description: "Motion graphics and compositing application."
+    surfaces: [DESKTOP]
+
+  - id: cavalry
+    name: Cavalry
+    kind: TOOL
+    category: MEDIA_FACTORY
+    provider: Cavalry
+    description: "Procedural and data-driven motion graphics application."
+    surfaces: [DESKTOP]
+
+  - id: ffmpeg
+    name: FFmpeg
+    kind: TOOL
+    category: MEDIA_FACTORY
+    provider: FFmpeg
+    description: "Media probing, encoding, filtering and assembly utility."
+    surfaces: [CLI]
+
+  - id: remotion
+    name: Remotion
+    kind: LIBRARY
+    category: MEDIA_FACTORY
+    provider: Remotion
+    description: "Deterministic programmatic video composition in React."
+    surfaces: [LIBRARY, CLI]
+
+  - id: buffer
+    name: Buffer
+    kind: SERVICE
+    category: MEDIA_FACTORY
+    provider: Buffer
+    description: "Publishing and social scheduling layer for Media Factory workflows."
+    surfaces: [WEB, API]
+
+  - id: docker
+    name: Docker
+    kind: TOOL
+    category: INFRA_BACKEND
+    provider: Docker
+    description: "Container runtime for reproducible local and hosted services."
+    surfaces: [DESKTOP, CLI, LOCAL_RUNTIME]
+
+  - id: sqlite
+    name: SQLite
+    kind: LIBRARY
+    category: INFRA_BACKEND
+    provider: SQLite
+    description: "Embedded relational database and local ledger option."
+    surfaces: [LIBRARY, CLI]
+
+  - id: supabase
+    name: Supabase
+    kind: SERVICE
+    category: INFRA_BACKEND
+    provider: Supabase
+    description: "Hosted Postgres, auth, storage and serverless backend."
+    surfaces: [WEB, API, CLI]
+
+  - id: vercel
+    name: Vercel
+    kind: SERVICE
+    category: INFRA_BACKEND
+    provider: Vercel
+    description: "Application deployment, previews, serverless and agent hosting."
+    surfaces: [WEB, API, CLI]
+
+  - id: cloudflare
+    name: Cloudflare
+    kind: SERVICE
+    category: INFRA_BACKEND
+    provider: Cloudflare
+    description: "DNS, edge compute, Workers, Pages, R2 and security platform."
+    surfaces: [WEB, API, CLI]
+
+  - id: firebase
+    name: Firebase
+    kind: SERVICE
+    category: INFRA_BACKEND
+    provider: Google
+    description: "Google application backend platform retained as a trigger-based candidate."
+    surfaces: [WEB, API, CLI]
+
+  - id: browserbase
+    name: Browserbase
+    kind: SERVICE
+    category: DEVELOPER_QA
+    provider: Browserbase
+    description: "Remote/persistent browser infrastructure candidate."
+    surfaces: [API, CLOUD_AGENT]
+
+  - id: tavily
+    name: Tavily
+    kind: SERVICE
+    category: RESEARCH_KNOWLEDGE
+    provider: Tavily
+    description: "Agent-oriented search/research service candidate."
+    surfaces: [API]
+
+  - id: brave-search
+    name: Brave Search
+    kind: SERVICE
+    category: RESEARCH_KNOWLEDGE
+    provider: Brave
+    description: "Search API/service candidate for low-level search routing."
+    surfaces: [WEB, API]
+
+  - id: scrapling
+    name: Scrapling
+    kind: LIBRARY
+    category: RESEARCH_KNOWLEDGE
+    provider: Community
+    description: "Adaptive scraping framework retained as a Firecrawl fallback."
+    surfaces: [LIBRARY, CLI]
+
+  - id: gitleaks
+    name: gitleaks
+    kind: TOOL
+    category: SECURITY_UTILITY
+    provider: gitleaks
+    description: "Secret scanning for repositories."
+    surfaces: [CLI]
+
+  - id: google-drive
+    name: Google Drive
+    kind: SERVICE
+    category: RESEARCH_KNOWLEDGE
+    provider: Google
+    description: "Cloud storage and document source layer."
+    surfaces: [WEB, DESKTOP, MOBILE, API]
+
+  - id: nordpass
+    name: NordPass
+    kind: SERVICE
+    category: SECURITY_UTILITY
+    provider: Nord Security
+    description: "Password and secret-management service."
+    surfaces: [WEB, DESKTOP, MOBILE]

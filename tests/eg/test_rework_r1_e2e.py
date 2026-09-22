@@ -58,6 +58,7 @@ def complete_state(envelope: dict, **overrides) -> dict:
         "active_blockers": [],
         "outstanding_human_gates": [],
         "prohibited_scope": [],
+        "effective_allowed_writes": [],
         "next_action": "verify artifact",
         "next_action_kind": "VERIFY",
     }
@@ -95,6 +96,7 @@ def test_e2e_02_routed_tool_and_model_to_trace():
             "tools": [{"id": "allowed", "capabilities": ["read"], "source_relation": "DIRECT"}],
             "models": [{"id": "text-model", "modalities": ["text"]}],
         },
+        resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED"}],
     )
     assert planned["disposition"] == "ROUTED"
     assert planned["model"]["selected_model"] == "text-model"

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import posixpath
+
 
 def recovery_requirements(
     work_order: dict,
     baseline_sha: str | None,
     metadata: dict | None = None,
     policy: dict | None = None,
+    effective_executor: str | None = None,
 ) -> dict:
     metadata = metadata or {}
     return {
@@ -18,13 +21,14 @@ def recovery_requirements(
         "resume_check_required": True,
         "expected_sha": baseline_sha,
         "expected_role": metadata.get("role_id"),
-        "expected_executor": metadata.get("expected_executor"),
+        "expected_executor": effective_executor,
         "expected_branch": metadata.get("branch"),
         "expected_workspace": metadata.get("workspace"),
         "expected_frontier_ref": metadata.get("frontier_ref"),
         "required_closed_claims": list(work_order.get("quality_claims", [])),
         "required_human_gates": list(work_order.get("human_gates", [])),
         "prohibited_scope": list(work_order.get("scope", {}).get("excluded", [])),
+        "allowed_writes": list(work_order.get("allowed_writes", [])),
     }
 
 
@@ -56,6 +60,7 @@ def resume_check(
         "active_blockers": "BLOCKERS_STATE_MISSING",
         "outstanding_human_gates": "HUMAN_GATES_STATE_MISSING",
         "prohibited_scope": "PROHIBITED_SCOPE_STATE_MISSING",
+        "effective_allowed_writes": "EFFECTIVE_WRITES_STATE_MISSING",
         "next_action": "NEXT_ACTION_MISSING",
         "next_action_kind": "NEXT_ACTION_KIND_MISSING",
     }
@@ -64,6 +69,8 @@ def resume_check(
             incomplete.append(reason)
     if incomplete:
         return {"status": "INCOMPLETE", "reason_codes": incomplete}
+    if requirements.get("expected_executor") and "executor_id" not in state:
+        return {"status": "INCOMPLETE", "reason_codes": ["EXECUTOR_STATE_MISSING"]}
     if state["project_id"] != envelope.get("project_id"):
         failures.append("PROJECT_MISMATCH")
     expected_role = requirements.get("expected_role")
@@ -86,8 +93,16 @@ def resume_check(
         failures.append("CLOSED_CLAIMS_INCOMPLETE")
     if requirements.get("required_closed_claims") and not state["closed_evidence_refs"]:
         failures.append("CLOSED_EVIDENCE_INCOMPLETE")
-    if set(state["prohibited_scope"]) & set(requirements.get("prohibited_scope", [])):
-        failures.append("PROHIBITED_SCOPE_ACTIVE")
+    required_prohibitions = _scope_set(requirements.get("prohibited_scope", []))
+    state_prohibitions = _scope_set(state["prohibited_scope"])
+    if not required_prohibitions.issubset(state_prohibitions):
+        failures.append("PROHIBITED_SCOPE_DROPPED")
+    allowed_boundaries = _scope_set(requirements.get("allowed_writes", []))
+    effective_writes = _scope_set(state["effective_allowed_writes"])
+    if not _writes_within_boundaries(effective_writes, allowed_boundaries):
+        failures.append("EFFECTIVE_WRITES_BROADENED")
+    if any(_scopes_overlap(write, prohibited) for write in effective_writes for prohibited in state_prohibitions):
+        failures.append("PROHIBITED_SCOPE_ACCESS")
     blockers = state["active_blockers"]
     gates = state["outstanding_human_gates"]
     if blockers:
@@ -103,3 +118,27 @@ def resume_check(
     if handoff.get("status") == "blocked":
         failures.append("HANDOFF_BLOCKED")
     return {"status": "FAIL" if failures else "PASS", "reason_codes": sorted(set(failures)) or ["RESUME_VALID"]}
+
+
+def _scope_set(values: object) -> set[str]:
+    if not isinstance(values, list):
+        raise ValueError("Resume scope state must be a list")
+    normalized = set()
+    for value in values:
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError("Resume scopes must be non-empty strings")
+        candidate = posixpath.normpath(value.replace("\\", "/").strip())
+        if candidate.startswith("/") or candidate == "." or ".." in candidate.split("/"):
+            raise ValueError("Resume scopes must be project-relative")
+        normalized.add(candidate.casefold())
+    return normalized
+
+
+def _scopes_overlap(left: str, right: str) -> bool:
+    return left == right or left.startswith(right + "/") or right.startswith(left + "/")
+
+
+def _writes_within_boundaries(writes: set[str], boundaries: set[str]) -> bool:
+    if not boundaries:
+        return not writes
+    return all(any(write == boundary or write.startswith(boundary + "/") for boundary in boundaries) for write in writes)

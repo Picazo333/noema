@@ -52,7 +52,7 @@ def test_tool_selector_suppresses_broader_duplicate_source():
 
 def test_read_set_and_runtime_pressure_are_conservative():
     read_set = ReadSet()
-    ref = {"scheme": "repo", "locator": "PROTOCOL.md"}
+    ref = {"scheme": "repo", "locator": "PROTOCOL.md", "integrity": "sha-protocol"}
     assert read_set.record(ref)["read"]
     assert read_set.record(ref)["reason_code"] == "DUPLICATE_READ_SUPPRESSED"
     posture = classify_runtime_posture({"posture_hint": "CONSERVE"})
@@ -71,7 +71,7 @@ def test_resume_rejects_stale_sha():
         "project_id": "noema", "role_id": "builder", "branch": "topic", "workspace": "work",
         "sha": "new", "frontier_ref": {"scheme": "git", "locator": "node"},
         "closed_claims": ["contract-conformance"], "closed_evidence_refs": [{"scheme": "repo", "locator": "evidence.md"}],
-        "active_blockers": [], "outstanding_human_gates": [], "prohibited_scope": [],
+        "active_blockers": [], "outstanding_human_gates": [], "prohibited_scope": [], "effective_allowed_writes": [],
         "next_action": "continue", "next_action_kind": "EXECUTE",
     }
     report = resume_check(envelope, {"work_order_ref": "repo://tests/eg/work-order.yaml", "status": "partial"}, state)

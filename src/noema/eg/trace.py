@@ -160,14 +160,18 @@ def _trace_metrics(actual: dict, tool_events: list[dict]) -> dict:
         raise ValueError("metrics must be an object")
     if set(supplied) - set(_METRIC_NAMES):
         raise ValueError("metrics contains unsupported metric names")
-    defaults = {
-        "tool_calls": len([event for event in tool_events if event.get("action") == "CALL"]),
-        "suppressed_calls": len(
+    defaults = {}
+    if "tool_events" in actual:
+        defaults["tool_calls"] = len(
+            [event for event in tool_events if event.get("action") == "CALL"]
+        )
+        defaults["suppressed_calls"] = len(
             [event for event in tool_events if event.get("action") == "SOFT_SUPPRESS"]
-        ),
-        "retries": int(actual.get("retries", 0)),
-        "rework": int(actual.get("rework_cycles", 0)),
-    }
+        )
+    if "retries" in actual:
+        defaults["retries"] = _observed_count(actual, "retries")
+    if "rework_cycles" in actual:
+        defaults["rework"] = _observed_count(actual, "rework_cycles")
     result = {}
     for name in _METRIC_NAMES:
         supplied_value = supplied.get(name)
@@ -218,7 +222,11 @@ def create_trace(
     for read in raw_reads:
         ref = _storage_ref(read.get("ref"), "context read ref")
         result = read_set.record(ref, read.get("freshness"), low_signal=bool(read.get("low_signal")))
-        context_events.append({"ref": ref, "result": result["reason_code"]})
+        context_events.append({
+            "ref": ref,
+            "result": result["reason_code"],
+            "identity_kind": result["identity_kind"],
+        })
         if result["read"]:
             context_refs.append(ref)
     started_at = started_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -242,6 +250,15 @@ def create_trace(
             "permission_events": permission_events,
         },
         "metrics": _trace_metrics(actual, tool_events),
-        "retries": int(actual.get("retries", 0)),
-        "rework_cycles": int(actual.get("rework_cycles", 0)),
+        "retries": _observed_count(actual, "retries"),
+        "rework_cycles": _observed_count(actual, "rework_cycles"),
     }
+
+
+def _observed_count(actual: dict, key: str) -> int | None:
+    if key not in actual:
+        return None
+    value = actual[key]
+    if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+        raise ValueError(f"{key} must be a non-negative observed integer")
+    return value

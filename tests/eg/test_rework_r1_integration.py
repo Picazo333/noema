@@ -33,7 +33,7 @@ def resume_state(env, **overrides):
         "frontier_ref": {"scheme": "git", "locator": "frontier"},
         "closed_claims": ["contract-conformance"],
         "closed_evidence_refs": [{"scheme": "repo", "locator": "evidence.md"}],
-        "active_blockers": [], "outstanding_human_gates": [], "prohibited_scope": [],
+        "active_blockers": [], "outstanding_human_gates": [], "prohibited_scope": ["secrets"], "effective_allowed_writes": [],
         "next_action": "continue", "next_action_kind": "EXECUTE",
     }
     state.update(overrides)
@@ -62,7 +62,7 @@ def test_routed_pipeline_uses_model_router_and_tool_fallback():
     }
     routed_work_order = work_order()
     routed_work_order["capability_requirements"] = [{"id": "external-resolution"}]
-    env = build_execution_envelope(ROOT, routed_work_order, work_order_ref="repo://tests/eg/work-order.yaml", task_metadata=metadata, candidate_snapshot=candidate_snapshot)
+    env = build_execution_envelope(ROOT, routed_work_order, work_order_ref="repo://tests/eg/work-order.yaml", task_metadata=metadata, candidate_snapshot=candidate_snapshot, resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED"}])
     assert env["disposition"] == "ROUTED"
     assert [item["decision"] for item in env["tool_decisions"]] == ["HARD_DENY", "CALL"]
     assert env["model"]["selected_model"] == "runtime-model"
@@ -86,7 +86,7 @@ def test_blocked_runtime_and_resolver_are_terminal_only_when_required():
 def test_no_verified_executor_blocks_integrated_pipeline():
     routed = work_order()
     routed["capability_requirements"] = [{"id": "route"}]
-    env = build_execution_envelope(ROOT, routed, work_order_ref="repo://tests/eg/work-order.yaml", task_metadata={"executor_requirements": {"capabilities": ["repository-work"]}})
+    env = build_execution_envelope(ROOT, routed, work_order_ref="repo://tests/eg/work-order.yaml", task_metadata={"executor_requirements": {"capabilities": ["repository-work"]}}, resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED"}])
     assert env["disposition"] == "BLOCKED"
     assert env["executor"]["status"] == "BLOCKED_NO_VERIFIED_EXECUTOR"
 
@@ -145,7 +145,7 @@ def test_parallel_isolation_rejects_unprovable_scopes(metadata):
 
 
 def test_parallel_isolation_accepts_disjoint_scopes():
-    topology = derive_topology({"parallel_isolated": True, "write_scopes": ["src/a", "src/b"], "serialized_publication": True}, {})
+    topology = derive_topology({"parallel_isolated": True, "write_scopes": ["src/a", "src/b"], "serialized_publication": True, "role_bindings": [{"role_id": "worker-a", "scope": ["src/a"]}, {"role_id": "worker-b", "scope": ["src/b"]}]}, {})
     assert topology["mode"] == "PARALLEL_ISOLATED"
 
 

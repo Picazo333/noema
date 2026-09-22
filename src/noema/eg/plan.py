@@ -68,6 +68,7 @@ def build_execution_envelope(
     root = root.resolve()
     _validate_work_order(work_order, root)
     manifest = load_yaml(root / "noema.project.yaml")
+    work_order_project_id = work_order["project_id"]
     metadata = task_metadata or {}
     candidates = candidate_snapshot or {}
     host = flattened_capabilities(host_capabilities or {})
@@ -83,13 +84,12 @@ def build_execution_envelope(
     model_requirements = metadata.get("model_requirements", {})
     tool_requirements = metadata.get("tool_requirements", {})
     resolver_required = bool(work_order.get("capability_requirements") or metadata.get("resolver_required"))
+    unexpected_receipts = bool(receipts) and not resolver_required
     needs_resolution = bool(
         resolver_required
         or tool_requirements
         or executor_requirements
         or model_requirements
-    ) or any(
-        receipt["status"] not in {"NOT_REQUIRED"} for receipt in receipts
     )
     decision = decide_disposition(
         control["control"],
@@ -116,10 +116,16 @@ def build_execution_envelope(
     final = decision
 
     resolver_statuses = {receipt["status"] for receipt in receipts}
-    if resolver_required and "BLOCKED" in resolver_statuses:
+    if work_order_project_id != manifest["project"]["id"]:
+        final = _terminal("ROUTE_ELSEWHERE", "WORK_ORDER_PROJECT_MISMATCH")
+    elif resolver_required and not receipts:
+        final = _terminal("DEFER", "RESOLVER_RECEIPT_MISSING")
+    elif resolver_required and "BLOCKED" in resolver_statuses:
         final = _terminal("BLOCKED", "RESOLVER_BLOCKED")
     elif resolver_required and "UNRESOLVED" in resolver_statuses:
         final = _terminal("DEFER", "RESOLVER_UNRESOLVED")
+    elif resolver_required and not resolver_statuses.issubset({"RESOLVED", "PARTIAL"}):
+        final = _terminal("DEFER", "RESOLVER_RECEIPT_UNUSABLE")
     elif control["control"] == "REQUIRE_HUMAN" and not host.get("enforce_human_gate"):
         final = _terminal("DEFER", "HUMAN_GATE_UNENFORCEABLE")
 
@@ -161,12 +167,14 @@ def build_execution_envelope(
             control["reason_codes"]
             + final["reason_codes"]
             + resource_policy["reason_codes"]
+            + (["RESOLVER_RECEIPT_NOT_REQUIRED"] if unexpected_receipts else [])
         )
     )
     return {
         "execution_id": f"exec-{uuid4().hex}",
         "work_order_ref": _storage_ref(work_order_ref),
-        "project_id": manifest["project"]["id"],
+        "work_order_id": work_order["work_order_id"],
+        "project_id": work_order_project_id,
         "profile": profile,
         "policy_version": "eg-policy-v0",
         "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -189,6 +197,11 @@ def build_execution_envelope(
         "model": model,
         "topology": topology,
         "evaluation_constraints": evaluation,
-        "recovery": recovery_requirements(work_order, baseline_sha, metadata),
+        "recovery": recovery_requirements(
+            work_order,
+            baseline_sha,
+            metadata,
+            effective_executor=executor["selected_executor"],
+        ),
         "evidence_refs": [],
     }

@@ -63,15 +63,21 @@ def resource_disposition_constraint(
     snapshot = snapshot or {}
     metadata = task_metadata or {}
     candidates = candidate_snapshot or {}
-    blocked = set(snapshot.get("blocked_resources", []))
-    blocked.update(snapshot.get("blocked_interfaces", []))
-    required = set(metadata.get("required_resources", []))
-    required.update(metadata.get("tool_requirements", {}).get("interfaces", []))
-    required.update(metadata.get("executor_requirements", {}).get("interfaces", []))
+    blocked = {str(value).casefold() for value in snapshot.get("blocked_resources", [])}
+    blocked.update(str(value).casefold() for value in snapshot.get("blocked_interfaces", []))
+    required = {str(value).casefold() for value in metadata.get("required_resources", [])}
+    required.update(
+        str(value).casefold()
+        for value in metadata.get("tool_requirements", {}).get("interfaces", [])
+    )
+    required.update(
+        str(value).casefold()
+        for value in metadata.get("executor_requirements", {}).get("interfaces", [])
+    )
     for tool in candidates.get("tools", []):
         if tool.get("required"):
-            required.update(tool.get("interfaces", []))
-            required.add(tool.get("id", ""))
+            required.update(str(value).casefold() for value in tool.get("interfaces", []))
+            required.add(str(tool.get("id", "")).casefold())
     if metadata.get("requires_external"):
         required.add("external")
     matches = bool(blocked & required) or (

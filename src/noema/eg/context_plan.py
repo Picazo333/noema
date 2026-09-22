@@ -101,17 +101,47 @@ class ReadSet:
     """Execution-local freshness-keyed read memoization with traceable outcomes."""
 
     def __init__(self) -> None:
-        self._seen: set[tuple[str, str, str | None]] = set()
+        self._seen: set[tuple[str, str, str, str]] = set()
         self.suppressed = 0
         self.thrash_events = 0
 
     def record(self, ref: dict, freshness: str | None = None, *, low_signal: bool = False) -> dict:
-        key = (ref.get("scheme", ""), ref.get("locator", ""), freshness)
+        identity_kind, identity_value = self._identity(ref, freshness)
+        if identity_kind == "UNKNOWN":
+            return self._read_required(identity_kind, low_signal)
+        key = (ref.get("scheme", ""), ref.get("locator", ""), identity_kind, identity_value)
         if key in self._seen:
             self.suppressed += 1
-            return {"read": False, "reason_code": "DUPLICATE_READ_SUPPRESSED"}
+            return {
+                "read": False,
+                "reason_code": "DUPLICATE_READ_SUPPRESSED",
+                "identity_kind": identity_kind,
+            }
         self._seen.add(key)
+        return self._read_required(identity_kind, low_signal)
+
+    @staticmethod
+    def _identity(ref: dict, freshness: str | None) -> tuple[str, str]:
+        integrity = ref.get("integrity")
+        if isinstance(integrity, str) and integrity:
+            return "INTEGRITY", integrity
+        version = ref.get("version")
+        if isinstance(version, (str, int)) and str(version):
+            return "VERSION", str(version)
+        if isinstance(freshness, str) and freshness:
+            return "FRESHNESS", freshness
+        return "UNKNOWN", ""
+
+    def _read_required(self, identity_kind: str, low_signal: bool) -> dict:
         if low_signal:
             self.thrash_events += 1
-            return {"read": True, "reason_code": "CONTEXT_THRASH"}
-        return {"read": True, "reason_code": "READ_REQUIRED"}
+            return {
+                "read": True,
+                "reason_code": "CONTEXT_THRASH",
+                "identity_kind": identity_kind,
+            }
+        return {
+            "read": True,
+            "reason_code": "READ_REQUIRED",
+            "identity_kind": identity_kind,
+        }

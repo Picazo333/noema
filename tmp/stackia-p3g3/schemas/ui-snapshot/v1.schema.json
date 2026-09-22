@@ -10,6 +10,7 @@
     "selection",
     "overview",
     "budget",
+    "monthly",
     "registry",
     "integrations",
     "actions",
@@ -60,7 +61,8 @@
       "additionalProperties": false,
       "required": [
         "month",
-        "scenario"
+        "scenario",
+        "available_months"
       ],
       "properties": {
         "month": {
@@ -73,6 +75,15 @@
             "LEAN",
             "SCALE"
           ]
+        },
+        "available_months": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}$"
+          },
+          "uniqueItems": true,
+          "minItems": 1
         }
       }
     },
@@ -310,7 +321,9 @@
       "additionalProperties": false,
       "required": [
         "workload_summary",
-        "executor_projection"
+        "executor_projection",
+        "workloads",
+        "executor_candidates"
       ],
       "properties": {
         "workload_summary": {
@@ -340,6 +353,27 @@
               "minimum": 0
             }
           }
+        },
+        "workloads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/workloadEvidence"
+          }
+        },
+        "executor_candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/executorCandidate"
+          }
+        }
+      }
+    },
+    "monthly": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^\\d{4}-\\d{2}$": {
+          "$ref": "#/$defs/monthlyState"
         }
       }
     }
@@ -354,6 +388,7 @@
         "plan_name",
         "payment_state",
         "subscription_state",
+        "billing_period",
         "amount",
         "covers_tools",
         "includes_capabilities"
@@ -429,6 +464,9 @@
             "type": "string"
           },
           "uniqueItems": true
+        },
+        "billing_period": {
+          "type": "string"
         }
       }
     },
@@ -717,7 +755,10 @@
         "scaling_status",
         "reroute_result",
         "economic_gate",
-        "next_action"
+        "next_action",
+        "completed_cycles_observed",
+        "blocked_workloads",
+        "workaround_minutes"
       ],
       "properties": {
         "capacity_resource_id": {
@@ -764,6 +805,18 @@
         },
         "next_action": {
           "type": "string"
+        },
+        "completed_cycles_observed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blocked_workloads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "workaround_minutes": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -776,7 +829,8 @@
         "primary_subjects",
         "fallback_subjects",
         "verification_state",
-        "human_gate_ids"
+        "human_gate_ids",
+        "workload_ids"
       ],
       "properties": {
         "id": {
@@ -811,6 +865,13 @@
           "items": {
             "type": "string"
           }
+        },
+        "workload_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
         }
       }
     },
@@ -913,6 +974,239 @@
           },
           "minItems": 1,
           "uniqueItems": true
+        }
+      }
+    },
+    "workloadEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "subjects",
+        "stage",
+        "category",
+        "target_level",
+        "result",
+        "objective",
+        "blocker"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "stage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "category": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "result": {
+          "type": "string"
+        },
+        "objective": {
+          "type": "string"
+        },
+        "blocker": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "monthlyState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "paid_plans",
+        "entitlements",
+        "exiting",
+        "active_tools",
+        "included_capabilities_to_use",
+        "integration_targets",
+        "agent_lab",
+        "spend"
+      ],
+      "properties": {
+        "paid_plans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/paidPlan"
+          }
+        },
+        "entitlements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entitlement"
+          }
+        },
+        "exiting": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "active_tools": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        },
+        "included_capabilities_to_use": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "integration_targets": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "skills",
+            "mcps"
+          ],
+          "properties": {
+            "skills": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "mcps": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "agent_lab": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "spend": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "known_exact_mxn",
+            "paid_confirmed_mxn",
+            "reference_mxn",
+            "reference_excludes",
+            "unresolved_subscription_ids"
+          ],
+          "properties": {
+            "reference_mxn": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "reference_excludes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "unresolved_subscription_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "known_exact_mxn": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "paid_confirmed_mxn": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "executorCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "subject_id",
+        "intended_capabilities",
+        "intended_interfaces",
+        "qualification",
+        "workload_ref",
+        "reason"
+      ],
+      "properties": {
+        "subject_id": {
+          "type": "string"
+        },
+        "intended_capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "intended_interfaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "qualification": {
+          "type": "string"
+        },
+        "workload_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     }

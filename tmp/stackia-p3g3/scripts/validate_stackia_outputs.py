@@ -39,12 +39,17 @@ def main():
     Draft202012Validator(j("schemas/capacity-router/v1.schema.json")).validate(capacity)
 
     month = y(f"state/months/{a.month}.yaml")
+    month_index = y("state/months/index.yaml")
+    subscriptions = y("state/subscriptions.yaml")
     evaluations = y("state/evaluations.yaml")
     deployments = y("state/deployments.yaml")
     needs = y(f"state/needs/{a.month}.yaml")
     scaling = y(f"state/scaling/{a.month}.yaml")
     noema = y("exports/noema/executors.yaml")
     scenario = j(f"ui/derived/scenarios/{a.month}.proposal.json")
+    verification_workloads = y("validation/verification-workloads.yaml")
+    media_workloads = y("validation/media-factory-workloads.yaml")
+    qualification = y("state/executor-qualification.yaml")
 
     paid_ids = [x["subscription_id"] for x in month["budget"]["paid_plans"]]
     snap_paid = [x["subscription_id"] for x in snapshot["budget"]["paid_plans"]]
@@ -71,8 +76,8 @@ def main():
     counts = {"VERIFIED": 0, "TESTED": 0, "UNVERIFIED": 0}
     for e in evs:
         counts[e["verification"]] = counts.get(e["verification"], 0) + 1
-    if counts != {"VERIFIED": 4, "TESTED": 6, "UNVERIFIED": 82}:
-        fail(f"evaluation baseline changed unexpectedly: {counts}")
+    if counts != {"VERIFIED": 4, "TESTED": 6, "UNVERIFIED": 86}:
+        fail(f"evaluation baseline changed unexpectedly after Decision 0017: {counts}")
 
     if len(deployments.get("deployments", [])) != 20:
         fail("explicit deployment baseline must be 20")
@@ -82,8 +87,94 @@ def main():
     ints_doc = y("catalog/integrations.yaml")
     integration_count = sum(len(ints_doc.get(k, []) or []) for k in ("skills", "mcps", "plugins_connectors"))
     expected_registry = tool_count + integration_count
+    if tool_count != 91:
+        fail(f"Decision 0017 tool baseline drift: {tool_count} != 91")
+    if integration_count != 92:
+        fail(f"integration baseline drift: {integration_count} != 92")
+    if expected_registry != 183:
+        fail(f"Decision 0017 registry baseline drift: {expected_registry} != 183")
     if snapshot["overview"]["counts"]["registry_items"] != expected_registry:
         fail(f"registry count {snapshot['overview']['counts']['registry_items']} != {expected_registry}")
+    if snapshot["overview"]["counts"].get("unknown") != 87:
+        fail("Decision 0017 must not convert pre-existing UNKNOWN identities")
+    if len(snapshot["actions"]) != 90:
+        fail(f"Decision 0017 action baseline drift: {len(snapshot['actions'])} != 90")
+    if len(snapshot["budget"]["paid_plans"]) != 6:
+        fail("Decision 0017 must not add a paid-plan row")
+
+    # Historical monthly UI coverage required by the approved monolith IA.
+    available_months = [x["month"] for x in month_index.get("months", []) or []]
+    if snapshot["selection"].get("available_months") != available_months:
+        fail(f"available month projection drift: {snapshot['selection'].get('available_months')} != {available_months}")
+    if set(snapshot.get("monthly", {})) != set(available_months):
+        fail("monthly comparison projection must contain every indexed locked month")
+
+    subscription_by_id = {x["id"]: x for x in subscriptions.get("subscriptions", []) or []}
+    def expected_month_spend(month_state):
+        known = sum((r.get("confirmed_mxn") or 0) for r in month_state["budget"]["paid_plans"])
+        paid = sum(
+            (r.get("confirmed_mxn") or 0)
+            for r in month_state["budget"]["paid_plans"]
+            if r.get("payment_state") in ("PAID", "CHARGED", "SETTLED")
+        )
+        ref = (month_state["budget"].get("totals", {}) or {}).get("reference_active_stack_mxn_excluding_capcut")
+        unresolved = list((month_state["budget"].get("totals", {}) or {}).get("unresolved_items", []) or [])
+        return known, paid, ref, unresolved
+
+    for meta in month_index.get("months", []) or []:
+        mid = meta["month"]
+        source = y(meta["path"])
+        projected = snapshot["monthly"][mid]
+        expected_paid_ids = [x["subscription_id"] for x in source["budget"]["paid_plans"]]
+        if [x["subscription_id"] for x in projected["paid_plans"]] != expected_paid_ids:
+            fail(f"{mid} paid-plan projection drift")
+        for row in projected["paid_plans"]:
+            if row["subscription_id"] not in subscription_by_id:
+                fail(f"{mid} broken projected subscription {row['subscription_id']}")
+            if not row.get("billing_period"):
+                fail(f"{mid} missing billing period for {row['subscription_id']}")
+        known, paid, ref_total, unresolved_ids = expected_month_spend(source)
+        if projected["spend"]["known_exact_mxn"] != known:
+            fail(f"{mid} known-exact projection drift")
+        if projected["spend"]["paid_confirmed_mxn"] != paid:
+            fail(f"{mid} paid-confirmed projection drift")
+        if projected["spend"]["reference_mxn"] != ref_total:
+            fail(f"{mid} reference projection drift")
+        if projected["spend"]["unresolved_subscription_ids"] != unresolved_ids:
+            fail(f"{mid} unresolved projection drift")
+
+    if snapshot["monthly"]["2026-09"]["spend"]["paid_confirmed_mxn"] != 794:
+        fail("September paid-confirmed baseline must remain MXN 794")
+    if snapshot["monthly"]["2026-09"]["spend"]["reference_mxn"] != 1389:
+        fail("September reference baseline must remain MXN 1389")
+    if snapshot["monthly"]["2026-10"]["spend"]["paid_confirmed_mxn"] != 0:
+        fail("October paid-confirmed baseline must remain MXN 0")
+    if snapshot["monthly"]["2026-10"]["spend"]["reference_mxn"] != 1665:
+        fail("October reference baseline must remain MXN 1665")
+
+    # Evidence detail must reconcile with canonical workload files.
+    workloads = list(verification_workloads.get("workloads", []) or []) + list(media_workloads.get("workloads", []) or [])
+    canonical_workload_ids = sorted(x["id"] for x in workloads)
+    projected_workload_ids = sorted(x["id"] for x in snapshot["evidence"].get("workloads", []))
+    if projected_workload_ids != canonical_workload_ids:
+        fail("detailed workload projection drift")
+    if len(projected_workload_ids) != 26:
+        fail(f"expected 26 canonical verification/media workloads, got {len(projected_workload_ids)}")
+
+    candidate_ids = [x["subject_id"] for x in qualification.get("candidates", []) or []]
+    projected_candidate_ids = [x["subject_id"] for x in snapshot["evidence"].get("executor_candidates", [])]
+    if projected_candidate_ids != candidate_ids:
+        fail("executor qualification projection drift")
+
+    need_index = {x["capacity_resource_id"]: x for x in need_rows}
+    for row in snapshot["capacity"]["resources"]:
+        source = need_index[row["capacity_resource_id"]]
+        if row.get("completed_cycles_observed") != int(source.get("completed_cycles_observed", 0) or 0):
+            fail(f"completed-cycle projection drift for {row['capacity_resource_id']}")
+        if row.get("blocked_workloads") != int(source.get("blocked_workloads", 0) or 0):
+            fail(f"blocked-workload projection drift for {row['capacity_resource_id']}")
+        if row.get("workaround_minutes") != int(source.get("workaround_minutes", 0) or 0):
+            fail(f"workaround projection drift for {row['capacity_resource_id']}")
 
     # UNKNOWN must exist for catalog identities without evaluation rows.
     if snapshot["overview"]["counts"].get("unknown", 0) <= 0:

@@ -193,10 +193,14 @@ jobs:
           assert(desktopGeometry.bodyScrollWidth<=desktopGeometry.innerWidth+1,'desktop body-level horizontal overflow');
 
           await page.setViewport({width:390,height:844,deviceScaleFactor:1});
-          await clickNav('overview');
           assert(await visible('#mobileMenu'),'mobile menu invisible');
           await page.click('#mobileMenu');
           assert((await page.$eval('#mobileMenu',el=>el.getAttribute('aria-expanded')))==='true','mobile aria expanded true');
+          await page.click('.nav button[data-page="overview"]');
+          await page.waitForFunction(()=>document.querySelector('#page-overview')?.classList.contains('active'));
+          assert((await page.$eval('#mobileMenu',el=>el.getAttribute('aria-expanded')))==='false','mobile nav should close after selection');
+          await page.click('#mobileMenu');
+          assert((await page.$eval('#mobileMenu',el=>el.getAttribute('aria-expanded')))==='true','mobile menu reopen failed');
           await page.keyboard.press('Escape');
           assert((await page.$eval('#mobileMenu',el=>el.getAttribute('aria-expanded')))==='false','mobile aria expanded false');
           const mobileGeometry=await page.evaluate(()=>({

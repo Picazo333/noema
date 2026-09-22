@@ -1,0 +1,208 @@
+name: Temp StackIA R6 Writeback Audit
+
+on:
+  push:
+    branches:
+      - "temp/stackia-r6-writeback-20260921"
+
+jobs:
+  audit-r6:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python dependencies
+        run: |
+          cd tmp/stackia-r6-repo
+          python -m pip install -r requirements-dev.txt >/dev/null
+          python -m py_compile scripts/human_change_adapter.py scripts/serve_human_ui_v2.py scripts/build_stackia.py scripts/validate_stackia_outputs.py
+
+      - name: Exercise command adapter
+        run: |
+          cd tmp/stackia-r6-repo
+          PYTHONPATH=scripts python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+          from ruamel.yaml import YAML
+          from human_change_adapter import StackIAChangeAdapter, ROOT
+
+          y=YAML(typ="safe")
+          root=Path(".").resolve()
+          adapter=StackIAChangeAdapter(root)
+
+          def stamp():
+              return datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
+
+          def cs(name, command, sid, cls, payload, expected=None, reason=None, refs=None):
+              return {
+                  "schema":"stackia/change-set@1",
+                  "change_set_id":name,
+                  "status":"DRAFT",
+                  "created_at":stamp(),
+                  "supersedes_change_set_id":None,
+                  "reason":reason,
+                  "operations":[{
+                      "operation_id":name+"-op",
+                      "command":command,
+                      "subject":{"id":sid,"class":cls},
+                      "expected_before":expected,
+                      "payload":payload,
+                      "reason":reason,
+                      "evidence_refs":refs or [],
+                  }],
+              }
+
+          snap=json.loads((root/"ui/derived/snapshots/2026-10.actual.json").read_text())
+          reg={x["id"]:x for x in snap["registry"]["items"]}
+          assert reg["v0"]["state"]["usage"]=="NOT_TRIED"
+
+          # 1) Usage apply + full rebuild.
+          c=cs("r6-usage","SET_USAGE","v0","TOOL",{"usage":"USED"},{"usage":"NOT_TRIED"})
+          p=adapter.preview(c); assert p["status"]=="PREVIEW_VALID",p
+          a=adapter.apply(c,p["preview_token"],rebuild=True); assert a["status"]=="APPLIED",a
+          snap=json.loads((root/"ui/derived/snapshots/2026-10.actual.json").read_text())
+          reg={x["id"]:x for x in snap["registry"]["items"]}
+          assert reg["v0"]["state"]["usage"]=="USED"
+
+          # stale expected_before must block.
+          stale=adapter.preview(c)
+          assert stale["status"]=="PREVIEW_BLOCKED",stale
+
+          # illegal usage downgrade must block without correction mode.
+          bad=cs("r6-usage-down","SET_USAGE","v0","TOOL",{"usage":"NOT_TRIED"},{"usage":"USED"})
+          assert adapter.preview(bad)["status"]=="PREVIEW_BLOCKED"
+
+          # 2) Deployment host-specific transition.
+          c=cs("r6-deploy","SET_DEPLOYMENT","superpowers","SKILL",{"host":"chatgpt","state":"CONFIGURED"},{"host":"chatgpt","state":"NOT_DEPLOYED"})
+          p=adapter.preview(c); assert p["status"]=="PREVIEW_VALID",p
+          a=adapter.apply(c,p["preview_token"],rebuild=True); assert a["status"]=="APPLIED",a
+          deps=y.load((root/"state/deployments.yaml").read_text())["deployments"]
+          row=next(x for x in deps if x["subject_id"]=="superpowers" and x["host"]=="chatgpt")
+          assert row["state"]=="CONFIGURED"
+
+          # 3) Test PASS can reach TESTED, never VERIFIED automatically.
+          wid="agency-web-v0-frontend-acceleration-v1"
+          c=cs("r6-test","RECORD_TEST","v0","TOOL",{"workload_id":wid,"result":"PASS","summary":"Ephemeral R6 adapter test proves evidence recording and TESTED promotion."},{"verification":"UNVERIFIED","workload_id":wid})
+          p=adapter.preview(c); assert p["status"]=="PREVIEW_VALID",p
+          a=adapter.apply(c,p["preview_token"],rebuild=True); assert a["status"]=="APPLIED",a
+          snap=json.loads((root/"ui/derived/snapshots/2026-10.actual.json").read_text())
+          reg={x["id"]:x for x in snap["registry"]["items"]}
+          assert reg["v0"]["state"]["verification"]=="TESTED"
+
+          # 4) Explicit per-workload verification can consume accepted PASS evidence.
+          c=cs("r6-verify","RECORD_VERIFICATION","v0","TOOL",{"workload_id":wid},{"verification":"TESTED","workload_id":wid},reason="Promote only after accepted PASS evidence.")
+          p=adapter.preview(c); assert p["status"]=="PREVIEW_VALID",p
+          a=adapter.apply(c,p["preview_token"],rebuild=True); assert a["status"]=="APPLIED",a
+          snap=json.loads((root/"ui/derived/snapshots/2026-10.actual.json").read_text())
+          reg={x["id"]:x for x in snap["registry"]["items"]}
+          assert reg["v0"]["state"]["verification"]=="VERIFIED"
+
+          # Generic/unsupported verification path remains blocked when there is no accepted pass.
+          c=cs("r6-bad-verify","RECORD_VERIFICATION","n8n","TOOL",{"workload_id":"n8n-media-orchestration-v1"},{"verification":"UNVERIFIED","workload_id":"n8n-media-orchestration-v1"})
+          assert adapter.preview(c)["status"]=="PREVIEW_BLOCKED"
+
+          # 5) Financial fact updates known-component total without adding a billing row.
+          c=cs("r6-capcut","RESOLVE_ACCOUNT_FACT","capcut-pro","PLAN",{"month":"2026-10","field":"confirmed_mxn","value":199},None,reason="Ephemeral checkout evidence for R6 test.",refs=["test://capcut-checkout"])
+          p=adapter.preview(c); assert p["status"]=="PREVIEW_VALID",p
+          a=adapter.apply(c,p["preview_token"],rebuild=True); assert a["status"]=="APPLIED",a
+          snap=json.loads((root/"ui/derived/snapshots/2026-10.actual.json").read_text())
+          assert snap["overview"]["spend"]["reference_mxn"]==1864,snap["overview"]["spend"]
+          assert len(snap["budget"]["paid_plans"])==6
+          assert snap["overview"]["spend"]["unresolved_subscription_ids"]==["higgsfield-current"]
+
+          log=y.load((root/"state/human-change-log.yaml").read_text())
+          ids=[x["change_set_id"] for x in log["entries"]]
+          for required in ("r6-usage","r6-deploy","r6-test","r6-verify","r6-capcut"):
+              assert required in ids,ids
+
+          html=(root/"ui/prototypes/human-v2-r6-writeback.html").read_text()
+          assert "R6 · DETECTANDO" in html
+          assert "1864" in html
+          print(json.dumps({"status":"PASS","change_log_entries":len(ids),"reference_mxn":1864},indent=2))
+          PY
+
+      - name: Install browser harness
+        run: |
+          mkdir -p /tmp/r6-browser
+          cd /tmp/r6-browser
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer-core@24 >/dev/null 2>&1
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN"
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+
+      - name: Exercise browser writeback
+        run: |
+          cd tmp/stackia-r6-repo
+          PYTHONPATH=scripts python scripts/serve_human_ui_v2.py --no-open --port 8765 >/tmp/r6-server.log 2>&1 &
+          echo $! >/tmp/r6-server.pid
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8765/api/status >/tmp/r6-status.json; then break; fi
+            sleep 0.25
+          done
+          cat /tmp/r6-status.json
+          cd "$GITHUB_WORKSPACE"
+          cat > /tmp/r6-browser/audit.mjs <<'NODE'
+          import puppeteer from 'puppeteer-core';
+          const browser=await puppeteer.launch({executablePath:process.env.CHROME_BIN,headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+          const page=await browser.newPage();
+          const errors=[];
+          page.on('pageerror',e=>errors.push(String(e)));
+          const assert=(c,m)=>{if(!c)throw new Error(m)};
+          await page.setViewport({width:1440,height:1000});
+          await page.goto('http://127.0.0.1:8765/',{waitUntil:'networkidle0'});
+          assert((await page.$eval('#writebackStatus',e=>e.textContent.trim()))==='R6 · WRITEBACK','writeback status not online');
+
+          await page.click('.nav button[data-page="inventario"]');
+          await page.type('#invSearch','n8n');
+          const btn=await page.$('#inventoryBody [data-inspect="n8n"]');
+          assert(!!btn,'n8n manage missing');
+          await btn.click();
+          await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open'));
+          const usage=await page.$$('#drawerBody [data-command="SET_USAGE"]');
+          assert(usage.length===2,'usage actions missing');
+          await usage[0].click();
+          await page.waitForFunction(()=>document.querySelector('#r6Apply'));
+          const preview=await page.$eval('.command-feedback',e=>e.textContent);
+          assert(preview.includes('PREVIEW VALIDADO'),'validated preview missing');
+          await page.click('#r6Apply');
+          await page.waitForFunction(()=>document.querySelector('#writebackStatus')?.textContent.includes('WRITEBACK'),{timeout:20000});
+          await new Promise(r=>setTimeout(r,800));
+
+          await page.click('.nav button[data-page="inventario"]');
+          await page.$eval('#invSearch',e=>{e.value='n8n';e.dispatchEvent(new Event('input',{bubbles:true}))});
+          const row=await page.$eval('#inventoryBody',e=>e.textContent);
+          assert(row.includes('En uso'),'n8n did not persist as USED');
+
+          await page.setViewport({width:390,height:844});
+          const dims=await page.evaluate(()=>({inner:innerWidth,body:document.body.scrollWidth}));
+          assert(dims.body<=dims.inner+1,'R6 mobile body overflow');
+          assert(errors.length===0,'page errors: '+errors.join(' | '));
+          console.log(JSON.stringify({status:'PASS',errors,dims},null,2));
+          await browser.close();
+          NODE
+          CHROME_BIN="$CHROME_BIN" node /tmp/r6-browser/audit.mjs
+          kill "$(cat /tmp/r6-server.pid)" || true
+
+      - name: Final canonical validation after browser apply
+        run: |
+          cd tmp/stackia-r6-repo
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          snap=json.loads(Path("ui/derived/snapshots/2026-10.actual.json").read_text())
+          reg={x["id"]:x for x in snap["registry"]["items"]}
+          assert reg["n8n"]["state"]["usage"]=="USED"
+          assert reg["v0"]["state"]["usage"]=="USED"
+          assert reg["v0"]["state"]["verification"]=="VERIFIED"
+          assert snap["overview"]["spend"]["reference_mxn"]==1864
+          assert len(snap["budget"]["paid_plans"])==6
+          print(json.dumps({
+            "status":"PASS",
+            "n8n_usage":"USED",
+            "v0_verification":"VERIFIED",
+            "reference_mxn":1864,
+            "paid_rows":6
+          },indent=2))
+          PY

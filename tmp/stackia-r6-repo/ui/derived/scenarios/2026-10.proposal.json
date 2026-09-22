@@ -1,0 +1,141 @@
+{
+  "schema": "stackia/scenario-projection@1",
+  "derived_only": true,
+  "month": "2026-10",
+  "source_refs": [
+    "state/months/2026-10.yaml",
+    "state/scenarios.yaml",
+    "rules/scale-triggers.yaml",
+    "docs/phase3/scenario-proposal-2026-10.md"
+  ],
+  "scenarios": {
+    "ACTUAL": {
+      "authority": "MONTHLY_LOCK",
+      "status": "ACTIVE",
+      "paid_subscription_ids": [
+        "chatgpt-plus",
+        "cursor-pro",
+        "google-ai-pro",
+        "capcut-pro",
+        "higgsfield-current",
+        "figma-professional-full"
+      ],
+      "reference_mxn": 1665,
+      "reference_excludes": [
+        "capcut-pro"
+      ],
+      "changes": [],
+      "rationale": "Exact paid membership is inherited from the locked October snapshot."
+    },
+    "LEAN": {
+      "authority": "DERIVED_PROPOSAL",
+      "status": "PROPOSED",
+      "paid_subscription_ids": [
+        "chatgpt-plus",
+        "cursor-pro",
+        "google-ai-pro",
+        "capcut-pro",
+        "higgsfield-current",
+        "figma-professional-full"
+      ],
+      "reference_mxn": 1665,
+      "reference_excludes": [
+        "capcut-pro"
+      ],
+      "changes": [
+        {
+          "operation": "REMOVE",
+          "subject": "higgsfield-current",
+          "state": "CONDITION_ONLY",
+          "condition": "Only after Higgsfield vs Google Flow benchmark proves >=~80% recurring accepted-workload coverage and remaining unique Higgsfield value is not material.",
+          "source_refs": [
+            "docs/phase3/scenario-proposal-2026-10.md",
+            "validation/media-factory-workloads.yaml#higgsfield-flow-video-benchmark-v1",
+            "rules/scale-triggers.yaml"
+          ]
+        }
+      ],
+      "rationale": "No immediate paid-plan removal is evidence-backed; Higgsfield is the first conditional redundancy candidate."
+    },
+    "SCALE": {
+      "authority": "DERIVED_PROPOSAL",
+      "status": "PROPOSED",
+      "paid_subscription_ids": [
+        "chatgpt-plus",
+        "cursor-pro",
+        "google-ai-pro",
+        "capcut-pro",
+        "higgsfield-current",
+        "figma-professional-full"
+      ],
+      "reference_mxn": 1665,
+      "reference_excludes": [
+        "capcut-pro"
+      ],
+      "changes": [
+        {
+          "operation": "ADD",
+          "subject": "runway-paid-video",
+          "state": "BLOCKED",
+          "condition": "Only if Higgsfield and included Google Flow fail the accepted video workload, Runway proves unique required value, and the Economic Gate passes.",
+          "source_refs": [
+            "state/needs/2026-10.yaml",
+            "state/scaling/2026-10.yaml",
+            "rules/scale-triggers.yaml"
+          ]
+        },
+        {
+          "operation": "ADD",
+          "subject": "firecrawl-paid",
+          "state": "CONDITION_ONLY",
+          "condition": "Only after real quota/feature limitation materially blocks recurring research and reroute/free alternatives are insufficient.",
+          "source_refs": [
+            "rules/scale-triggers.yaml",
+            "state/needs/2026-10.yaml"
+          ]
+        },
+        {
+          "operation": "ADD",
+          "subject": "elevenlabs-paid",
+          "state": "CONDITION_ONLY",
+          "condition": "Only after representative voice quality is verified and free-first capacity/quality becomes insufficient for actual production volume.",
+          "source_refs": [
+            "validation/media-factory-workloads.yaml#elevenlabs-voice-v1",
+            "rules/scale-triggers.yaml"
+          ]
+        },
+        {
+          "operation": "ADD",
+          "subject": "buffer-paid",
+          "state": "CONDITION_ONLY",
+          "condition": "Only after publishing/metrics workflow is verified and manual/native workflow creates recurring burden that free/current Buffer cannot solve.",
+          "source_refs": [
+            "validation/media-factory-workloads.yaml#buffer-publish-v1",
+            "validation/media-factory-workloads.yaml#media-metrics-v1"
+          ]
+        },
+        {
+          "operation": "UPGRADE",
+          "subject": "chatgpt-higher-tier",
+          "state": "CONDITION_ONLY",
+          "condition": "Repeated early depletion or blocked commercial workload, reroute exhausted, and high-cost Economic Gate PASS.",
+          "source_refs": [
+            "rules/scale-triggers.yaml",
+            "state/needs/2026-10.yaml"
+          ]
+        },
+        {
+          "operation": "UPGRADE",
+          "subject": "cursor-higher-tier",
+          "state": "CONDITION_ONLY",
+          "condition": "Repeated early engineering-capacity depletion materially blocks repository work, alternatives do not preserve productivity, and applicable Economic Gate passes.",
+          "source_refs": [
+            "rules/scale-triggers.yaml",
+            "state/needs/2026-10.yaml"
+          ]
+        }
+      ],
+      "rationale": "No paid expansion is justified today; all expansion candidates remain conditional."
+    }
+  }
+}

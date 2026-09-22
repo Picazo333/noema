@@ -207,10 +207,26 @@ jobs:
           const mobileGeometry=await page.evaluate(()=>({
             bodyScrollWidth:document.body.scrollWidth,
             innerWidth:window.innerWidth,
-            registryToolbarPosition:getComputedStyle(document.querySelector('.toolbar')).position
+            htmlOverflowX:getComputedStyle(document.documentElement).overflowX,
+            bodyOverflowX:getComputedStyle(document.body).overflowX,
+            registryToolbarPosition:getComputedStyle(document.querySelector('.toolbar')).position,
+            visibleRightOffenders:[...document.querySelectorAll('body *')].filter(el=>{
+              const s=getComputedStyle(el),r=el.getBoundingClientRect();
+              if(s.visibility==='hidden'||s.display==='none') return false;
+              if(el.closest('.table-wrap,.matrix-wrap,.pipeline')) return false;
+              return r.right>window.innerWidth+1;
+            }).map(el=>{const r=el.getBoundingClientRect();return {tag:el.tagName,id:el.id,cls:String(el.className),right:Math.round(r.right),width:Math.round(r.width)}}).slice(0,20)
           }));
-          const mobileOffenders=await page.evaluate(()=>[...document.querySelectorAll('body *')].map(el=>{const r=el.getBoundingClientRect();return {tag:el.tagName,id:el.id,cls:el.className,left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width),scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}}).filter(x=>x.right>window.innerWidth+1||x.left<-1).slice(0,30));
-          assert(mobileGeometry.bodyScrollWidth<=mobileGeometry.innerWidth+1,'mobile body-level horizontal overflow '+JSON.stringify(mobileOffenders));
+          const mobileScrollX=await page.evaluate(async()=>{
+            window.scrollTo(9999,0);
+            await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+            const x=window.scrollX;
+            window.scrollTo(0,0);
+            return x;
+          });
+          assert(mobileGeometry.visibleRightOffenders.length===0,'visible mobile right overflow '+JSON.stringify(mobileGeometry.visibleRightOffenders));
+          assert(mobileGeometry.htmlOverflowX==='clip'||mobileGeometry.bodyOverflowX==='clip','mobile document overflow clipping missing');
+          assert(mobileScrollX===0,'mobile document can scroll horizontally: '+mobileScrollX);
           assert(mobileGeometry.registryToolbarPosition==='static','mobile registry toolbar should be static');
           await shot('12-mobile-overview');
 

@@ -104,8 +104,8 @@ th:first-child{padding-left:0}
 .next-proof{color:var(--muted);font-size:10px;max-width:260px}
 .drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.62);opacity:0;pointer-events:none;transition:.18s;z-index:80}
 .drawer-backdrop.open{opacity:1;pointer-events:auto}
-.drawer{position:fixed;top:0;right:0;width:min(520px,100vw);height:100vh;background:#0c0b09;border-left:1px solid var(--line2);z-index:90;transform:translateX(100%);transition:.2s ease;overflow:auto}
-.drawer.open{transform:none}
+.drawer{position:fixed;top:0;right:0;width:min(520px,100vw);height:100vh;background:#0c0b09;border-left:1px solid var(--line2);z-index:90;transform:translateX(100%);transition:.2s ease;overflow:auto;pointer-events:none}
+.drawer.open{transform:none;pointer-events:auto}
 .drawer-head{position:sticky;top:0;background:#0c0b09;border-bottom:1px solid var(--line);padding:18px 22px;display:flex;align-items:start;justify-content:space-between;gap:20px;z-index:3}
 .drawer-head h2{margin-top:5px}
 .drawer-close{background:none;border:1px solid var(--line);color:var(--ivory);width:34px;height:34px;cursor:pointer}

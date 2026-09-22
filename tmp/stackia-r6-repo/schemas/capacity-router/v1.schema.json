@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stackia/capacity-router/v1",
+  "title": "StackIA Capacity Router Stable Seed v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "meta",
+    "month",
+    "plans",
+    "capacity_resources"
+  ],
+  "properties": {
+    "schema": {
+      "const": "stackia/capacity-router-seed@1"
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "derived_only",
+        "source_repo",
+        "source_commit"
+      ],
+      "properties": {
+        "derived_only": {
+          "const": true
+        },
+        "source_repo": {
+          "const": "Picazo333/stack-ia"
+        },
+        "source_commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "month": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}$"
+    },
+    "plans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subscription_id",
+          "subscription_state",
+          "billing",
+          "covered_subjects"
+        ],
+        "properties": {
+          "subscription_id": {
+            "type": "string"
+          },
+          "subscription_state": {
+            "type": "string"
+          },
+          "billing": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "currency",
+              "native_amount",
+              "native_certainty",
+              "reference_mxn",
+              "reference_mxn_certainty"
+            ],
+            "properties": {
+              "currency": {
+                "type": "string"
+              },
+              "native_amount": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "reference_mxn": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "native_certainty": {
+                "enum": [
+                  "CONFIRMED",
+                  "REFERENCE_ESTIMATE",
+                  "UNKNOWN"
+                ]
+              },
+              "reference_mxn_certainty": {
+                "enum": [
+                  "CONFIRMED",
+                  "REFERENCE_ESTIMATE",
+                  "UNKNOWN"
+                ]
+              }
+            }
+          },
+          "covered_subjects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "capacity_resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "capacity_resource_id",
+          "plan_ref",
+          "subjects",
+          "integrations",
+          "durable_events",
+          "depletion_class",
+          "scaling_status",
+          "reroute_result",
+          "economic_gate",
+          "next_action"
+        ],
+        "properties": {
+          "capacity_resource_id": {
+            "type": "string"
+          },
+          "plan_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "subjects": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "integrations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "durable_events": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "depletion_class": {
+            "type": "string"
+          },
+          "scaling_status": {
+            "enum": [
+              "UNASSESSED",
+              "OK",
+              "WATCH",
+              "SCALE_CANDIDATE",
+              "EVALUATE_NOW",
+              "REDUNDANT"
+            ]
+          },
+          "reroute_result": {
+            "type": "string"
+          },
+          "economic_gate": {
+            "type": "string"
+          },
+          "next_action": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "live_remaining_credits"
+        ]
+      },
+      {
+        "required": [
+          "live_reset_countdown"
+        ]
+      },
+      {
+        "required": [
+          "secrets"
+        ]
+      },
+      {
+        "required": [
+          "runtime_availability"
+        ]
+      }
+    ]
+  }
+}

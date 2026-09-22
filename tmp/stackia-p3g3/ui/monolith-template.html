@@ -256,8 +256,8 @@ tbody tr:hover{background:#17140f}
   .arrow{transform:rotate(90deg)}
 }
 
-.drawer{position:fixed;z-index:70;top:0;right:0;bottom:0;width:min(520px,92vw);background:#ece5d4;color:#17140f;border-left:1px solid #baaF98;box-shadow:-30px 0 80px rgba(0,0,0,.45);transform:translateX(104%);transition:transform .23s ease;overflow:auto}
-.drawer.open{transform:translateX(0)}
+.drawer{position:fixed;z-index:70;top:0;right:0;bottom:0;width:min(520px,92vw);background:#ece5d4;color:#17140f;border-left:1px solid #baaF98;box-shadow:-30px 0 80px rgba(0,0,0,.45);transform:translateX(104%);visibility:hidden;pointer-events:none;transition:transform .23s ease,visibility 0s linear .23s;overflow:auto}
+.drawer.open{transform:translateX(0);visibility:visible;pointer-events:auto;transition:transform .23s ease,visibility 0s}
 .drawer-head{position:sticky;top:0;background:rgba(236,229,212,.97);border-bottom:1px solid #b8ad96;padding:18px 20px;display:flex;align-items:start;justify-content:space-between;gap:15px;z-index:2}
 .drawer-head h3{font:400 27px/1 var(--serif);margin:3px 0 0}
 .drawer-head small{font:9px var(--mono);color:#6b6355}

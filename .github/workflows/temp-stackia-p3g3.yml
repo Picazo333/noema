@@ -249,9 +249,26 @@ jobs:
           node /tmp/stackia-browser/audit.mjs
           cat /tmp/browser-audit.json
 
+      - name: Create visual-review thumbnails
+        run: |
+          pip install pillow >/dev/null
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          src=Path('/tmp/screens')
+          dst=Path('/tmp/thumbs')
+          dst.mkdir(parents=True,exist_ok=True)
+          for p in sorted(src.glob('*.jpg')):
+              im=Image.open(p).convert('RGB')
+              target_w=420
+              target_h=max(1,round(im.height*target_w/im.width))
+              im=im.resize((target_w,target_h),Image.Resampling.LANCZOS)
+              im.save(dst/p.name,format='JPEG',quality=32,optimize=True,progressive=True)
+          PY
+
       - name: Persist exact audit outputs
         run: |
-          mkdir -p tmp/stackia-p3g3/out/screens
+          mkdir -p tmp/stackia-p3g3/out/screens tmp/stackia-p3g3/out/thumbs
           cp /tmp/stackia-a.json tmp/stackia-p3g3/out/2026-10.actual.json
           cp /tmp/capacity-a.json tmp/stackia-p3g3/out/capacity-router-stack.json
           cp /tmp/stackia.html tmp/stackia-p3g3/out/stackia.html
@@ -259,6 +276,7 @@ jobs:
           cp /tmp/stackia-validation.json tmp/stackia-p3g3/out/validation.json
           cp /tmp/browser-audit.json tmp/stackia-p3g3/out/browser-audit.json
           cp /tmp/screens/* tmp/stackia-p3g3/out/screens/
+          cp /tmp/thumbs/* tmp/stackia-p3g3/out/thumbs/
           git config user.name "stackia-temp-runner"
           git config user.email "stackia-temp-runner@users.noreply.github.com"
           git add tmp/stackia-p3g3/out

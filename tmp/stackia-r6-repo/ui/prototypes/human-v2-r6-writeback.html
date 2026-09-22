@@ -17,6 +17,8 @@ button,input,select{font:inherit}
 button{color:inherit}
 a{color:inherit}
 :focus-visible{outline:2px solid var(--ivory);outline-offset:3px}
+.skip-link{position:fixed;left:16px;top:10px;z-index:120;transform:translateY(-160%);background:var(--ivory);color:var(--ink);padding:9px 12px;font-size:11px;text-decoration:none;border:1px solid var(--line2)}
+.skip-link:focus{transform:none}
 .shell{max-width:var(--max);margin:0 auto;padding:0 28px 80px}
 .top{
   position:sticky;top:0;z-index:40;background:rgba(10,9,8,.97);
@@ -174,6 +176,7 @@ details.tech summary{cursor:pointer;color:var(--muted);font-size:10px}
 </style>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Saltar al contenido</a>
 <div class="shell">
   <header class="top">
     <div class="brand">STACKIA</div>
@@ -183,10 +186,10 @@ details.tech summary{cursor:pointer;color:var(--muted);font-size:10px}
       <button data-page="presupuesto">Presupuesto</button>
       <button data-page="benchmark">Benchmark</button>
     </nav>
-    <div class="top-meta"><span id="writebackStatus" class="prototype-flag">R6 · DETECTANDO</span> · OCT 2026</div>
+    <div class="top-meta"><span id="writebackStatus" class="prototype-flag">Comprobando edición…</span> · OCT 2026</div>
   </header>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <section id="page-hoy" class="page active">
       <div class="eyebrow">01 / Hoy</div>
       <h1>Lo que importa ahora.</h1>
@@ -9231,7 +9234,16 @@ function openPlan(id,source){
 function bindCommandPreview(subject){all('#drawerBody [data-command]').forEach(b=>b.addEventListener("click",()=>{$("#drawerBody .command-preview").innerHTML=preview(b.dataset.command,subject,b.dataset.before,b.dataset.after)}))}
 function openDrawer(){$("#drawer").classList.add("open");$("#backdrop").classList.add("open");$("#drawer").setAttribute("aria-hidden","false");$("#drawerClose").focus()}
 function closeDrawer(){const was=$("#drawer").classList.contains("open");$("#drawer").classList.remove("open");$("#backdrop").classList.remove("open");$("#drawer").setAttribute("aria-hidden","true");if(was&&returnFocus?.focus)returnFocus.focus()}
-$("#drawerClose").addEventListener("click",closeDrawer);$("#backdrop").addEventListener("click",closeDrawer);document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer()});
+$("#drawerClose").addEventListener("click",closeDrawer);$("#backdrop").addEventListener("click",closeDrawer);
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){closeDrawer();return}
+  if(e.key!=="Tab"||!$("#drawer").classList.contains("open"))return;
+  const focusable=all('#drawer button:not([disabled]),#drawer input:not([disabled]),#drawer select:not([disabled]),#drawer textarea:not([disabled]),#drawer a[href],#drawer summary,[tabindex]:not([tabindex="-1"])').filter(el=>el.offsetParent!==null);
+  if(!focusable.length){e.preventDefault();$("#drawerClose").focus();return}
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+});
 
 function bindDynamic(){
   all("[data-inspect]").forEach(b=>{if(!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",()=>openItem(b.dataset.inspect,b))}});
@@ -9276,10 +9288,10 @@ init();
       }catch(_){R6.online=false}
     }
     var s=q("#writebackStatus");
-    if(s)s.textContent=R6.online?"R6 · WRITEBACK":"R6 · LECTURA";
+    if(s)s.textContent=R6.online?"Edición activa":"Solo lectura";
   }
   async function preview(cs){
-    if(!R6.online)return {status:"PREVIEW_BLOCKED",errors:["Modo lectura: abre StackIA desde el companion local para aplicar cambios."]};
+    if(!R6.online)return {status:"PREVIEW_BLOCKED",errors:["Modo solo lectura. Abre StackIA en modo edición para aplicar cambios."]};
     var r=await fetch("/api/preview",{method:"POST",headers:{"Content-Type":"application/json","X-StackIA-Request":"human-ui"},body:JSON.stringify({change_set:cs})});
     return await r.json();
   }

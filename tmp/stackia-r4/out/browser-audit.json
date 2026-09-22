@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "page_errors": [],
+  "desktop": {
+    "innerWidth": 1440,
+    "bodyScrollWidth": 1440,
+    "topWidth": 1124
+  },
+  "mobile": {
+    "innerWidth": 390,
+    "bodyScrollWidth": 390,
+    "pageWidth": 358
+  },
+  "nav": [
+    "Hoy",
+    "Inventario",
+    "Presupuesto",
+    "Benchmark"
+  ],
+  "inventory": {
+    "tools": 9,
+    "skills": 3,
+    "mcps": 3,
+    "plugins": 3,
+    "default": "Tools"
+  },
+  "attention_items": 4,
+  "budget": {
+    "october": {
+      "confirmed": 0,
+      "reference": 1665,
+      "plans": 6
+    },
+    "september": {
+      "confirmed": 794,
+      "reference": 1389,
+      "plans": 5
+    }
+  },
+  "benchmark": {
+    "repo_candidates": 6,
+    "lenses": 4
+  },
+  "screenshots": [
+    "01-hoy-desktop.jpg",
+    "02-inventario-tools.jpg",
+    "03-inventario-skills.jpg",
+    "04-inventario-drawer-command.jpg",
+    "05-presupuesto.jpg",
+    "06-benchmark.jpg",
+    "07-hoy-mobile.jpg",
+    "08-inventario-mobile.jpg"
+  ]
+}

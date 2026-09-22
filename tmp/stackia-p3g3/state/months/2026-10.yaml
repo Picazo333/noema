@@ -68,6 +68,10 @@ activation_policy:
     - vercel
     - elevenlabs
     - runway
+    - v0
+    - attio
+    - google-analytics-4
+    - microsoft-clarity
 
 parked_tools: [claude, claude-code, gemini-cli]
 dropped_tools: [grok, perplexity]

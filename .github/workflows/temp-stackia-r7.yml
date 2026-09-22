@@ -155,7 +155,7 @@ jobs:
           assert((await txt('#inventoryBody')).includes('En uso'),'H4 usage did not persist');
 
           // Error recovery: invalid USED -> NOT_TRIED is explained, not applied.
-          const manage2=await page.$('#inventoryBody [data-inspect="n8n"]'); await manage2.click();
+          const manage2=await page.$('#inventoryBody [data-inspect="n8n"]'); await manage2.click(); await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open')); await new Promise(r=>setTimeout(r,250));
           const usage2=await page.$$('#drawerBody [data-command="SET_USAGE"]');
           await usage2[1].click();
           await page.waitForFunction(()=>document.querySelector('.command-feedback')?.textContent.includes('Cambio bloqueado'));
@@ -167,7 +167,7 @@ jobs:
           // H5: TEST -> PARK in <=3 interactions after finding v0.
           await search('v0');
           const v0Manage=await page.$('#inventoryBody [data-inspect="v0"]');assert(!!v0Manage,'v0 missing');
-          await v0Manage.click(); // 1
+          await v0Manage.click(); await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open')); await new Promise(r=>setTimeout(r,250)); // 1
           const pause=await page.$x?.catch?.(()=>null);
           const decisionBtns=await page.$$('#drawerBody [data-command="SET_DECISION"]');
           const labels=await Promise.all(decisionBtns.map(b=>b.evaluate(e=>e.textContent.trim())));
@@ -180,14 +180,14 @@ jobs:
 
           // H6: deployment is host-specific and verification remains unchanged.
           await page.click('#classSeg button[data-class="Skills"]');await search('superpowers');
-          const sm=await page.$('#inventoryBody [data-inspect="superpowers"]');assert(!!sm,'superpowers missing');await sm.click();
+          const sm=await page.$('#inventoryBody [data-inspect="superpowers"]');assert(!!sm,'superpowers missing');await sm.click();await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open'));await new Promise(r=>setTimeout(r,250));
           const beforeVerify=await page.$eval('#drawerBody .detail-cell:nth-child(2) strong',e=>e.textContent.trim());
           const depBtn=await page.$('#drawerBody [data-command="SET_DEPLOYMENT"]');assert(!!depBtn,'H6 deployment entry missing');await depBtn.click();
           await page.waitForSelector('#r6Host');
           await page.select('#r6Host','chatgpt');await page.select('#r6DepState','CONFIGURED');
           await page.click('#r6DepPreview');await page.waitForSelector('#r6Apply');await applyCurrent();
           await go('inventario');await page.click('#classSeg button[data-class="Skills"]');await search('superpowers');
-          await (await page.$('#inventoryBody [data-inspect="superpowers"]')).click();
+          await (await page.$('#inventoryBody [data-inspect="superpowers"]')).click();await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open'));await new Promise(r=>setTimeout(r,250));
           const afterVerify=await page.$eval('#drawerBody .detail-cell:nth-child(2) strong',e=>e.textContent.trim());
           assert(beforeVerify===afterVerify,'H6 deployment altered verification');
           assert((await txt('#drawerBody')).includes('Chatgpt: Configured')||(await txt('#drawerBody')).includes('Chatgpt: Configurado'),'H6 host deployment not visible');
@@ -195,7 +195,7 @@ jobs:
 
           // H7: representative test records TESTED, not VERIFIED; no free VERIFIED action.
           await page.click('#classSeg button[data-class="Tools"]');await search('v0');
-          await (await page.$('#inventoryBody [data-inspect="v0"]')).click();
+          await (await page.$('#inventoryBody [data-inspect="v0"]')).click();await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open'));await new Promise(r=>setTimeout(r,250));
           assert(!(await txt('#drawerBody')).includes('Mark VERIFIED'),'generic VERIFIED action');
           const testBtn=await page.$('#drawerBody [data-command="RECORD_TEST"]');assert(!!testBtn,'H7 test entry missing');await testBtn.click();
           await page.waitForSelector('#r6Workload');

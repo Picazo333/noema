@@ -258,12 +258,28 @@ jobs:
           src=Path('/tmp/screens')
           dst=Path('/tmp/thumbs')
           dst.mkdir(parents=True,exist_ok=True)
+          thumbs=[]
           for p in sorted(src.glob('*.jpg')):
               im=Image.open(p).convert('RGB')
               target_w=420
               target_h=max(1,round(im.height*target_w/im.width))
               im=im.resize((target_w,target_h),Image.Resampling.LANCZOS)
               im.save(dst/p.name,format='JPEG',quality=32,optimize=True,progressive=True)
+              thumbs.append((p.name,im))
+          cell_w,cell_h,label_h=210,146,18
+          cols=3
+          rows=(len(thumbs)+cols-1)//cols
+          sheet=Image.new('RGB',(cell_w*cols,(cell_h+label_h)*rows),(12,11,9))
+          from PIL import ImageDraw
+          draw=ImageDraw.Draw(sheet)
+          for i,(name,im) in enumerate(thumbs):
+              x=(i%cols)*cell_w
+              y=(i//cols)*(cell_h+label_h)
+              tile=im.copy()
+              tile.thumbnail((cell_w,cell_h),Image.Resampling.LANCZOS)
+              sheet.paste(tile,(x,y))
+              draw.text((x+4,y+cell_h+2),name[:29],fill=(225,218,199))
+          sheet.save(dst/'contact-sheet.jpg',format='JPEG',quality=30,optimize=True,progressive=True)
           PY
 
       - name: Persist exact audit outputs

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>StackIA — Human UI V2 · R4</title>
+<title>StackIA — Human UI V2 · R5 Full Data</title>
 <style>
 :root{
   --ink:#0a0908;--ink2:#100f0d;--ink3:#171410;--line:#2b2720;--line2:#42392d;
@@ -171,7 +171,7 @@ details.tech summary{cursor:pointer;color:var(--muted);font-size:10px}
       <button data-page="presupuesto">Presupuesto</button>
       <button data-page="benchmark">Benchmark</button>
     </nav>
-    <div class="top-meta"><span class="prototype-flag">R4 PROTOTIPO</span> · OCT 2026</div>
+    <div class="top-meta"><span class="prototype-flag">R5 FULL DATA</span> · OCT 2026</div>
   </header>
 
   <main>
@@ -315,11 +315,11 @@ function priorityLabel(x){return labels.priority[state(x,"priority")]||"Sin prio
 function rowStatusClass(x){const u=state(x,"usage");return u==="USED"?"used":u==="NOT_TRIED"?"tested":"unresolved"}
 
 function go(page){
-  $(".nav button").forEach(b=>{if(b.dataset.page===page)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
-  $(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));
+  all(".nav button").forEach(b=>{if(b.dataset.page===page)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  all(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+page));
   location.hash=page;window.scrollTo(0,0);
 }
-$(".nav button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
+all(".nav button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.page)));
 document.addEventListener("click",e=>{const b=e.target.closest("[data-go]");if(b)go(b.dataset.go)});
 
 function activeIds(month){
@@ -403,7 +403,7 @@ function renderInventory(){
     </tr>`).join(""):`<tr><td colspan="5" class="empty">No hay elementos que coincidan con estos filtros.</td></tr>`;
   bindDynamic();
 }
-$("#classSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-class]");if(!b)return;currentClass=b.dataset.class;$('#classSeg button').forEach(x=>x.classList.toggle("active",x===b));renderInventory()});
+$("#classSeg").addEventListener("click",e=>{const b=e.target.closest("button[data-class]");if(!b)return;currentClass=b.dataset.class;all('#classSeg button').forEach(x=>x.classList.toggle("active",x===b));renderInventory()});
 ["invSearch","invStatus","invDecision","invPriority"].forEach(id=>$("#"+id).addEventListener(id==="invSearch"?"input":"change",renderInventory));
 
 function renderMonthOptions(){
@@ -437,7 +437,7 @@ function renderScenarios(){
 }
 function renderScenario(id){
   const s=scenarios[id];if(!s)return;
-  $("#scenarioSeg button").forEach(b=>b.classList.toggle("active",b.dataset.scenario===id));
+  all("#scenarioSeg button").forEach(b=>b.classList.toggle("active",b.dataset.scenario===id));
   const proposal=s.status==="PROPOSED"?" · propuesta":"";
   $("#scenarioNote").innerHTML="<strong>"+esc(id)+"</strong>"+esc(proposal)+" · "+esc(s.rationale||"");
 }
@@ -469,7 +469,7 @@ function renderBenchmark(lens="repo"){
   }).join("");
   bindDynamic();
 }
-$("#benchLens").addEventListener("click",e=>{const b=e.target.closest("[data-lens]");if(!b)return;$('#benchLens button').forEach(x=>x.classList.toggle("active",x===b));renderBenchmark(b.dataset.lens)});
+$("#benchLens").addEventListener("click",e=>{const b=e.target.closest("[data-lens]");if(!b)return;all('#benchLens button').forEach(x=>x.classList.toggle("active",x===b));renderBenchmark(b.dataset.lens)});
 
 function preview(command,subject,before,after,extra=""){
   return `<div class="preview"><small>PREVIEW · R5 AÚN NO ESCRIBE EL CANON</small><strong>${esc(command)}</strong><p>${esc(subject)} · ${esc(before)} → ${esc(after)}</p>${extra?`<p>${esc(extra)}</p>`:""}<p class="prototype-only">R6 conectará este intent al change-set validado.</p></div>`;
@@ -518,16 +518,16 @@ function openPlan(id,source){
   $("#drawerBody").innerHTML=`<div class="drawer-section"><div class="detail-grid"><div class="detail-cell"><small>Precio</small><strong>${esc(planPrice(p))}</strong></div><div class="detail-cell"><small>Pago</small><strong>${esc(humanPlanState(p.payment_state))}</strong></div><div class="detail-cell"><small>Estado</small><strong>${esc(humanPlanState(p.subscription_state))}</strong></div><div class="detail-cell"><small>Mes</small><strong>${esc(selectedMonth)}</strong></div></div></div><div class="drawer-section"><label>Resolver dato</label><button class="action-btn primary" data-command="RESOLVE_ACCOUNT_FACT" data-before="${esc(humanPlanState(p.payment_state))}" data-after="Nuevo valor explícito">Resolver dato</button></div><div class="command-preview"></div>`;
   bindCommandPreview(p.plan_name);openDrawer();
 }
-function bindCommandPreview(subject){$('#drawerBody [data-command]').forEach(b=>b.addEventListener("click",()=>{$("#drawerBody .command-preview").innerHTML=preview(b.dataset.command,subject,b.dataset.before,b.dataset.after)}))}
+function bindCommandPreview(subject){all('#drawerBody [data-command]').forEach(b=>b.addEventListener("click",()=>{$("#drawerBody .command-preview").innerHTML=preview(b.dataset.command,subject,b.dataset.before,b.dataset.after)}))}
 function openDrawer(){$("#drawer").classList.add("open");$("#backdrop").classList.add("open");$("#drawer").setAttribute("aria-hidden","false");$("#drawerClose").focus()}
 function closeDrawer(){const was=$("#drawer").classList.contains("open");$("#drawer").classList.remove("open");$("#backdrop").classList.remove("open");$("#drawer").setAttribute("aria-hidden","true");if(was&&returnFocus?.focus)returnFocus.focus()}
 $("#drawerClose").addEventListener("click",closeDrawer);$("#backdrop").addEventListener("click",closeDrawer);document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer()});
 
 function bindDynamic(){
-  $("[data-inspect]").forEach(b=>{if(!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",()=>openItem(b.dataset.inspect,b))}});
-  $("[data-budget]").forEach(b=>{if(!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",()=>{go("presupuesto");setTimeout(()=>{const row=$('[data-plan="'+b.dataset.budget+'"]');if(row)row.scrollIntoView({block:"center"})},20)})}});
-  $("[data-plan-manage]").forEach(b=>{if(!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",()=>openPlan(b.dataset.planManage,b))}});
-  $("[data-candidate]").forEach(b=>{if(!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",()=>openCandidate(b.dataset.candidate,b))}});
+  all("[data-inspect]").forEach(b=>{if(!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",()=>openItem(b.dataset.inspect,b))}});
+  all("[data-budget]").forEach(b=>{if(!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",()=>{go("presupuesto");setTimeout(()=>{const row=$('[data-plan="'+b.dataset.budget+'"]');if(row)row.scrollIntoView({block:"center"})},20)})}});
+  all("[data-plan-manage]").forEach(b=>{if(!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",()=>openPlan(b.dataset.planManage,b))}});
+  all("[data-candidate]").forEach(b=>{if(!b.dataset.bound){b.dataset.bound="1";b.addEventListener("click",()=>openCandidate(b.dataset.candidate,b))}});
 }
 function init(){
   renderMonthOptions();renderScenarios();renderHoy();renderInventory();renderBudget();renderBenchmark("repo");bindDynamic();

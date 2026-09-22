@@ -203,6 +203,7 @@ jobs:
           assert((await page.$eval('#mobileMenu',el=>el.getAttribute('aria-expanded')))==='true','mobile menu reopen failed');
           await page.keyboard.press('Escape');
           assert((await page.$eval('#mobileMenu',el=>el.getAttribute('aria-expanded')))==='false','mobile aria expanded false');
+          await new Promise(resolve=>setTimeout(resolve,260));
           const mobileGeometry=await page.evaluate(()=>({
             bodyScrollWidth:document.body.scrollWidth,
             innerWidth:window.innerWidth,

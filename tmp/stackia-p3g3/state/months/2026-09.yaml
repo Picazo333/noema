@@ -1,0 +1,87 @@
+schema: stackia/monthly-stack@0.3
+status: locked
+month: "2026-09"
+scenario: ACTUAL
+decision_ref: decisions/0002-september-october-stack-lock.md
+
+budget:
+  paid_plans:
+    - subscription_id: chatgpt-plus
+      payment_state: PAID
+      confirmed_mxn: 399
+    - subscription_id: cursor-pro
+      payment_state: PENDING
+      reference_mxn: 340
+    - subscription_id: google-ai-pro
+      payment_state: PAID
+      confirmed_mxn: 395
+    - subscription_id: capcut-pro
+      payment_state: PENDING_ACTIVATION
+      confirmed_mxn: null
+    - subscription_id: higgsfield-current
+      payment_state: UNRESOLVED
+      reference_mxn: 255
+  totals:
+    already_paid_confirmed_mxn: 794
+    pending_confirmed_or_reference_mxn_excluding_capcut_and_unresolved_higgsfield: 340
+    reference_active_stack_mxn_excluding_capcut: 1389
+    unresolved_items: [capcut-pro, higgsfield-current]
+    note: "Reference total uses Cursor/Higgsfield MXN estimates; it is not an accounting total."
+
+entitlements:
+  zero_monthly_cash_out:
+    - subscription_id: canva-free
+      basis: FREE
+    - subscription_id: figma-starter
+      basis: FREE
+    - subscription_id: coursera-plus
+      basis: PREPAID
+    - subscription_id: nordpass-prepaid
+      basis: PREPAID
+  exiting:
+    - subscription_id: claude-pro-exit
+
+active_tools:
+  core: [chatgpt, codex, cursor, gemini]
+  agentic: [google-antigravity, jules]
+  media: [capcut, higgsfield]
+  knowledge: [obsidian]
+  automation: [n8n]
+
+included_capabilities_to_use:
+  - chatgpt-work
+  - cursor-agent
+  - cursor-cloud-agents
+  - cursor-projects
+  - grok-bot-cursor
+  - gemini-deep-research
+  - gemini-spark
+
+parked_tools: [claude, claude-code, gemini-cli]
+dropped_tools: [grok, perplexity]
+
+integration_targets:
+  skills:
+    - superpowers
+    - ponytail
+    - skill-creator
+    - mcp-builder
+    - webapp-testing
+    - impeccable
+    - taste
+    - frontend-design
+
+  mcps:
+    - github-mcp
+    - playwright-mcp
+    - chrome-devtools-mcp
+    - context7-mcp
+    - firecrawl-mcp
+    - figma-mcp
+    - google-developer-knowledge-mcp
+
+notes:
+  - "This monthly file records approved membership/intent, not deployment or verification."
+  - "ChatGPT Plus and Google AI Pro are confirmed paid for September."
+  - "CapCut promotion/checkout remains unresolved and must not be guessed."
+  - "Higgsfield is retained during audit but exact tier/charge remains unresolved."

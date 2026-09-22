@@ -5,7 +5,7 @@ the implementation adjudication for the independent audit's R1 findings. The
 work remains on `codex/noema-vnext-execution-governance`; no downstream
 repository was accessed or modified.
 
-Tested implementation SHA: `c61fcb8f4f02e1f65d0f58b6ac3ca064cc3a4684`.
+Tested implementation SHA: `3d1c60d7584eadb29fdd82b0a92677b96ba721e8`.
 
 ## R1-01 — execution-trace secret safety
 
@@ -26,7 +26,7 @@ Tested implementation SHA: `c61fcb8f4f02e1f65d0f58b6ac3ca064cc3a4684`.
 - Fix: resource matching occurs before final disposition; only required blocked resources are terminal, preserving the pure/local path.
 - Tests added: `test_blocked_runtime_and_resolver_are_terminal_only_when_required`; `test_e2e_04_runtime_blocked_required_resource_is_terminal`.
 - Before reproduction: a blocked GitHub-dependent task could be direct.
-- After result: required blocked resources yield `BLOCKED` (or `DEFER` when throttled); unrelated blocked resources leave pure/local work direct.
+- After result: required blocked resources yield `BLOCKED` (or `DEFER` when throttled); unrelated and optional-enrichment resources leave pure/local work direct.
 - Remaining limitation: resource identity is supplied by task/runtime contract; Noema does not infer it from external systems.
 
 ## R1-03 — orchestrator router use

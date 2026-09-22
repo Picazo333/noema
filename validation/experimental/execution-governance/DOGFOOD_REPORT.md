@@ -3,7 +3,7 @@
 Status: `READY_FOR_REAUDIT` pending final freeze. This supersedes the former
 claim that all 22 canaries were end-to-end. The level here states what each test
 actually exercises. `R1_IMPLEMENTATION_SHA` is the exact tested implementation
-commit `c61fcb8f4f02e1f65d0f58b6ac3ca064cc3a4684`.
+commit `3d1c60d7584eadb29fdd82b0a92677b96ba721e8`.
 
 | ID | Scope | Level | Exact test | Entrypoint | Expected / observed result | Evidence | SHA | Status |
 |---|---|---|---|---|---|---|---|---|
@@ -28,7 +28,7 @@ commit `c61fcb8f4f02e1f65d0f58b6ac3ca064cc3a4684`.
 | C19 | Duplicate read | INTEGRATION | `test_trace_is_structured_and_explicit_about_unavailable_metrics` | `create_trace` + ReadSet | suppression recorded | trace assertion | R1_IMPLEMENTATION_SHA | PASS |
 | C20 | Conserve posture | UNIT | `test_read_set_and_runtime_pressure_are_conservative` | `derive_resource_policy` | external calls conserved | assertion | R1_IMPLEMENTATION_SHA | PASS |
 | C21 | Throttle posture | UNIT | `test_throttled_and_blocked_runtime_do_not_expand_work` | runtime policy | external calls deferred | assertion | R1_IMPLEMENTATION_SHA | PASS |
-| C22 | Blocked platform precedence | END_TO_END | `test_e2e_04_runtime_blocked_required_resource_is_terminal` | envelope → runtime constraint | BLOCKED, not direct | integrated assertion | R1_IMPLEMENTATION_SHA | PASS |
+| C22 | Blocked platform precedence | END_TO_END | `test_e2e_04_runtime_blocked_required_resource_is_terminal` | envelope → runtime constraint | required BLOCKED; optional continues direct | integrated assertion | R1_IMPLEMENTATION_SHA | PASS |
 
 The fourteen mandatory R1 E2E flows are explicit in
 `tests/eg/test_rework_r1_e2e.py`: C01 (direct), C12 (routed), invalid WorkOrder

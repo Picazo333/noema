@@ -94,7 +94,6 @@ def compile_snapshot(month: str, source_commit: str, source_timestamp: str, sour
     needs_doc = load_yaml(f"state/needs/{month}.yaml")
     scaling_doc = load_yaml(f"state/scaling/{month}.yaml")
     media_doc = load_yaml("state/media-factory.yaml")
-    evidence_doc = load_yaml("state/verification-evidence.yaml")
     qual_doc = load_yaml("state/executor-qualification.yaml")
     noema_doc = load_yaml("exports/noema/executors.yaml")
     scenario_doc = load_json(f"ui/derived/scenarios/{month}.proposal.json")

@@ -166,16 +166,6 @@ def main():
     if projected_candidate_ids != candidate_ids:
         fail("executor qualification projection drift")
 
-    need_index = {x["capacity_resource_id"]: x for x in need_rows}
-    for row in snapshot["capacity"]["resources"]:
-        source = need_index[row["capacity_resource_id"]]
-        if row.get("completed_cycles_observed") != int(source.get("completed_cycles_observed", 0) or 0):
-            fail(f"completed-cycle projection drift for {row['capacity_resource_id']}")
-        if row.get("blocked_workloads") != int(source.get("blocked_workloads", 0) or 0):
-            fail(f"blocked-workload projection drift for {row['capacity_resource_id']}")
-        if row.get("workaround_minutes") != int(source.get("workaround_minutes", 0) or 0):
-            fail(f"workaround projection drift for {row['capacity_resource_id']}")
-
     # UNKNOWN must exist for catalog identities without evaluation rows.
     if snapshot["overview"]["counts"].get("unknown", 0) <= 0:
         fail("expected UNKNOWN registry states for identities without evaluation rows")
@@ -203,6 +193,16 @@ def main():
         fail("snapshot capacity resource count mismatch")
     if len(capacity["capacity_resources"]) != len(need_ids):
         fail("Capacity Router resource count mismatch")
+
+    need_index = {x["capacity_resource_id"]: x for x in need_rows}
+    for row in snapshot["capacity"]["resources"]:
+        source = need_index[row["capacity_resource_id"]]
+        if row.get("completed_cycles_observed") != int(source.get("completed_cycles_observed", 0) or 0):
+            fail(f"completed-cycle projection drift for {row['capacity_resource_id']}")
+        if row.get("blocked_workloads") != int(source.get("blocked_workloads", 0) or 0):
+            fail(f"blocked-workload projection drift for {row['capacity_resource_id']}")
+        if row.get("workaround_minutes") != int(source.get("workaround_minutes", 0) or 0):
+            fail(f"workaround projection drift for {row['capacity_resource_id']}")
 
     # Noema boundary.
     if noema.get("executors", []) != []:

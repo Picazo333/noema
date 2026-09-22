@@ -1,0 +1,444 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "stackia/change-set@1",
+  "title": "StackIA Human Change Set V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "change_set_id",
+    "status",
+    "created_at",
+    "operations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "stackia/change-set@1"
+    },
+    "change_set_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "DRAFT",
+        "PREVIEW_VALID",
+        "PREVIEW_BLOCKED",
+        "APPLIED",
+        "FAILED_VALIDATION",
+        "SUPERSEDED"
+      ]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "supersedes_change_set_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "$ref": "#/$defs/operation"
+      }
+    }
+  },
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "class"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "class": {
+          "enum": [
+            "TOOL",
+            "SKILL",
+            "MCP",
+            "PLUGIN",
+            "PLAN"
+          ]
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_id",
+        "command",
+        "subject",
+        "payload"
+      ],
+      "properties": {
+        "operation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "command": {
+          "enum": [
+            "SET_OPERATOR_REVIEW",
+            "SET_USAGE",
+            "SET_DECISION",
+            "SET_PRIORITY",
+            "SET_DEPLOYMENT",
+            "RECORD_TEST",
+            "RECORD_VERIFICATION",
+            "RESOLVE_ACCOUNT_FACT"
+          ]
+        },
+        "subject": {
+          "$ref": "#/$defs/subject"
+        },
+        "expected_before": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "payload": {
+          "type": "object"
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "command": {
+                "const": "SET_OPERATOR_REVIEW"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "reviewed": {
+                    "type": "boolean"
+                  },
+                  "urgency": {
+                    "enum": [
+                      "URGENT",
+                      "NON_URGENT"
+                    ]
+                  },
+                  "note": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 2000
+                  }
+                },
+                "anyOf": [
+                  {
+                    "required": [
+                      "reviewed"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "urgency"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "note"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "command": {
+                "const": "SET_USAGE"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "usage"
+                ],
+                "properties": {
+                  "usage": {
+                    "enum": [
+                      "NOT_TRIED",
+                      "USED"
+                    ]
+                  },
+                  "correction_mode": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "command": {
+                "const": "SET_DECISION"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "decision"
+                ],
+                "properties": {
+                  "decision": {
+                    "enum": [
+                      "KEEP",
+                      "TEST",
+                      "PARK",
+                      "DROP"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "command": {
+                "const": "SET_PRIORITY"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "priority"
+                ],
+                "properties": {
+                  "priority": {
+                    "enum": [
+                      "CORE",
+                      "NOW",
+                      "NEXT",
+                      "LATER",
+                      "TRIGGER"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "command": {
+                "const": "SET_DEPLOYMENT"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "host",
+                  "state"
+                ],
+                "properties": {
+                  "host": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "state": {
+                    "enum": [
+                      "NOT_DEPLOYED",
+                      "INSTALLED",
+                      "CONFIGURED",
+                      "CONNECTED"
+                    ]
+                  },
+                  "correction_mode": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "command": {
+                "const": "RECORD_TEST"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "workload_id",
+                  "result"
+                ],
+                "properties": {
+                  "workload_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "result": {
+                    "enum": [
+                      "PASS",
+                      "FAIL",
+                      "PARTIAL"
+                    ]
+                  },
+                  "summary": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "command": {
+                "const": "RECORD_VERIFICATION"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "workload_id"
+                ],
+                "properties": {
+                  "workload_id": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "command": {
+                "const": "RESOLVE_ACCOUNT_FACT"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "subject": {
+                "type": "object",
+                "properties": {
+                  "class": {
+                    "const": "PLAN"
+                  }
+                },
+                "required": [
+                  "id",
+                  "class"
+                ]
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "month",
+                  "field",
+                  "value"
+                ],
+                "properties": {
+                  "month": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}$"
+                  },
+                  "field": {
+                    "enum": [
+                      "payment_state",
+                      "confirmed_mxn",
+                      "reference_mxn",
+                      "billing_amount",
+                      "billing_currency",
+                      "billing_period",
+                      "subscription_state"
+                    ]
+                  },
+                  "value": {},
+                  "certainty": {
+                    "enum": [
+                      "CONFIRMED",
+                      "REFERENCE_ESTIMATE",
+                      "UNKNOWN"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

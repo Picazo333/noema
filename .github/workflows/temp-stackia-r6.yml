@@ -166,9 +166,14 @@ jobs:
           await page.waitForFunction(()=>document.querySelector('#r6Apply'));
           const preview=await page.$eval('.command-feedback',e=>e.textContent);
           assert(preview.includes('PREVIEW VALIDADO'),'validated preview missing');
+          const applyResponsePromise=page.waitForResponse(r=>r.url().endsWith('/api/apply'),{timeout:30000});
+          const navigationPromise=page.waitForNavigation({waitUntil:'networkidle0',timeout:30000}).catch(()=>null);
           await page.click('#r6Apply');
-          await page.waitForFunction(()=>document.querySelector('#writebackStatus')?.textContent.includes('WRITEBACK'),{timeout:20000});
-          await new Promise(r=>setTimeout(r,800));
+          const applyResponse=await applyResponsePromise;
+          const applyBody=await applyResponse.json();
+          assert(applyBody.status==='APPLIED','apply failed: '+JSON.stringify(applyBody));
+          await navigationPromise;
+          await page.waitForFunction(()=>document.querySelector('#writebackStatus')?.textContent.includes('WRITEBACK'),{timeout:30000});
 
           await page.click('.nav button[data-page="inventario"]');
           await page.$eval('#invSearch',e=>{e.value='n8n';e.dispatchEvent(new Event('input',{bubbles:true}))});
@@ -182,8 +187,13 @@ jobs:
           console.log(JSON.stringify({status:'PASS',errors,dims},null,2));
           await browser.close();
           NODE
+          set +e
           CHROME_BIN="$CHROME_BIN" node /tmp/r6-browser/audit.mjs
+          rc=$?
+          set -e
+          if [ "$rc" -ne 0 ]; then cat /tmp/r6-server.log; fi
           kill "$(cat /tmp/r6-server.pid)" || true
+          exit "$rc"
 
       - name: Final canonical validation after browser apply
         run: |

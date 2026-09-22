@@ -1,0 +1,4 @@
+# Derived stable projection for Noema routing.
+# Do not add volatile quota, reset, outage, or session state here.
+# Only verified executor descriptors should be promoted after the StackIA audit.
+executors: []

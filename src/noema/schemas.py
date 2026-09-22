@@ -19,6 +19,8 @@ SCHEMA_FILES = {
     "ecosystem-index": "schemas/ecosystem-index/v1.schema.json",
     "execution-envelope": "schemas/execution-envelope/v0.schema.json",
     "execution-trace": "schemas/execution-trace/v0.schema.json",
+    "execution-envelope-v1": "schemas/execution-envelope/v1.schema.json",
+    "execution-trace-v1": "schemas/execution-trace/v1.schema.json",
 }
 
 
@@ -51,5 +53,8 @@ def validator_for(name: str, protocol_root: Path | None = None) -> Draft202012Va
 
 
 def validation_errors(name: str, data, protocol_root: Path | None = None):
+    if name in {"execution-envelope", "execution-trace"} and isinstance(data, dict):
+        if data.get("contract_version") == f"{name}/v1":
+            name += "-v1"
     validator = validator_for(name, protocol_root)
     return sorted(validator.iter_errors(data), key=lambda e: list(e.absolute_path))

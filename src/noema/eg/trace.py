@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from .context_plan import ReadSet
 from .enums import MetricStatus
-from .semantics import raise_for_issues, validate_envelope_semantics, validate_trace_semantics
+from .semantics import raise_for_issues, sensitive_ref, validate_envelope_semantics, validate_trace_semantics
 
 
 _METRIC_NAMES = (
@@ -107,6 +107,8 @@ def _storage_ref(value: object, label: str) -> dict:
     ref = _require_known_mapping(value, _STORAGE_REF_KEYS, label)
     if not isinstance(ref.get("scheme"), str) or not isinstance(ref.get("locator"), str):
         raise ValueError(f"{label} requires a scheme and locator")
+    if sensitive_ref(ref):
+        raise ValueError(f"{label} contains a credential-like locator")
     return ref
 
 
@@ -235,6 +237,7 @@ def create_trace(
             context_refs.append(ref)
     started_at = started_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     trace = {
+        "contract_version": "execution-trace/v1",
         "trace_id": f"trace-{uuid4().hex}",
         "execution_id": envelope["execution_id"],
         "envelope_ref": envelope_ref,

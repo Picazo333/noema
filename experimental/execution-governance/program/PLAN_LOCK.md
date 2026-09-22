@@ -11,3 +11,8 @@ domain quality semantics, runtime scheduling, or domain state.
 
 Security is based on independent deliberation, effect, sensitivity, and
 authority axes. DIRECT avoids unnecessary routing but does not bypass control.
+
+R4 narrowly reopens the two artifact versions to `execution-envelope/v1` and
+`execution-trace/v1` under ADR-0008. v0 remains read-only legacy. This does not
+reopen the prohibition on a daemon, workflow engine, catalog, agent runtime,
+or domain-state ownership.

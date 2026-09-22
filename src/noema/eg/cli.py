@@ -128,9 +128,12 @@ def validate(args) -> int:
         return 0
     issues = contract_issues(kind, data, schema_root(Path(args.root).resolve()))
     if issues:
-        print("FAIL: " + issues[0].message)
+        print(("UNVERIFIED: " if issues[0].severity == "UNVERIFIED" else "FAIL: ") + issues[0].message)
         return 1
-    print("PASS")
+    if kind in {"execution-envelope", "execution-trace"} and "contract_version" not in data:
+        print("LEGACY_VALID: v0 shape/semantics only; not R4 structural conformance")
+    else:
+        print("PASS")
     return 0
 
 
@@ -138,6 +141,8 @@ def record(args) -> int:
     envelope = load_yaml(Path(args.envelope))
     actual = load_yaml(Path(args.actual))
     raise_for_issues(contract_issues("execution-envelope", envelope, schema_root()))
+    if envelope.get("contract_version") != "execution-envelope/v1":
+        raise ValueError("v0 envelopes are read-only; record requires v1")
     trace = create_trace(envelope, actual)
     raise_for_issues(contract_issues("execution-trace", trace, schema_root()))
     _write(trace, args.out, args.json)
@@ -152,6 +157,8 @@ def compare(args) -> int:
 def resume(args) -> int:
     envelope = load_yaml(Path(args.envelope))
     raise_for_issues(contract_issues("execution-envelope", envelope, schema_root()))
+    if envelope.get("contract_version") != "execution-envelope/v1":
+        raise ValueError("v0 envelopes are read-only; resume-check requires v1")
     report = resume_check(envelope, load_yaml(Path(args.handoff)), load_yaml(Path(args.state)))
     _write(report, None, args.json)
     return 0 if report["status"] == "PASS" else 1

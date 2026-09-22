@@ -140,15 +140,15 @@ def test_r2_02_runtime_pressure_malformed_input_is_rejected_by_cli(tmp_path):
 
 def test_r2_03_readset_requires_evidence_and_trace_records_identity():
     reads = ReadSet()
-    first = {"scheme": "repo", "locator": "doc.md", "integrity": "sha-a"}
-    changed = {"scheme": "repo", "locator": "doc.md", "integrity": "sha-b"}
+    first = {"scheme": "repo", "locator": "doc.md", "integrity": "sha256:" + "a" * 64}
+    changed = {"scheme": "repo", "locator": "doc.md", "integrity": "sha256:" + "b" * 64}
     unknown = {"scheme": "repo", "locator": "unknown.md"}
     assert reads.record(first)["reason_code"] == "READ_REQUIRED"
     assert reads.record(first)["reason_code"] == "DUPLICATE_READ_SUPPRESSED"
     assert reads.record(changed)["reason_code"] == "READ_REQUIRED"
     assert reads.record(unknown)["reason_code"] == "READ_REQUIRED"
     assert reads.record(unknown)["reason_code"] == "READ_REQUIRED"
-    assert reads.record({"scheme": "repo", "locator": "other.md", "integrity": "sha-a"})["reason_code"] == "READ_REQUIRED"
+    assert reads.record({"scheme": "repo", "locator": "other.md", "integrity": "sha256:" + "a" * 64})["reason_code"] == "READ_REQUIRED"
 
     trace = create_trace(envelope(), {"context_reads": [
         {"ref": first}, {"ref": first}, {"ref": changed},
@@ -232,7 +232,7 @@ def test_r2_07_public_routed_tool_fallback_and_trace(tmp_path):
     candidates_path.write_text(dump_yaml({
         "tools": [
             {"id": "denied-authoritative", "allowed": False, "capabilities": ["read"], "source_relation": "AUTHORITATIVE"},
-            {"id": "allowed-fallback", "capabilities": ["read"], "source_relation": "BROAD"},
+            {"id": "allowed-fallback", "capabilities": ["read"], "source_relation": "BROAD", "allowed": True, "available": True, "availability": "AVAILABLE", "qualification": "VERIFIED"},
         ],
         "models": [{"id": "text-model", "modalities": ["text"]}],
     }), encoding="utf-8")
@@ -286,8 +286,8 @@ def test_r2_07_public_context_trace_resume_secret_and_harvest(tmp_path):
     planned = load_yaml(envelope_path)
     assert planned["context"]["tier_transitions"]
     actual_path.write_text(dump_yaml({"context_reads": [
-        {"ref": {"scheme": "repo", "locator": "history.md", "integrity": "sha-history"}},
-        {"ref": {"scheme": "repo", "locator": "history.md", "integrity": "sha-history"}},
+        {"ref": {"scheme": "repo", "locator": "history.md", "integrity": "sha256:" + "a" * 64}},
+        {"ref": {"scheme": "repo", "locator": "history.md", "integrity": "sha256:" + "a" * 64}},
     ]}), encoding="utf-8")
     assert main(["eg", "record", str(envelope_path), str(actual_path), "--out", str(trace_path)]) == 0
     assert load_yaml(trace_path)["actual"]["context_events"][1]["result"] == "DUPLICATE_READ_SUPPRESSED"

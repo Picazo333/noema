@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 import posixpath
+import re
 
 from ..context import context_stats, optional_context_refs, resolve_context_paths
 from ..refs import parse_ref, safe_project_path
@@ -130,13 +131,8 @@ class ReadSet:
         locator = str(ref.get("locator", "")).replace("\\", "/").strip()
         locator = posixpath.normpath(locator) if locator else locator
         integrity = ref.get("integrity")
-        if isinstance(integrity, str) and integrity:
+        if isinstance(integrity, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", integrity):
             return ReadIdentity.from_evidence(scheme, locator, "INTEGRITY", integrity)
-        version = ref.get("version")
-        if isinstance(version, (str, int)) and str(version):
-            return ReadIdentity.from_evidence(scheme, locator, "VERSION", str(version))
-        if isinstance(freshness, str) and freshness:
-            return ReadIdentity.from_evidence(scheme, locator, "FRESHNESS", freshness)
         return ReadIdentity(scheme, locator, "UNKNOWN", None)
 
     def _read_required(self, identity: "ReadIdentity", low_signal: bool) -> dict:
@@ -165,5 +161,5 @@ class ReadIdentity:
 
     @classmethod
     def from_evidence(cls, scheme: str, locator: str, kind: str, evidence: str) -> "ReadIdentity":
-        fingerprint = sha256(f"{kind}:{evidence}".encode("utf-8")).hexdigest()
+        fingerprint = sha256(f"{scheme}:{locator}:{kind}:{evidence}".encode("utf-8")).hexdigest()
         return cls(scheme, locator, kind, fingerprint)

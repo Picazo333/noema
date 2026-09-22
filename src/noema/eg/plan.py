@@ -29,7 +29,7 @@ from .runtime import (
     resource_disposition_constraint,
 )
 from .provenance import LoadedWorkOrder, programmatic_work_order
-from .semantics import contract_issues, raise_for_issues, validate_envelope_semantics
+from .semantics import canonical_digest, contract_issues, raise_for_issues, sensitive_ref, validate_envelope_semantics
 from .tooling import decide_tools
 from .topology import derive_topology
 
@@ -43,6 +43,31 @@ def _validate_work_order(work_order: dict, root: Path) -> None:
 
 def _terminal(disposition: str, reason: str) -> dict:
     return {"disposition": disposition, "reason_codes": [reason]}
+
+
+def _binding(value: object, source_ref: dict | None = None) -> dict:
+    def reject_credentials(item: object) -> None:
+        if isinstance(item, dict):
+            if sensitive_ref(item):
+                raise ValueError("EG input reference contains a credential-like locator")
+            for key, child in item.items():
+                if str(key).lower().replace("-", "_") in {
+                    "access_token", "refresh_token", "api_key", "password", "client_secret",
+                    "authorization", "credential", "secret_key",
+                }:
+                    raise ValueError("EG input snapshot contains a credential-like field")
+                reject_credentials(child)
+        elif isinstance(item, list):
+            for child in item:
+                reject_credentials(child)
+
+    reject_credentials(value)
+    digest = canonical_digest(value)
+    return {
+        "snapshot": value,
+        "digest": digest,
+        "source_ref": source_ref or {"scheme": "memory", "locator": digest, "integrity": digest},
+    }
 
 
 def build_execution_envelope(
@@ -67,6 +92,17 @@ def build_execution_envelope(
     loaded = loaded_work_order or programmatic_work_order(work_order)
     if loaded.data != work_order:
         raise ValueError("LoadedWorkOrder data must be the WorkOrder being planned")
+    if loaded_work_order is not None:
+        ref = loaded_work_order.canonical_source_ref
+        if ref.get("scheme") == "file":
+            from .provenance import load_work_order
+
+            verified = load_work_order(Path(ref["locator"]))
+            if verified.data != work_order or verified.source_digest != loaded_work_order.source_digest:
+                raise ValueError("LoadedWorkOrder source does not match its file content")
+            loaded = verified
+        else:
+            loaded = programmatic_work_order(work_order)
     _validate_work_order(loaded.data, root)
     work_order = loaded.data
     manifest = load_yaml(root / "noema.project.yaml")
@@ -88,9 +124,7 @@ def build_execution_envelope(
     tool_requirements = metadata.get("tool_requirements", {})
     resolver_required = needs.resolution_required
     unexpected_receipts = bool(receipts) and not resolver_required
-    needs_resolution = bool(
-        resolver_required or bool(needs.tool_capabilities) or needs.executor_required or needs.model_required
-    )
+    needs_resolution = needs.external_required
     decision = decide_disposition(
         control["control"],
         already_complete=bool(metadata.get("already_complete")),
@@ -124,6 +158,11 @@ def build_execution_envelope(
         final = _terminal("BLOCKED", "RESOLVER_BLOCKED")
     elif resolver_required and "UNRESOLVED" in resolver_statuses:
         final = _terminal("DEFER", "RESOLVER_UNRESOLVED")
+    elif resolver_required and any(
+        set(receipt.get("unresolved_capabilities", [])) & needs.capability_requirements
+        for receipt in receipts if receipt.get("status") == "PARTIAL"
+    ):
+        final = _terminal("DEFER", "RESOLVER_PARTIAL_REQUIRED")
     elif resolver_required and not resolver_statuses.issubset({"RESOLVED", "PARTIAL"}):
         final = _terminal("DEFER", "RESOLVER_RECEIPT_UNUSABLE")
     elif control["control"] == "REQUIRE_HUMAN" and not host.get("enforce_human_gate"):
@@ -134,6 +173,15 @@ def build_execution_envelope(
     )
     if runtime_constraint is not None:
         final = _terminal(runtime_constraint["disposition"], runtime_constraint["reason_code"])
+
+    for category, required in (("resources", needs.required_resources),
+                               ("interfaces", needs.required_interfaces)):
+        witnesses = candidates.get(category, [])
+        verified = {item.get("id") for item in witnesses if isinstance(item, dict)
+                    and item.get("available") is True and item.get("allowed") is True
+                    and item.get("qualification") == "VERIFIED"}
+        if required - verified and final["disposition"] not in {"BLOCKED", "ROUTE_ELSEWHERE"}:
+            final = _terminal("DEFER", "REQUIRED_DEPENDENCY_UNVERIFIED")
 
     if final["disposition"] == "ROUTED":
         tool_decisions = decide_tools(candidates.get("tools", []), tool_requirements, control=control["control"])
@@ -156,6 +204,11 @@ def build_execution_envelope(
             model = {"requirements": model_requirements, **selected_model}
             if model["selected_model"] is None:
                 final = _terminal("DEFER", "NO_ELIGIBLE_MODEL")
+    if final["disposition"] in {"DEFER", "BLOCKED", "ROUTE_ELSEWHERE", "NO_ACTION"}:
+        for item in tool_decisions:
+            if item["decision"] == "CALL":
+                item["decision"] = "DEFER"
+                item["reason_codes"] = ["PLAN_NOT_EXECUTABLE"]
 
     baseline = (
         {"scheme": "git", "locator": baseline_sha}
@@ -171,12 +224,13 @@ def build_execution_envelope(
         )
     )
     envelope = {
+        "contract_version": "execution-envelope/v1",
         "execution_id": f"exec-{uuid4().hex}",
         "work_order_ref": loaded.canonical_source_ref,
         "work_order_id": work_order["work_order_id"],
         "project_id": work_order_project_id,
         "profile": profile,
-        "policy_version": "eg-policy-v0",
+        "policy_version": "eg-policy-v1",
         "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "baseline_ref": baseline,
         "disposition": final["disposition"],
@@ -191,6 +245,16 @@ def build_execution_envelope(
         "context": context,
         "runtime_resource_policy": resource_policy,
         "capability_requirements": list(work_order.get("capability_requirements", [])),
+        "effective_needs": needs.to_dict(),
+        "input_bindings": {
+            "work_order": _binding(work_order, loaded.canonical_source_ref),
+            "metadata": _binding(metadata),
+            "runtime_pressure": _binding(runtime_pressure),
+            "candidate_snapshot": _binding(candidate_snapshot),
+            "resolver_receipts": _binding(resolver_receipts or []),
+            "host_capabilities": _binding(host_capabilities),
+            "manifest": _binding(manifest, {"scheme": "file", "locator": str(root / "noema.project.yaml"), "integrity": canonical_digest(manifest)}),
+        },
         "resolver_receipts": receipts,
         "tool_decisions": tool_decisions,
         "executor": executor,

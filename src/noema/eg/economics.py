@@ -11,9 +11,9 @@ def economics_vector(trace: dict) -> dict:
     return {
         key: metrics.get(key, metric()) for key in keys
     } | {
-        "tool_calls": sum(1 for event in trace.get("actual", {}).get("tool_events", []) if event.get("action") == "CALL"),
-        "suppressed_calls": sum(1 for event in trace.get("actual", {}).get("tool_events", []) if event.get("action") == "SOFT_SUPPRESS"),
-        "retries": trace.get("retries", 0),
-        "rework_cycles": trace.get("rework_cycles", 0),
+        "tool_calls": metrics.get("tool_calls", metric()),
+        "suppressed_calls": metrics.get("suppressed_calls", metric()),
+        "retries": trace.get("retries"),
+        "rework_cycles": trace.get("rework_cycles"),
         "outcome": trace.get("outcome"),
     }

@@ -93,7 +93,7 @@ def test_e2e_02_routed_tool_and_model_to_trace():
             "model_requirements": {"modalities": ["text"]},
         },
         candidate_snapshot={
-            "tools": [{"id": "allowed", "capabilities": ["read"], "source_relation": "DIRECT"}],
+            "tools": [{"id": "allowed", "capabilities": ["read"], "source_relation": "DIRECT", "allowed": True, "available": True, "availability": "AVAILABLE", "qualification": "VERIFIED"}],
             "models": [{"id": "text-model", "modalities": ["text"]}],
         },
         resolver_receipts=[{"resolver": "project:resolver", "status": "RESOLVED", "resolution_ref": {"scheme": "repo", "locator": "resolution.yaml"}}],
@@ -151,7 +151,7 @@ def test_e2e_07_denied_authoritative_tool_leaves_allowed_fallback():
         task_metadata={"tool_requirements": {"capabilities": ["read"]}},
         candidate_snapshot={"tools": [
             {"id": "denied", "allowed": False, "capabilities": ["read"], "source_relation": "AUTHORITATIVE"},
-            {"id": "fallback", "capabilities": ["read"], "source_relation": "BROAD"},
+            {"id": "fallback", "capabilities": ["read"], "source_relation": "BROAD", "allowed": True, "available": True, "availability": "AVAILABLE", "qualification": "VERIFIED"},
         ]},
     )
     assert planned["disposition"] == "ROUTED"
@@ -174,8 +174,8 @@ def test_e2e_09_context_promotion_and_read_set_suppression_reach_trace():
     }})
     assert planned["context"]["tier_transitions"]
     trace = trace_for(planned, {"context_reads": [
-        {"ref": {"scheme": "repo", "locator": "history.md"}, "freshness": "sha-r1"},
-        {"ref": {"scheme": "repo", "locator": "history.md"}, "freshness": "sha-r1"},
+        {"ref": {"scheme": "repo", "locator": "history.md", "integrity": "sha256:" + "a" * 64}},
+        {"ref": {"scheme": "repo", "locator": "history.md", "integrity": "sha256:" + "a" * 64}},
     ]})
     assert trace["actual"]["context_events"][-1]["result"] == "DUPLICATE_READ_SUPPRESSED"
 

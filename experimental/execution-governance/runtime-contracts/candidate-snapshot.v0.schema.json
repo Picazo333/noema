@@ -1,1 +1,1 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"tools":{"type":"array","items":{"type":"object"}},"models":{"type":"array","items":{"type":"object"}}},"additionalProperties":false}
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","properties":{"tools":{"type":"array","items":{"type":"object"}},"models":{"type":"array","items":{"type":"object"}},"resources":{"type":"array","items":{"type":"object"}},"interfaces":{"type":"array","items":{"type":"object"}}},"additionalProperties":false}

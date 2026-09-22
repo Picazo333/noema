@@ -108,6 +108,37 @@ def resume_check(
         failures.append("PROHIBITED_SCOPE_ACCESS")
     blockers = state["active_blockers"]
     gates = state["outstanding_human_gates"]
+    required_gates = set(requirements.get("required_human_gates", []))
+    clearances = state.get("gate_clearances", [])
+    cleared = set()
+    if isinstance(clearances, list):
+        for clearance in clearances:
+            if not isinstance(clearance, dict):
+                continue
+            ref = clearance.get("evidence_ref", {})
+            if (isinstance(ref, dict)
+                    and ref.get("scheme") == "file"
+                    and isinstance(ref.get("locator"), str)
+                    and isinstance(ref.get("integrity"), str)
+                    and ref in (handoff.get("evidence") or [])):
+                from pathlib import Path
+                from .semantics import canonical_digest
+                from ..loader import load_yaml
+
+                try:
+                    evidence = load_yaml(Path(ref["locator"]))
+                    if (isinstance(evidence, dict)
+                            and evidence.get("gate_id") == clearance.get("gate_id")
+                            and evidence.get("work_order_id") == envelope.get("work_order_id")
+                            and evidence.get("decision") == "APPROVED"
+                            and isinstance(evidence.get("approved_by"), str)
+                            and evidence["approved_by"]
+                            and canonical_digest(evidence) == ref["integrity"]):
+                        cleared.add(clearance.get("gate_id"))
+                except (OSError, ValueError):
+                    pass
+    if required_gates - set(gates) - cleared:
+        failures.append("HUMAN_GATE_DROPPED_WITHOUT_EVIDENCE")
     if blockers:
         failures.append("ACTIVE_BLOCKERS")
         if state["next_action_kind"] != "RESOLVE_BLOCKERS":

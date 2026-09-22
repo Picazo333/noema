@@ -22,6 +22,8 @@ def decide_disposition(
         return {"disposition": Disposition.ROUTE_ELSEWHERE.value, "reason_codes": ["FOREIGN_AUTHORITY"]}
     if control == ControlDecision.DEFER.value:
         return {"disposition": Disposition.DEFER.value, "reason_codes": ["CONTROL_DEFER"]}
+    if control == ControlDecision.REQUIRE_HUMAN.value:
+        return {"disposition": Disposition.DEFER.value, "reason_codes": ["HUMAN_APPROVAL_REQUIRED"]}
     if not required_evidence_available:
         return {"disposition": Disposition.BLOCKED.value, "reason_codes": ["REQUIRED_EVIDENCE_UNAVAILABLE"]}
     if not needs_resolution and not needs_topology and context_simple:

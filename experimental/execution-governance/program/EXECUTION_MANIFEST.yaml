@@ -1,9 +1,9 @@
-program_id: noema-vnext-execution-governance-v0
-status: DOGFOOD_READY_AWAITING_JULES_AUDIT
+program_id: noema-vnext-execution-governance-r4
+status: R4_IMPLEMENTED_PENDING_POST_COMMIT_EVIDENCE_AND_REAUDIT
 baseline:
   reference_sha: 0e49538c24e51af98a3f3c12706afdbe2e8d812d
   drift: D0
-contracts: [execution-envelope/v0, execution-trace/v0]
+contracts: [execution-envelope/v1, execution-trace/v1]
 gates: [G0, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12]
 forbidden:
   - second-context-router

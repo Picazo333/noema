@@ -43,8 +43,8 @@ def test_direct_envelope_is_valid_and_skips_tool_routing():
 
 def test_tool_selector_suppresses_broader_duplicate_source():
     decisions = decide_tools([
-        {"id": "repo", "capabilities": ["read"], "source_relation": "DIRECT"},
-        {"id": "crawler", "capabilities": ["read"], "source_relation": "BROAD"},
+        {"id": "repo", "capabilities": ["read"], "source_relation": "DIRECT", "allowed": True, "available": True, "availability": "AVAILABLE", "qualification": "VERIFIED"},
+        {"id": "crawler", "capabilities": ["read"], "source_relation": "BROAD", "allowed": True, "available": True, "availability": "AVAILABLE", "qualification": "VERIFIED"},
     ], {"capabilities": ["read"]})
     assert decisions[0]["decision"] == "CALL"
     assert decisions[1]["decision"] == "SOFT_SUPPRESS"
@@ -52,7 +52,7 @@ def test_tool_selector_suppresses_broader_duplicate_source():
 
 def test_read_set_and_runtime_pressure_are_conservative():
     read_set = ReadSet()
-    ref = {"scheme": "repo", "locator": "PROTOCOL.md", "integrity": "sha-protocol"}
+    ref = {"scheme": "repo", "locator": "PROTOCOL.md", "integrity": "sha256:" + "a" * 64}
     assert read_set.record(ref)["read"]
     assert read_set.record(ref)["reason_code"] == "DUPLICATE_READ_SUPPRESSED"
     posture = classify_runtime_posture({"posture_hint": "CONSERVE"})

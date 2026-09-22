@@ -80,10 +80,10 @@ def test_r3_runtime_dependency_matrix(pressure, metadata, expected):
 
 
 @pytest.mark.parametrize("first,second,suppressed", [
-    ({"scheme": "repo", "locator": "a", "integrity": "one"}, {"scheme": "repo", "locator": "a", "integrity": "one"}, True),
-    ({"scheme": "repo", "locator": "a", "integrity": "one"}, {"scheme": "repo", "locator": "a", "integrity": "two"}, False),
+    ({"scheme": "repo", "locator": "a", "integrity": "sha256:" + "a" * 64}, {"scheme": "repo", "locator": "a", "integrity": "sha256:" + "a" * 64}, True),
+    ({"scheme": "repo", "locator": "a", "integrity": "sha256:" + "a" * 64}, {"scheme": "repo", "locator": "a", "integrity": "sha256:" + "b" * 64}, False),
     ({"scheme": "repo", "locator": "a"}, {"scheme": "repo", "locator": "a"}, False),
-    ({"scheme": "repo", "locator": "a", "integrity": "one"}, {"scheme": "repo", "locator": "b", "integrity": "one"}, False),
+    ({"scheme": "repo", "locator": "a", "integrity": "sha256:" + "a" * 64}, {"scheme": "repo", "locator": "b", "integrity": "sha256:" + "a" * 64}, False),
 ])
 def test_r3_read_identity_matrix(first, second, suppressed):
     reads = ReadSet()
@@ -116,15 +116,17 @@ def test_r3_provenance_is_derived_and_trace_preserves_read_evidence():
     assert env["work_order_ref"]["scheme"] == "memory"
     assert env["work_order_ref"]["integrity"]
     trace = create_trace(env, {"context_reads": [
-        {"ref": {"scheme": "repo", "locator": "a.md"}, "freshness": "etag-a"},
-        {"ref": {"scheme": "repo", "locator": "a.md"}, "freshness": "etag-a"},
+        {"ref": {"scheme": "repo", "locator": "a.md", "integrity": "sha256:" + "a" * 64}},
+        {"ref": {"scheme": "repo", "locator": "a.md", "integrity": "sha256:" + "a" * 64}},
     ]})
     assert trace["actual"]["context_events"][1]["identity_fingerprint"]
     assert not contract_issues("execution-trace", trace, ROOT)
 
 
 def test_r3_dogfood_report_is_rendered_from_machine_evidence():
-    evidence_path = ROOT / "validation" / "experimental" / "execution-governance" / "CANARY_RESULTS.json"
-    report_path = evidence_path.with_name("DOGFOOD_REPORT.md")
-    results = json.loads(evidence_path.read_text(encoding="utf-8"))
-    assert render_dogfood_report(results) == report_path.read_text(encoding="utf-8")
+    definitions = ROOT / "validation" / "experimental" / "execution-governance" / "CANARY_DEFINITIONS.json"
+    cases = json.loads(definitions.read_text(encoding="utf-8"))["canaries"]
+    assert all("status" not in case and "sha" not in case for case in cases)
+    observed = {"tested_sha": "test-sha", "canaries": [
+        {**cases[0], "observed": "PASS", "sha": "test-sha", "status": "PASS"}]}
+    assert "test-sha" in render_dogfood_report(observed)

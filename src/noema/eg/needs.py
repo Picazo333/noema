@@ -7,6 +7,7 @@ what is mandatory without becoming a tool, model, or capability registry.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dataclasses import asdict
 
 
 def _strings(value: object) -> frozenset[str]:
@@ -27,6 +28,10 @@ class ExecutionNeeds:
     write_targets: frozenset[str]
     external_effect_required: bool
     independent_review_required: bool
+
+    def to_dict(self) -> dict:
+        return {key: sorted(value) if isinstance(value, frozenset) else value
+                for key, value in asdict(self).items()}
 
     @property
     def external_required(self) -> bool:

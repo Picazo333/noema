@@ -56,7 +56,7 @@ def test_routed_pipeline_uses_model_router_and_tool_fallback():
     candidate_snapshot = {
         "tools": [
             {"id": "denied-direct", "allowed": False, "capabilities": ["read"], "source_relation": "AUTHORITATIVE"},
-            {"id": "allowed-fallback", "capabilities": ["read"], "source_relation": "BROAD"},
+            {"id": "allowed-fallback", "capabilities": ["read"], "source_relation": "BROAD", "allowed": True, "available": True, "availability": "AVAILABLE", "qualification": "VERIFIED"},
         ],
         "models": [{"id": "runtime-model", "available": True, "modalities": ["text"]}],
     }
@@ -108,8 +108,8 @@ def test_trace_is_structured_and_explicit_about_unavailable_metrics():
     env = envelope()
     trace = create_trace(env, {
         "context_reads": [
-            {"ref": {"scheme": "repo", "locator": "PROTOCOL.md"}, "freshness": "sha-a"},
-            {"ref": {"scheme": "repo", "locator": "PROTOCOL.md"}, "freshness": "sha-a"},
+            {"ref": {"scheme": "repo", "locator": "PROTOCOL.md", "integrity": "sha256:" + "a" * 64}},
+            {"ref": {"scheme": "repo", "locator": "PROTOCOL.md", "integrity": "sha256:" + "a" * 64}},
         ],
         "tool_events": [{"candidate": "direct", "action": "CALL", "result": "SUCCESS", "reason_codes": [], "evidence_refs": []}],
         "metrics": {"context_units": 42},
@@ -170,6 +170,6 @@ def test_context_promotion_and_resume_contract():
 def test_denied_candidate_cannot_suppress_fallback():
     decisions = decide_tools([
         {"id": "denied", "allowed": False, "capabilities": ["read"], "source_relation": "AUTHORITATIVE"},
-        {"id": "fallback", "capabilities": ["read"], "source_relation": "BROAD"},
+        {"id": "fallback", "capabilities": ["read"], "source_relation": "BROAD", "allowed": True, "available": True, "availability": "AVAILABLE", "qualification": "VERIFIED"},
     ], {"capabilities": ["read"]})
     assert [item["decision"] for item in decisions] == ["HARD_DENY", "CALL"]

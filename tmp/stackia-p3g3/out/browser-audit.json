@@ -1,0 +1,52 @@
+{
+  "status": "PASS",
+  "page_errors": [],
+  "desktop_geometry": {
+    "bodyScrollWidth": 1440,
+    "innerWidth": 1440,
+    "activePage": "page-evidence"
+  },
+  "mobile_geometry": {
+    "bodyScrollWidth": 390,
+    "innerWidth": 390,
+    "htmlOverflowX": "clip",
+    "bodyOverflowX": "clip",
+    "registryToolbarPosition": "static",
+    "visibleRightOffenders": []
+  },
+  "counts": {
+    "nav": 9,
+    "registry": 183,
+    "actions": 90,
+    "workloads": 26,
+    "executor_candidates": 6,
+    "capacity": 12,
+    "media_stages": 9
+  },
+  "months": {
+    "september": {
+      "paid_confirmed_mxn": 794,
+      "reference_mxn": 1389,
+      "paid_rows": 5
+    },
+    "october": {
+      "paid_confirmed_mxn": 0,
+      "reference_mxn": 1665,
+      "paid_rows": 6
+    }
+  },
+  "screenshots": [
+    "01-overview-october.jpg",
+    "02-budget-october.jpg",
+    "03-budget-september.jpg",
+    "04-budget-october-delta.jpg",
+    "05-registry-inspector-v0.jpg",
+    "06-integrations.jpg",
+    "07-audit-agent-lab.jpg",
+    "08-capacity.jpg",
+    "09-media-factory.jpg",
+    "10-scenarios.jpg",
+    "11-evidence.jpg",
+    "12-mobile-overview.jpg"
+  ]
+}

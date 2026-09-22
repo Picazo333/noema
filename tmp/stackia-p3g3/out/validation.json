@@ -1,10 +1,10 @@
 {
   "status": "PASS",
   "month": "2026-10",
-  "registry_items": 179,
-  "tools": 87,
+  "registry_items": 183,
+  "tools": 91,
   "integrations": 92,
-  "actions": 86,
+  "actions": 90,
   "capacity_resources": 12,
   "paid_rows": 6,
   "unknown_registry_states": 87

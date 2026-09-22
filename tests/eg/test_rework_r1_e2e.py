@@ -120,6 +120,11 @@ def test_e2e_04_runtime_blocked_required_resource_is_terminal():
     )
     assert planned["disposition"] == "BLOCKED"
     assert "REQUIRED_RESOURCE_BLOCKED" in planned["reason_codes"]
+    optional = envelope(
+        runtime_pressure={"posture_hint": "BLOCKED", "blocked_resources": ["github"]},
+        candidate_snapshot={"tools": [{"id": "github", "interfaces": ["github"], "required": False}]},
+    )
+    assert optional["disposition"] == "DIRECT_EXECUTION"
 
 
 def test_e2e_05_resolver_blocked_is_terminal():
@@ -182,7 +187,13 @@ def test_e2e_10_resume_success():
     assert report["status"] == "PASS"
 
 
-@pytest.mark.parametrize("override", [{"sha": "stale"}, {"role_id": "reviewer"}, {"outstanding_human_gates": ["approval"], "next_action_kind": "EXECUTE"}])
+@pytest.mark.parametrize("override", [
+    {"sha": "stale"},
+    {"role_id": "reviewer"},
+    {"project_id": "foreign"},
+    {"branch": "wrong-branch"},
+    {"outstanding_human_gates": ["approval"], "next_action_kind": "EXECUTE"},
+])
 def test_e2e_11_resume_wrong_state_rejects(override):
     planned = envelope(
         baseline_sha="r1-baseline",

@@ -286,8 +286,9 @@ tbody tr:hover{background:#17140f}
 }
 @media(max-width:760px){
   :root{--rail:0px;--top:54px}
-  .rail{transform:translateX(-105%);width:min(285px,88vw);transition:transform .2s}
-  .rail.open{transform:translateX(0)}
+  html,body{overflow-x:clip}
+  .rail{transform:translateX(-105%);width:min(285px,88vw);transition:transform .2s;visibility:hidden;pointer-events:none}
+  .rail.open{transform:translateX(0);visibility:visible;pointer-events:auto}
   .topbar{left:0}
   .wordmark{min-width:auto;padding-left:52px}
   .wordmark small{display:none}

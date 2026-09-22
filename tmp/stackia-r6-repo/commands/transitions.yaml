@@ -1,0 +1,170 @@
+schema: stackia/command-transitions@0.1
+status: canonical-contract
+decision: decisions/0020-human-command-layer-contract.md
+
+subject_classes:
+  TOOL:
+    evaluation_collection: tool_evaluations
+  SKILL:
+    evaluation_collection: skill_evaluations
+  MCP:
+    evaluation_collection: mcp_evaluations
+  PLUGIN:
+    evaluation_collection: plugin_connector_evaluations
+  PLAN:
+    evaluation_collection: null
+
+commands:
+  SET_USAGE:
+    classes: [TOOL, SKILL, MCP, PLUGIN]
+    write_targets: [state/evaluations.yaml]
+    axis: usage
+    allowed_values: [NOT_TRIED, USED]
+    transitions:
+      - {from: UNKNOWN, to: NOT_TRIED, mode: normal}
+      - {from: UNKNOWN, to: USED, mode: normal}
+      - {from: NOT_TRIED, to: USED, mode: normal}
+      - {from: NOT_TRIED, to: NOT_TRIED, mode: noop}
+      - {from: USED, to: USED, mode: noop}
+      - {from: USED, to: NOT_TRIED, mode: correction_only}
+    invariants:
+      - payment_does_not_imply_usage
+      - verification_unchanged
+      - deployment_unchanged
+
+  SET_DECISION:
+    classes: [TOOL, SKILL, MCP, PLUGIN]
+    write_targets: [state/evaluations.yaml]
+    axis: decision
+    allowed_values: [KEEP, TEST, PARK, DROP]
+    transitions:
+      policy: any_explicit_to_any_explicit
+    invariants:
+      - usage_unchanged
+      - verification_unchanged
+      - deployment_unchanged
+      - subscription_unchanged
+      - drop_does_not_delete_identity
+
+  SET_PRIORITY:
+    classes: [TOOL, SKILL, MCP, PLUGIN]
+    write_targets: [state/evaluations.yaml]
+    axis: priority
+    allowed_values: [CORE, NOW, NEXT, LATER, TRIGGER]
+    transitions:
+      policy: any_explicit_to_any_explicit
+    invariants:
+      - decision_unchanged
+      - usage_unchanged
+      - verification_unchanged
+
+  SET_DEPLOYMENT:
+    classes: [TOOL, SKILL, MCP, PLUGIN]
+    write_targets: [state/deployments.yaml]
+    required_context: [host]
+    allowed_values: [NOT_DEPLOYED, INSTALLED, CONFIGURED, CONNECTED]
+    transitions:
+      - {from: ABSENT, to: NOT_DEPLOYED, mode: normal}
+      - {from: ABSENT, to: INSTALLED, mode: normal}
+      - {from: ABSENT, to: CONFIGURED, mode: normal}
+      - {from: ABSENT, to: CONNECTED, mode: normal}
+      - {from: NOT_DEPLOYED, to: INSTALLED, mode: normal}
+      - {from: NOT_DEPLOYED, to: CONFIGURED, mode: normal}
+      - {from: NOT_DEPLOYED, to: CONNECTED, mode: normal}
+      - {from: INSTALLED, to: CONFIGURED, mode: normal}
+      - {from: INSTALLED, to: CONNECTED, mode: normal}
+      - {from: CONFIGURED, to: CONNECTED, mode: normal}
+      - {from: CONNECTED, to: CONFIGURED, mode: reason_required}
+      - {from: CONNECTED, to: INSTALLED, mode: reason_required}
+      - {from: CONNECTED, to: NOT_DEPLOYED, mode: reason_required}
+      - {from: CONFIGURED, to: INSTALLED, mode: reason_required}
+      - {from: CONFIGURED, to: NOT_DEPLOYED, mode: reason_required}
+      - {from: INSTALLED, to: NOT_DEPLOYED, mode: reason_required}
+    invariants:
+      - absent_is_unknown_not_not_deployed
+      - verification_unchanged
+      - usage_unchanged
+      - deployment_is_host_specific
+
+  RECORD_TEST:
+    classes: [TOOL, SKILL, MCP, PLUGIN]
+    write_targets:
+      - state/verification-evidence.yaml
+      - state/evaluations.yaml
+    required_context: [workload_id, result]
+    allowed_results: [PASS, FAIL, PARTIAL]
+    guards:
+      - workload_exists
+      - subject_is_compatible_with_workload
+      - durable_evidence_or_human_note_exists
+    effects:
+      PASS:
+        maximum_automatic_verification: TESTED
+      FAIL:
+        maximum_automatic_verification: UNVERIFIED
+      PARTIAL:
+        maximum_automatic_verification: UNVERIFIED
+    invariants:
+      - no_automatic_verified
+      - deployment_unchanged
+
+  RECORD_VERIFICATION:
+    classes: [TOOL, SKILL, MCP, PLUGIN]
+    write_targets:
+      - state/verification-evidence.yaml
+      - state/evaluations.yaml
+    required_context: [workload_id]
+    guards:
+      - workload_exists
+      - workload_target_allows_verified
+      - workload_result_is_pass_or_equivalent
+      - all_pass_criteria_satisfied
+      - durable_evidence_ref_exists
+    effects:
+      verification: VERIFIED
+    invariants:
+      - no_generic_verified_toggle
+      - deployment_unchanged
+
+  RESOLVE_ACCOUNT_FACT:
+    classes: [PLAN]
+    write_targets:
+      - state/subscriptions.yaml
+      - state/months/YYYY-MM.yaml
+    allowed_fields:
+      - payment_state
+      - confirmed_mxn
+      - reference_mxn
+      - billing_amount
+      - billing_currency
+      - billing_period
+      - subscription_state
+    guards:
+      - month_is_explicit
+      - field_is_allowlisted
+      - before_state_is_previewed
+      - source_or_reason_exists
+      - confirmed_requires_confirming_evidence
+    invariants:
+      - no_new_identity
+      - no_skill_mcp_plugin_cashout
+      - no_duplicate_plan_cashout
+      - agency_delta_decision_unchanged
+
+transaction:
+  max_operations: 10
+  atomic_by_default: true
+  require_preview: true
+  concurrency_guard: expected_before
+  rollback_on_postwrite_validation_failure: true
+
+evidence:
+  preserve_history: true
+  correction_policy: supersede_not_delete
+
+navigation:
+  primary: [Hoy, Inventario, Presupuesto, Benchmark]
+  no_command_route: true
+  inventory_lanes: [Tools, Skills, MCPs, Plugins, Todo]
+  inventory_default: Tools
+  cli_semantics: access_deployment_surface

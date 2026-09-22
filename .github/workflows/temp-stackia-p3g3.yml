@@ -204,7 +204,8 @@ jobs:
             innerWidth:window.innerWidth,
             registryToolbarPosition:getComputedStyle(document.querySelector('.toolbar')).position
           }));
-          assert(mobileGeometry.bodyScrollWidth<=mobileGeometry.innerWidth+1,'mobile body-level horizontal overflow');
+          const mobileOffenders=await page.evaluate(()=>[...document.querySelectorAll('body *')].map(el=>{const r=el.getBoundingClientRect();return {tag:el.tagName,id:el.id,cls:el.className,left:Math.round(r.left),right:Math.round(r.right),width:Math.round(r.width),scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}}).filter(x=>x.right>window.innerWidth+1||x.left<-1).slice(0,30));
+          assert(mobileGeometry.bodyScrollWidth<=mobileGeometry.innerWidth+1,'mobile body-level horizontal overflow '+JSON.stringify(mobileOffenders));
           assert(mobileGeometry.registryToolbarPosition==='static','mobile registry toolbar should be static');
           await shot('12-mobile-overview');
 

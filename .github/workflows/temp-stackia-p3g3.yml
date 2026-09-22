@@ -1,9 +1,9 @@
-name: Temp StackIA P3-G3 Runner
+name: Temp StackIA Final HTML Audit
 
 on:
   push:
     branches:
-      - "temp/stackia-p3g3-runner-20260921"
+      - "temp/stackia-final-html-audit-20260921"
     paths-ignore:
       - "tmp/stackia-p3g3/out/**"
 
@@ -20,19 +20,31 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install
+      - name: Install Python dependencies
         working-directory: tmp/stackia-p3g3
         run: pip install -r requirements-dev.txt
 
       - name: Compile A
         working-directory: tmp/stackia-p3g3
         run: |
-          python scripts/build_stackia.py             --month 2026-10             --source-commit 6584423e524ca0af3c169bb0a03f9ca03cc7cb12             --source-timestamp 2026-09-21T20:58:53Z             --source-ref phase3/compiler-golden-snapshot             --snapshot-out /tmp/stackia-a.json             --capacity-out /tmp/capacity-a.json
+          python scripts/build_stackia.py \
+            --month 2026-10 \
+            --source-commit b2c45a001a7f1e4cbcb52c80124cebe71d70dad7 \
+            --source-timestamp 2026-09-22T01:30:05Z \
+            --source-ref audit/final-html-integration-reconciliation \
+            --snapshot-out /tmp/stackia-a.json \
+            --capacity-out /tmp/capacity-a.json
 
       - name: Compile B
         working-directory: tmp/stackia-p3g3
         run: |
-          python scripts/build_stackia.py             --month 2026-10             --source-commit 6584423e524ca0af3c169bb0a03f9ca03cc7cb12             --source-timestamp 2026-09-21T20:58:53Z             --source-ref phase3/compiler-golden-snapshot             --snapshot-out /tmp/stackia-b.json             --capacity-out /tmp/capacity-b.json
+          python scripts/build_stackia.py \
+            --month 2026-10 \
+            --source-commit b2c45a001a7f1e4cbcb52c80124cebe71d70dad7 \
+            --source-timestamp 2026-09-22T01:30:05Z \
+            --source-ref audit/final-html-integration-reconciliation \
+            --snapshot-out /tmp/stackia-b.json \
+            --capacity-out /tmp/capacity-b.json
 
       - name: Determinism
         run: |
@@ -40,23 +52,195 @@ jobs:
           cmp /tmp/capacity-a.json /tmp/capacity-b.json
           sha256sum /tmp/stackia-a.json /tmp/capacity-a.json | tee /tmp/stackia-hashes.txt
 
-      - name: Validate
+      - name: Validate canonical outputs
         working-directory: tmp/stackia-p3g3
         run: |
           set -o pipefail
-          python scripts/validate_stackia_outputs.py             --month 2026-10             --snapshot /tmp/stackia-a.json             --capacity /tmp/capacity-a.json | tee /tmp/stackia-validation.json
+          python scripts/validate_stackia_outputs.py \
+            --month 2026-10 \
+            --snapshot /tmp/stackia-a.json \
+            --capacity /tmp/capacity-a.json | tee /tmp/stackia-validation.json
 
-      - name: Persist outputs on temp branch
+      - name: Build exact review HTML
+        working-directory: tmp/stackia-p3g3
         run: |
-          mkdir -p tmp/stackia-p3g3/out
+          python scripts/build_stackia_ui.py \
+            --snapshot /tmp/stackia-a.json \
+            --template ui/monolith-template.html \
+            --out /tmp/stackia.html
+
+      - name: Install browser harness
+        run: |
+          mkdir -p /tmp/stackia-browser
+          cd /tmp/stackia-browser
+          npm init -y >/dev/null 2>&1
+          npm install puppeteer-core@24 >/dev/null 2>&1
+          CHROME_BIN="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME_BIN"
+          echo "CHROME_BIN=$CHROME_BIN" >> "$GITHUB_ENV"
+          "$CHROME_BIN" --version
+
+      - name: Browser and visual-layout audit
+        run: |
+          cat > /tmp/stackia-browser/audit.mjs <<'NODE'
+          import puppeteer from 'puppeteer-core';
+          import fs from 'fs';
+
+          const browser = await puppeteer.launch({
+            executablePath: process.env.CHROME_BIN,
+            headless: true,
+            args: ['--no-sandbox','--disable-dev-shm-usage']
+          });
+          const page = await browser.newPage();
+          const errors = [];
+          page.on('pageerror', e => errors.push(String(e)));
+          await page.setViewport({width:1440,height:1000,deviceScaleFactor:1});
+          await page.goto('file:///tmp/stackia.html', {waitUntil:'load'});
+          const assert = (cond,msg) => { if(!cond) throw new Error(msg); };
+          const text = sel => page.$eval(sel, el => el.textContent.trim());
+          const visible = sel => page.$eval(sel, el => {
+            const s=getComputedStyle(el),r=el.getBoundingClientRect();
+            return s.display!=='none'&&s.visibility!=='hidden'&&r.width>0&&r.height>0;
+          });
+          const clickNav = async name => {
+            await page.click('.nav button[data-page="'+name+'"]');
+            await page.waitForFunction(n => document.querySelector('#page-'+n)?.classList.contains('active'), {}, name);
+          };
+          const screenDir='/tmp/screens';
+          fs.mkdirSync(screenDir,{recursive:true});
+          const shot = async name => page.screenshot({path:screenDir+'/'+name+'.jpg',type:'jpeg',quality:48,fullPage:false});
+
+          assert((await page.$$('.nav button[data-page]')).length===9,'nav != 9');
+          assert((await text('#registryHeroCount'))==='183','registry count');
+          assert((await text('#auditHeroCount'))==='90','audit count');
+          assert((await page.$$('#monthSelect option')).length===2,'month options');
+          assert((await text('#topPaid'))==='MX$0','October paid-confirmed');
+          assert((await text('#topReference'))==='MX$1,665','October reference');
+          assert((await page.$$('#workloadList .workload-row')).length===26,'workload detail count');
+          assert((await page.$$('#executorGrid .executor-card')).length===6,'executor candidate count');
+          assert((await page.$$('#scenarioContext .truth-row')).length===4,'scenario context rows');
+          assert((await page.$$('#capacityGrid .capacity-card')).length===12,'capacity cards');
+          assert((await page.$$('#mediaPipeline .stage')).length===9,'media stages');
+          await shot('01-overview-october');
+
+          await clickNav('budget');
+          await shot('02-budget-october');
+          await page.select('#monthSelect','2026-09');
+          await page.waitForFunction(()=>document.querySelector('#topPaid')?.textContent.trim()==='MX$794');
+          assert((await text('#topReference'))==='MX$1,389','September reference');
+          assert((await text('#paidMeta')).includes('5 plan rows'),'September paid rows');
+          assert((await text('#exitingPlans')).includes('claude-pro-exit'),'September exiting plan');
+          assert((await text('#monthDelta')).includes('baseline'),'September baseline copy');
+          await shot('03-budget-september');
+          await page.select('#monthSelect','2026-10');
+          await page.waitForFunction(()=>document.querySelector('#topPaid')?.textContent.trim()==='MX$0');
+          assert((await text('#monthDelta')).includes('figma-professional-full'),'October delta lacks Figma');
+          await shot('04-budget-october-delta');
+
+          await clickNav('registry');
+          await page.select('#regPriority','NOW');
+          await page.type('#regSearch','v0');
+          assert((await page.$$('#registryBody tr[data-id="v0"]')).length===1,'v0 NOW filter');
+          await page.focus('#registryBody tr[data-id="v0"]');
+          await page.keyboard.press('Enter');
+          await page.waitForFunction(()=>document.querySelector('#drawer')?.classList.contains('open'));
+          const drawerText=await text('#drawerBody');
+          assert(drawerText.includes('Monthly membership / targets'),'inspector monthly');
+          assert(drawerText.includes('Verification / workload evidence'),'inspector workload');
+          assert(drawerText.includes('Capacity / scaling'),'inspector capacity');
+          await shot('05-registry-inspector-v0');
+          await page.keyboard.press('Escape');
+          await page.evaluate(()=>{document.querySelector('#regSearch').value='';document.querySelector('#regSearch').dispatchEvent(new Event('input',{bubbles:true}));});
+          await page.select('#regPriority','');
+
+          await clickNav('integrations');
+          await page.select('#intDeployment','KNOWN');
+          assert((await page.$$('#integrationBody tr')).length>0,'known integrations empty');
+          const matrixOverflow=await page.$eval('.matrix-wrap',el=>el.scrollWidth>el.clientWidth);
+          assert(matrixOverflow,'matrix should overflow horizontally');
+          await shot('06-integrations');
+
+          await clickNav('audit');
+          await page.click('#auditAgentLab');
+          assert((await page.$$('#auditList .audit-row')).length>0,'Agent Lab audit empty');
+          assert((await text('#auditList')).includes('Refs:'),'audit refs missing');
+          await shot('07-audit-agent-lab');
+
+          await clickNav('capacity');
+          const capText=await text('#capacityGrid');
+          assert(capText.includes('Completed cycles')&&capText.includes('Blocked workloads')&&capText.includes('Workaround burden'),'capacity burden fields');
+          await shot('08-capacity');
+
+          await clickNav('media');
+          assert((await text('#mediaPipeline')).includes('Representative workload'),'media workload detail');
+          assert((await page.$$('#mediaPipeline .stage')).length===9,'media stage count drift');
+          await shot('09-media-factory');
+
+          await clickNav('scenarios');
+          assert((await text('#scenarioContext')).includes('Verification coverage'),'scenario context missing');
+          await shot('10-scenarios');
+
+          await clickNav('evidence');
+          assert((await text('#workloadList')).includes('agency-web-v0-frontend-acceleration-v1'),'agency workload absent');
+          assert((await text('#executorGrid')).includes('Codex'),'Codex qualification absent');
+          await shot('11-evidence');
+
+          const desktopGeometry=await page.evaluate(()=>({
+            bodyScrollWidth:document.body.scrollWidth,
+            innerWidth:window.innerWidth,
+            activePage:document.querySelector('.page.active').id
+          }));
+          assert(desktopGeometry.bodyScrollWidth<=desktopGeometry.innerWidth+1,'desktop body-level horizontal overflow');
+
+          await page.setViewport({width:390,height:844,deviceScaleFactor:1});
+          await clickNav('overview');
+          assert(await visible('#mobileMenu'),'mobile menu invisible');
+          await page.click('#mobileMenu');
+          assert((await page.$eval('#mobileMenu',el=>el.getAttribute('aria-expanded')))==='true','mobile aria expanded true');
+          await page.keyboard.press('Escape');
+          assert((await page.$eval('#mobileMenu',el=>el.getAttribute('aria-expanded')))==='false','mobile aria expanded false');
+          const mobileGeometry=await page.evaluate(()=>({
+            bodyScrollWidth:document.body.scrollWidth,
+            innerWidth:window.innerWidth,
+            registryToolbarPosition:getComputedStyle(document.querySelector('.toolbar')).position
+          }));
+          assert(mobileGeometry.bodyScrollWidth<=mobileGeometry.innerWidth+1,'mobile body-level horizontal overflow');
+          assert(mobileGeometry.registryToolbarPosition==='static','mobile registry toolbar should be static');
+          await shot('12-mobile-overview');
+
+          assert(errors.length===0,'page errors: '+errors.join(' | '));
+          const result={
+            status:'PASS',
+            page_errors:errors,
+            desktop_geometry:desktopGeometry,
+            mobile_geometry:mobileGeometry,
+            counts:{nav:9,registry:183,actions:90,workloads:26,executor_candidates:6,capacity:12,media_stages:9},
+            months:{
+              september:{paid_confirmed_mxn:794,reference_mxn:1389,paid_rows:5},
+              october:{paid_confirmed_mxn:0,reference_mxn:1665,paid_rows:6}
+            },
+            screenshots:fs.readdirSync(screenDir).sort()
+          };
+          fs.writeFileSync('/tmp/browser-audit.json',JSON.stringify(result,null,2)+'\n');
+          await browser.close();
+          NODE
+          node /tmp/stackia-browser/audit.mjs
+          cat /tmp/browser-audit.json
+
+      - name: Persist exact audit outputs
+        run: |
+          mkdir -p tmp/stackia-p3g3/out/screens
           cp /tmp/stackia-a.json tmp/stackia-p3g3/out/2026-10.actual.json
           cp /tmp/capacity-a.json tmp/stackia-p3g3/out/capacity-router-stack.json
+          cp /tmp/stackia.html tmp/stackia-p3g3/out/stackia.html
           cp /tmp/stackia-hashes.txt tmp/stackia-p3g3/out/hashes.txt
           cp /tmp/stackia-validation.json tmp/stackia-p3g3/out/validation.json
+          cp /tmp/browser-audit.json tmp/stackia-p3g3/out/browser-audit.json
+          cp /tmp/screens/* tmp/stackia-p3g3/out/screens/
           git config user.name "stackia-temp-runner"
           git config user.email "stackia-temp-runner@users.noreply.github.com"
           git add tmp/stackia-p3g3/out
           if ! git diff --cached --quiet; then
-            git commit -m "temp: persist StackIA P3-G3 execution outputs"
-            git push origin HEAD:temp/stackia-p3g3-runner-20260921
+            git commit -m "temp: persist StackIA final HTML audit outputs"
+            git push origin HEAD:temp/stackia-final-html-audit-20260921
           fi

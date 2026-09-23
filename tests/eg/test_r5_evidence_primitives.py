@@ -1,0 +1,226 @@
+"""G0/G2 positive evidence paths using the production verifier."""
+
+from __future__ import annotations
+
+from hashlib import sha256
+from pathlib import Path
+from copy import deepcopy
+import json
+import subprocess
+
+import pytest
+
+from noema.eg.bindings import gate_fingerprint, material_digest
+from noema.eg.bindings import FIELD_CLASS
+from noema.eg.evidence import VerificationContext, verify_assertion, verify_content
+from noema.eg.persistence import assert_persistable
+from noema.eg.plan import build_execution_envelope
+from noema.eg import dogfood
+from noema.loader import dump_yaml
+from noema.loader import load_json
+
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def order() -> dict:
+    return {
+        "work_order_id": "wo-r5-trust", "project_id": "noema", "objective": "Read",
+        "scope": {"allowed": ["src/noema"], "excluded": []}, "context_mode": "patch",
+        "inputs": [], "capability_requirements": [], "allowed_writes": [],
+        "forbidden_effects": [], "expected_artifacts": [], "quality_claims": [],
+        "human_gates": ["review"],
+    }
+
+
+def r2_envelope() -> dict:
+    envelope = build_execution_envelope(ROOT, order())
+    envelope["contract_revision"] = 2
+    envelope["intent"] = {
+        "attempt_id": "attempt-1", "action_id": "action-1", "action_effect": "READ",
+        "target_ref": None, "planned_executor": None, "planned_model": None,
+        "planned_tools": [], "planned_topology": envelope["topology"],
+    }
+    envelope["verification_requirements"] = []
+    envelope["evidence_bindings"] = []
+    envelope["material_binding"] = {"algorithm": "EG-C14N-1", "digest": ""}
+    envelope["material_binding"]["digest"] = material_digest(envelope)
+    return envelope
+
+
+def test_observed_bytes_verify_only_content(tmp_path: Path) -> None:
+    path = tmp_path / "observed.txt"
+    path.write_bytes(b"observed bytes")
+    expected = "sha256:" + sha256(b"observed bytes").hexdigest()
+    checked = verify_content(path, expected, "file", "file:observed")
+    assert checked.predicate == "CONTENT_INTEGRITY"
+    assert checked.state == "VERIFIED"
+    path.write_bytes(b"changed bytes")
+    assert verify_content(path, expected, "file", "file:observed").state == "INVALID"
+
+
+def test_independent_approval_and_external_projection(tmp_path: Path) -> None:
+    envelope = r2_envelope()
+    gate_subject = gate_fingerprint(envelope, "review")
+    tool_subject = "tool:reader:repo-read"
+    sources = []
+    refs = {}
+    for name, predicate, subject, authority, decision in (
+        ("approval", "HUMAN_APPROVAL", gate_subject, "operator", "APPROVED"),
+        ("qualification", "TOOL_QUALIFICATION", tool_subject, "external-fixture", "VERIFIED"),
+    ):
+        assertion = {"predicate": predicate, "subject": subject, "scope": "project:noema",
+                     "authority": authority, "decision": decision}
+        path = tmp_path / f"{name}.yaml"
+        path.write_text(dump_yaml(assertion), encoding="utf-8")
+        ref = {"scheme": "file", "locator": str(path)}
+        refs[name] = ref
+        sources.append({"ref": ref, "digest": "sha256:" + sha256(path.read_bytes()).hexdigest(),
+                        "predicate": predicate, "subject": subject, "scope": "project:noema",
+                        "authority": authority, "valid_until": "2099-01-01T00:00:00Z"})
+    context_path = tmp_path / "host-context.yaml"
+    context_path.write_text(dump_yaml({"sources": sources}), encoding="utf-8")
+    context = VerificationContext.from_host(ROOT, ROOT, context_path)
+    assert verify_assertion(context, "review", gate_subject, "HUMAN_APPROVAL",
+                            "project:noema", refs["approval"]).state == "VERIFIED"
+    assert verify_assertion(context, "reader", tool_subject, "TOOL_QUALIFICATION",
+                            "project:noema", refs["qualification"]).state == "VERIFIED"
+    assert verify_assertion(context, "review", "wrong-action", "HUMAN_APPROVAL",
+                            "project:noema", refs["approval"]).state == "UNVERIFIED"
+    assert verify_assertion(context, "reader", "tool:other:repo-read", "TOOL_QUALIFICATION",
+                            "project:noema", refs["qualification"]).state == "UNVERIFIED"
+    assert verify_assertion(VerificationContext.from_host(ROOT, ROOT), "review",
+                            gate_subject, "HUMAN_APPROVAL", "project:noema").state == "UNVERIFIED"
+
+
+def test_persistence_rejects_defined_credential_families() -> None:
+    for value in (
+        {"refresh_token": "marker"},
+        {"reason_codes": ["Authorization: Bearer marker123"]},
+        {"ref": {"scheme": "https", "locator": "example.invalid/e?cookie=marker"}},
+        {"nested": [{"id_token": "marker"}]},
+    ):
+        try:
+            assert_persistable(value)
+        except ValueError:
+            continue
+        raise AssertionError("credential-like value passed the EG firewall")
+
+
+def test_revision_2_schema_fields_are_explicitly_classified() -> None:
+    schema = load_json(ROOT / "schemas" / "execution-envelope" / "v1-r2.schema.json")
+    assert set(schema["properties"]) == set(FIELD_CLASS)
+    assert set(schema["required"]) == set(FIELD_CLASS)
+    assert set(FIELD_CLASS.values()) == {"MATERIAL", "EVIDENCE", "DERIVED", "NON_MATERIAL"}
+    assert FIELD_CLASS["decision"] == "MATERIAL"
+    assert FIELD_CLASS["intent"] == "MATERIAL"
+    assert FIELD_CLASS["material_binding"] == "DERIVED"
+    assert FIELD_CLASS["evidence_bindings"] == "EVIDENCE"
+
+
+def test_material_digest_covers_every_classified_material_field() -> None:
+    envelope = r2_envelope()
+    baseline = material_digest(envelope)
+    for field, category in FIELD_CLASS.items():
+        changed = deepcopy(envelope)
+        value = changed[field]
+        if field == "contract_revision":
+            changed[field] = 3
+            try:
+                material_digest(changed)
+            except ValueError:
+                continue
+            raise AssertionError("unknown revision accepted")
+        if field == "decision":
+            value["action_effect"] = "r5-test-marker"
+        elif field == "executor":
+            value["selected_executor"] = "r5-test-marker"
+        elif field == "model":
+            value["selected_model"] = "r5-test-marker"
+        elif isinstance(value, dict):
+            value["r5-test-marker"] = True
+        elif isinstance(value, list):
+            value.append("r5-test-marker")
+        else:
+            changed[field] = "r5-test-marker"
+        if category == "MATERIAL":
+            assert material_digest(changed) != baseline, field
+        else:
+            assert material_digest(changed) == baseline, field
+
+
+@pytest.mark.parametrize("exit_code,output", [
+    (1, "1 failed"), (0, "1 passed, 1 skipped"),
+    (0, "no tests ran"), (2, "ERROR collecting test.py"),
+])
+def test_canary_runner_never_passes_failed_skipped_or_empty_required_case(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, exit_code: int, output: str,
+) -> None:
+    sha = "a" * 40
+    definitions = tmp_path / "definitions.json"
+    definitions.write_text(json.dumps({"suite": "R5", "canaries": [{
+        "id": "case", "scenario": "fixture", "level": "END_TO_END",
+        "public_entrypoint": "python -m noema eg validate", "evidence": "test.py::test_case",
+        "expected": "PASS",
+    }]}), encoding="utf-8")
+    monkeypatch.setattr(dogfood, "_git", lambda root, *args: sha if args[-1] == "HEAD" else "")
+
+    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        if "-c" in command:
+            return subprocess.CompletedProcess(command, 0,
+                stdout=str(ROOT / "src" / "noema" / "__init__.py") + "\n", stderr="")
+        return subprocess.CompletedProcess(command, exit_code, stdout=output, stderr="")
+
+    monkeypatch.setattr(dogfood.subprocess, "run", fake_run)
+    report = dogfood.run_dogfood(ROOT, definitions, tmp_path / "results", sha)
+    assert report["status"] == "FAIL"
+    assert (tmp_path / "results" / "CANARY_RESULTS.json").exists()
+
+
+def test_canary_runner_rejects_wrong_sha_and_zero_cases(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    definitions = tmp_path / "definitions.json"
+    definitions.write_text('{"canaries": []}', encoding="utf-8")
+    monkeypatch.setattr(dogfood, "_git", lambda root, *args: "a" * 40 if args[-1] == "HEAD" else "")
+    with pytest.raises(ValueError, match="SHA"):
+        dogfood.run_dogfood(ROOT, definitions, tmp_path / "results", "b" * 40)
+    with pytest.raises(ValueError, match="At least one"):
+        dogfood.run_dogfood(ROOT, definitions, tmp_path / "results", "a" * 40)
+
+
+def test_canary_runner_rejects_import_outside_checkout_and_tree_mutation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sha = "a" * 40
+    definitions = tmp_path / "definitions.json"
+    definitions.write_text(json.dumps({"canaries": [{
+        "id": "case", "scenario": "fixture", "level": "END_TO_END",
+        "public_entrypoint": "python -m noema eg validate", "evidence": "test.py::test_case",
+        "expected": "PASS",
+    }]}), encoding="utf-8")
+    monkeypatch.setattr(dogfood, "_git", lambda root, *args: sha if args[-1] == "HEAD" else "")
+    monkeypatch.setattr(dogfood.subprocess, "run", lambda command, **kwargs:
+        subprocess.CompletedProcess(command, 0, stdout=str(tmp_path / "foreign.py"), stderr=""))
+    with pytest.raises(ValueError, match="import"):
+        dogfood.run_dogfood(ROOT, definitions, tmp_path / "results", sha)
+    calls = 0
+
+    def changing_git(root: Path, *args: str) -> str:
+        nonlocal calls
+        if args[-1] == "HEAD":
+            return sha
+        calls += 1
+        return "" if calls == 1 else " M changed.py"
+
+    monkeypatch.setattr(dogfood, "_git", changing_git)
+
+    def good_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        output = (str(ROOT / "src" / "noema" / "__init__.py") + "\n"
+                  if "-c" in command else "1 passed")
+        return subprocess.CompletedProcess(command, 0, stdout=output, stderr="")
+
+    monkeypatch.setattr(dogfood.subprocess, "run", good_run)
+    report = dogfood.run_dogfood(ROOT, definitions, tmp_path / "results", sha)
+    assert report["status"] == "FAIL"
+    assert report["canaries"][0]["reason_codes"] == ["TREE_MUTATION"]

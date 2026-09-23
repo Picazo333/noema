@@ -38,6 +38,8 @@ def resume_check(
     envelope: dict,
     handoff: dict,
     current_state: dict | None = None,
+    *,
+    verified_gates: set[str] | None = None,
 ) -> dict:
     """Return PASS/FAIL/INCOMPLETE without rewriting historical evidence."""
     raise_for_issues(validate_envelope_semantics(envelope))
@@ -49,7 +51,10 @@ def resume_check(
     if isinstance(handoff_ref, str) and "://" in handoff_ref:
         scheme, locator = handoff_ref.split("://", 1)
         handoff_ref = {"scheme": scheme, "locator": locator}
-    if handoff_ref != envelope.get("work_order_ref"):
+    expected_ref = envelope.get("work_order_ref", {})
+    if not isinstance(handoff_ref, dict) or any(
+        handoff_ref.get(key) != expected_ref.get(key) for key in ("scheme", "locator")
+    ):
         failures.append("WORK_ORDER_MISMATCH")
     required_fields = {
         "project_id": "PROJECT_STATE_MISSING",
@@ -110,8 +115,8 @@ def resume_check(
     gates = state["outstanding_human_gates"]
     required_gates = set(requirements.get("required_human_gates", []))
     clearances = state.get("gate_clearances", [])
-    cleared = set()
-    if isinstance(clearances, list):
+    cleared = set(verified_gates or ())
+    if envelope.get("contract_revision") != 2 and isinstance(clearances, list):
         for clearance in clearances:
             if not isinstance(clearance, dict):
                 continue

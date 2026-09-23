@@ -123,6 +123,8 @@ def validate_resolver_receipt_semantics(receipt: object, *, participates: bool |
         unresolved = receipt.get("unresolved_capabilities")
         if not isinstance(unresolved, list) or not unresolved or any(not isinstance(value, str) or not value for value in unresolved):
             issues.append(issue("EG-RESOLVER-PARTIAL-SET", "unresolved_capabilities", "PARTIAL requires an explicit non-empty unresolved_capabilities set"))
+        if "satisfied_capabilities" in receipt and not receipt["satisfied_capabilities"]:
+            issues.append(issue("EG-RESOLVER-PARTIAL-SATISFIED", "satisfied_capabilities", "PARTIAL requires an explicit satisfied set"))
     if participates is True and status == "NOT_REQUIRED":
         issues.append(issue("EG-RESOLVER-PARTICIPATION", "status", "NOT_REQUIRED cannot satisfy a required resolver dependency"))
     return issues
@@ -226,6 +228,17 @@ def validate_trace_semantics(trace: object) -> list[SemanticIssue]:
                 check_refs(child, f"{path}[{index}]")
     check_refs(trace, "$")
     if isinstance(actual, dict):
+        bindings = trace.get("read_identity_bindings", [])
+        binding_by_index = {}
+        if trace.get("contract_revision") == 2:
+            from .bindings import read_subject
+            for binding in bindings:
+                index = binding.get("event_index")
+                if (not isinstance(index, int) or index < 0
+                        or index in binding_by_index
+                        or index >= len(actual.get("context_events", []))):
+                    issues.append(issue("EG-READ-BINDING-INDEX", "read_identity_bindings", "read binding index is duplicated or out of range"))
+                binding_by_index[index] = binding
         seen: set[tuple[str, str, str]] = set()
         for index, event in enumerate(actual.get("context_events", [])):
             if not isinstance(event, dict):
@@ -236,7 +249,25 @@ def validate_trace_semantics(trace: object) -> list[SemanticIssue]:
                 issues.append(issue("EG-READ-UNKNOWN-FINGERPRINT", f"actual.context_events[{index}]", "unknown read identity cannot claim a fingerprint"))
             if kind != "UNKNOWN" and (not isinstance(fingerprint, str) or not fingerprint):
                 issues.append(issue("EG-READ-FINGERPRINT", f"actual.context_events[{index}]", "read identity evidence requires a stable fingerprint"))
-            if trace.get("contract_version") == "execution-trace/v1":
+            if trace.get("contract_revision") == 2:
+                binding = binding_by_index.get(index)
+                ref = event.get("ref", {})
+                if binding is None:
+                    if kind != "UNKNOWN" or event.get("result") == "DUPLICATE_READ_SUPPRESSED":
+                        issues.append(issue("EG-READ-UNVERIFIED-IDENTITY", f"actual.context_events[{index}]", "revision-2 historical identity requires independent event-time proof"))
+                else:
+                    from .context_plan import ReadSet
+
+                    identity = ReadSet._identity(ref, None)
+                    if (binding.get("subject_fingerprint") != read_subject(trace, index, ref)
+                            or kind != identity.kind or fingerprint != identity.fingerprint):
+                        issues.append(issue("EG-READ-BINDING-MISMATCH", f"actual.context_events[{index}]", "read binding does not match the event identity"))
+                    key = (str(ref.get("scheme")), str(ref.get("locator")), str(fingerprint))
+                    if event.get("result") == "DUPLICATE_READ_SUPPRESSED" and key not in seen:
+                        issues.append(issue("EG-READ-UNPROVEN-SUPPRESSION", f"actual.context_events[{index}]", "suppression lacks a prior verified identity"))
+                    if event.get("result") != "DUPLICATE_READ_SUPPRESSED":
+                        seen.add(key)
+            elif trace.get("contract_version") == "execution-trace/v1":
                 ref = event.get("ref", {})
                 from .context_plan import ReadSet
 
@@ -365,7 +396,10 @@ def contract_issues(kind: str, data: object, root: Path) -> list[SemanticIssue]:
         if version is not None:
             if version != f"{kind}/v1":
                 return [issue("EG-VERSION", "contract_version", "unsupported contract version")]
-            versioned_kind = kind + "-v1"
+            revision = data.get("contract_revision")
+            if revision not in (None, 2):
+                return [issue("EG-REVISION", "contract_revision", "unsupported contract revision")]
+            versioned_kind = kind + ("-v1-r2" if revision == 2 else "-v1")
     structural = [issue("EG-SCHEMA", ".".join(map(str, error.absolute_path)) or "$", error.message) for error in validation_errors(versioned_kind, data, root)]
     if structural:
         return structural
@@ -380,3 +414,175 @@ def contract_issues(kind: str, data: object, root: Path) -> list[SemanticIssue]:
     if not problems and kind == "execution-envelope" and versioned_kind.endswith("-v1"):
         problems.extend(validate_v1_bindings(data, root))
     return problems
+
+
+def assess_envelope(envelope: dict, context: object) -> dict:
+    """Recalculate revision-2 evidence and readiness from current observations."""
+    from .bindings import gate_fingerprint, material_digest, material_projection
+    from .evidence import VerificationContext, required_dependency_results, verify_assertion
+    from .persistence import assert_persistable
+
+    if not isinstance(context, VerificationContext):
+        raise ValueError("VerificationContext is required")
+    if not isinstance(envelope, dict):
+        return {"structural_valid": False, "semantic_valid": False,
+                "readiness": "NOT_EXECUTION_READY", "evidence_results": [],
+                "reason_codes": ["EG-ENVELOPE-OBJECT"]}
+    schema_kind = ("execution-envelope-v1-r2" if envelope.get("contract_revision") == 2
+                   else "execution-envelope-v1" if envelope.get("contract_version")
+                   else "execution-envelope")
+    shape_errors = validation_errors(schema_kind, envelope, context.package_root)
+    if shape_errors:
+        return {"structural_valid": False, "semantic_valid": False,
+                "readiness": "NOT_EXECUTION_READY", "evidence_results": [],
+                "reason_codes": ["EG-SCHEMA"]}
+    problems = contract_issues("execution-envelope", envelope, context.package_root)
+    if problems:
+        return {"structural_valid": True, "semantic_valid": False,
+                "readiness": "NOT_EXECUTION_READY", "evidence_results": [],
+                "reason_codes": [item.code for item in problems]}
+    if envelope.get("contract_revision") != 2:
+        return {"structural_valid": True, "semantic_valid": True,
+                "readiness": "NOT_EXECUTION_READY", "evidence_results": [],
+                "reason_codes": ["LEGACY_CONTRACT_UNVERIFIED"]}
+    reasons: list[str] = []
+    observations = []
+    try:
+        assert_persistable(envelope)
+        if envelope["material_binding"]["digest"] != material_digest(envelope):
+            reasons.append("MATERIAL_DIGEST_MISMATCH")
+        for name, binding in envelope["input_bindings"].items():
+            expected = canonical_digest(binding["snapshot"])
+            ref = binding["source_ref"]
+            if binding["digest"] != expected or ref.get("integrity") != expected:
+                reasons.append("INPUT_BINDING_MISMATCH")
+                continue
+            if ref.get("scheme") == "file":
+                path = Path(ref["locator"]).resolve()
+                try:
+                    if canonical_digest(load_yaml(path)) != expected:
+                        reasons.append("SOURCE_CONTENT_DRIFT")
+                except (OSError, ValueError):
+                    reasons.append("SOURCE_UNVERIFIED")
+            elif ref.get("scheme") != "memory":
+                reasons.append("SOURCE_UNVERIFIED")
+        from .plan import build_execution_envelope
+        from .provenance import load_work_order
+
+        bindings = envelope["input_bindings"]
+        work_ref = bindings["work_order"]["source_ref"]
+        loaded = (load_work_order(Path(work_ref["locator"]))
+                  if work_ref.get("scheme") == "file" else None)
+        replay = build_execution_envelope(
+            context.project_root, bindings["work_order"]["snapshot"],
+            loaded_work_order=loaded, profile=envelope["profile"],
+            host_capabilities=bindings["host_capabilities"]["snapshot"],
+            candidate_snapshot=bindings["candidate_snapshot"]["snapshot"],
+            runtime_pressure=bindings["runtime_pressure"]["snapshot"],
+            resolver_receipts=bindings["resolver_receipts"]["snapshot"],
+            task_metadata=bindings["metadata"]["snapshot"],
+            baseline_sha=envelope["baseline_ref"].get("locator"),
+            revision=2, verification_context=context,
+            _replay_execution_id=envelope["execution_id"],
+            _replay_created_at=envelope["created_at"],
+        )
+        if material_projection(replay) != material_projection(envelope):
+            reasons.append("MATERIAL_REPLAY_MISMATCH")
+        for field in ("decision", "context", "effective_needs", "tool_decisions",
+                      "executor", "model",
+                      "runtime_resource_policy", "evaluation_constraints"):
+            if replay[field] != envelope[field]:
+                reasons.append("DERIVED_REPLAY_MISMATCH")
+        if (envelope["disposition"] != replay["disposition"]
+                and not (envelope["disposition"] == "DEFER"
+                         and replay["disposition"] in {"DIRECT_EXECUTION", "ROUTED"}
+                         and "DEPENDENCY_EVIDENCE_UNVERIFIED" in envelope["reason_codes"])):
+            reasons.append("DISPOSITION_REPLAY_MISMATCH")
+        evidence_reason = {"DEPENDENCY_EVIDENCE_UNVERIFIED"}
+        if ({code for code in replay["reason_codes"] if code not in evidence_reason}
+                != {code for code in envelope["reason_codes"] if code not in evidence_reason}):
+            reasons.append("REASON_REPLAY_MISMATCH")
+        import subprocess
+
+        actual_sha = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=context.project_root,
+            text=True, stderr=subprocess.DEVNULL,
+        ).strip()
+        if envelope["baseline_ref"] != {"scheme": "git", "locator": actual_sha}:
+            reasons.append("BASELINE_MISMATCH")
+        if context.baseline_sha is not None and context.baseline_sha != actual_sha:
+            reasons.append("HOST_BASELINE_MISMATCH")
+        if context.policy_revision != envelope["policy_version"]:
+            reasons.append("POLICY_MISMATCH")
+        gates = list(envelope["recovery"]["required_human_gates"])
+        if envelope["decision"]["control"] == "REQUIRE_HUMAN" and not gates:
+            gates = ["material-effect"]
+        expected_requirements = [
+            {"id": f"gate:{gate}", "predicate": "HUMAN_APPROVAL",
+             "subject_fingerprint": gate_fingerprint(envelope, gate),
+            "required_for_execution": True} for gate in gates
+        ]
+        dependency_observations, dependency_reasons = required_dependency_results(
+            envelope, context)
+        expected_requirements.extend(
+            {"id": item["requirement_id"], "predicate": item["predicate"],
+             "subject_fingerprint": item["subject_fingerprint"],
+             "required_for_execution": True} for item in dependency_observations
+        )
+        observations.extend(dependency_observations)
+        reasons.extend(dependency_reasons)
+        if envelope["verification_requirements"] != expected_requirements:
+            reasons.append("REQUIREMENT_REPLAY_MISMATCH")
+        scope = "project:" + envelope["project_id"]
+        for gate in gates:
+            subject = gate_fingerprint(envelope, gate)
+            checked = verify_assertion(context, f"gate:{gate}", subject,
+                                       "HUMAN_APPROVAL", scope)
+            observations.append(checked.to_dict())
+            if checked.state != "VERIFIED":
+                reasons.append("HUMAN_APPROVAL_UNVERIFIED")
+        work_ref = envelope["work_order_ref"]
+        if work_ref.get("scheme") == "memory":
+            reasons.append("WORK_ORDER_AUTHORITY_UNVERIFIED")
+        if envelope["decision"]["control"] in {"DENY", "ROUTE_ELSEWHERE", "DEFER"}:
+            reasons.append("CONTROL_NOT_EXECUTABLE")
+        callable_tools = {item["candidate"] for item in envelope["tool_decisions"]
+                          if item["decision"] == "CALL"}
+        if set(envelope["intent"]["planned_tools"]) - callable_tools:
+            reasons.append("TOOL_PLAN_NOT_EXECUTABLE")
+        if "HUMAN_GATE_UNENFORCEABLE" in envelope["reason_codes"]:
+            reasons.append("HUMAN_GATE_UNENFORCEABLE")
+        if envelope["disposition"] in {"BLOCKED", "ROUTE_ELSEWHERE", "NO_ACTION"}:
+            reasons.append("DISPOSITION_NOT_EXECUTABLE")
+        if envelope["disposition"] == "DEFER" and not (
+            "HUMAN_APPROVAL_REQUIRED" in envelope["reason_codes"]
+            or "EXPLICIT_HUMAN_GATE" in envelope["reason_codes"]
+        ) and dependency_reasons:
+            reasons.append("DISPOSITION_NOT_EXECUTABLE")
+        if envelope["topology"].get("mode") == "PARALLEL_ISOLATED":
+            allowed = {normalize_scope(value).casefold() for value in
+                       envelope["recovery"]["allowed_writes"]}
+            scopes = {normalize_scope(value).casefold() for value in
+                      envelope["topology"]["write_scopes"]}
+            if not all(any(scope == boundary or scope.startswith(boundary + "/")
+                           for boundary in allowed) for scope in scopes):
+                reasons.append("PARALLEL_SCOPE_OUTSIDE_AUTHORITY")
+            bindings = envelope["topology"]["role_bindings"]
+            workspaces = [str(item.get("workspace") or "").casefold() for item in bindings]
+            branches = [str(item.get("branch") or "").casefold() for item in bindings]
+            if ("" in workspaces or len(set(workspaces)) != len(workspaces)
+                    or "" in branches or len(set(branches)) != len(branches)):
+                reasons.append("PARALLEL_WORKSPACE_UNVERIFIED")
+        if context.trust_root_id is None:
+            reasons.append("TRUST_ROOT_MISSING")
+    except (OSError, KeyError, TypeError, ValueError):
+        reasons.append("EVALUATION_INCOMPLETE")
+    unique = sorted(set(reasons))
+    return {"structural_valid": True, "semantic_valid": not bool(
+        {"MATERIAL_DIGEST_MISMATCH", "INPUT_BINDING_MISMATCH", "SOURCE_CONTENT_DRIFT",
+         "BASELINE_MISMATCH", "REQUIREMENT_REPLAY_MISMATCH", "EVALUATION_INCOMPLETE",
+         "MATERIAL_REPLAY_MISMATCH", "DERIVED_REPLAY_MISMATCH",
+         "DISPOSITION_REPLAY_MISMATCH", "REASON_REPLAY_MISMATCH",
+         "PARALLEL_SCOPE_OUTSIDE_AUTHORITY", "PARALLEL_WORKSPACE_UNVERIFIED"} & set(unique)),
+        "readiness": "NOT_EXECUTION_READY" if unique else "EXECUTION_READY",
+        "evidence_results": observations, "reason_codes": unique}

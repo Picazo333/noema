@@ -46,7 +46,7 @@ def qualified(ident="reader"):
 def test_v1_direct_public_validation_and_legacy_label(tmp_path, capsys):
     env = build_execution_envelope(ROOT, order())
     assert public_validate(tmp_path, env) == 0
-    assert "PASS" in capsys.readouterr().out
+    assert "LEGACY_V1_UNVERIFIED" in capsys.readouterr().out
     legacy = {key: value for key, value in env.items()
               if key not in {"contract_version", "effective_needs", "input_bindings"}}
     legacy["policy_version"] = "eg-policy-v0"
@@ -103,9 +103,10 @@ def test_public_plan_defers_unverified_interface_and_partial_resolver(tmp_path):
     receipt_path.write_text(dump_yaml({"resolver": "resolver", "status": "PARTIAL",
         "resolution_ref": {"scheme": "repo", "locator": "resolution.yaml"},
         "unresolved_capabilities": ["cap-a"]}), encoding="utf-8")
+    # Revision 2 rejects a nominal PARTIAL receipt without an explicit
+    # satisfied set; it cannot be treated as a usable partial result.
     assert main(["eg", "plan", str(order_path), "--root", str(ROOT),
-                 "--resolver-receipt", str(receipt_path), "--out", str(envelope_path)]) == 0
-    assert load_yaml(envelope_path)["disposition"] == "DEFER"
+                 "--resolver-receipt", str(receipt_path), "--out", str(envelope_path)]) != 0
 
 
 def test_caller_forged_loaded_work_order_is_rejected(tmp_path):
@@ -182,8 +183,10 @@ def test_public_resume_gate_requires_handoff_bound_approval(tmp_path):
     handoff["evidence"] = [ref]
     handoff_path.write_text(dump_yaml(handoff), encoding="utf-8")
     state_path.write_text(dump_yaml(state), encoding="utf-8")
+    # Historical revision 1 remains readable but cannot certify R5 resume.
     assert main(["eg", "resume-check", str(envelope_path), str(handoff_path),
-                 "--state", str(state_path)]) == 0
+                 "--state", str(state_path)]) == 1
+    assert resume_check(env, handoff, state)["status"] == "PASS"
 
 
 def test_unqualified_tool_cannot_call_and_secret_ref_cannot_record():

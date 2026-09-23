@@ -32,6 +32,9 @@ def evaluate_control(
         return {"control": ControlDecision.ROUTE_ELSEWHERE.value, "reason_codes": ["FOREIGN_AUTHORITY"]}
     if (data_sensitivity is DataSensitivity.UNKNOWN or authority_scope is AuthorityScope.UNKNOWN) and action_effect in _MATERIAL:
         return {"control": ControlDecision.DEFER.value, "reason_codes": ["UNKNOWN_MATERIAL_STATE"]}
+    if work_order.get("human_gates"):
+        return {"control": ControlDecision.REQUIRE_HUMAN.value,
+                "reason_codes": ["EXPLICIT_HUMAN_GATE"]}
     if action_effect in _MATERIAL:
         return {"control": ControlDecision.REQUIRE_HUMAN.value, "reason_codes": ["MATERIAL_EFFECT_HUMAN_GATE"]}
     if action_effect is ActionEffect.WRITE_REVERSIBLE:

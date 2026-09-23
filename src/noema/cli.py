@@ -216,6 +216,8 @@ def build_parser() -> argparse.ArgumentParser:
     command.add_argument("--candidate-snapshot")
     command.add_argument("--runtime-pressure")
     command.add_argument("--task-metadata")
+    command.add_argument("--trust-context")
+    command.add_argument("--require-ready", action="store_true")
     command.add_argument("--resolver-receipt", action="append", default=[])
     command.add_argument("--out")
     command.add_argument("--json", action="store_true")
@@ -223,6 +225,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     command = eg_sub.add_parser("explain")
     command.add_argument("envelope")
+    command.add_argument("--root", default=".")
+    command.add_argument("--trust-context")
     command.add_argument("--json", action="store_true")
     command.set_defaults(func=eg_cli.explain)
 
@@ -239,11 +243,17 @@ def build_parser() -> argparse.ArgumentParser:
         ],
     )
     command.add_argument("--root", default=".")
+    command.add_argument("--trust-context")
+    command.add_argument("--require-ready", action="store_true")
+    command.add_argument("--envelope")
+    command.add_argument("--json", action="store_true")
     command.set_defaults(func=eg_cli.validate)
 
     command = eg_sub.add_parser("record")
     command.add_argument("envelope")
     command.add_argument("actual")
+    command.add_argument("--root", default=".")
+    command.add_argument("--trust-context")
     command.add_argument("--out")
     command.add_argument("--json", action="store_true")
     command.set_defaults(func=eg_cli.record)
@@ -251,12 +261,16 @@ def build_parser() -> argparse.ArgumentParser:
     command = eg_sub.add_parser("compare")
     command.add_argument("envelope")
     command.add_argument("trace")
+    command.add_argument("--root", default=".")
+    command.add_argument("--trust-context")
     command.add_argument("--json", action="store_true")
     command.set_defaults(func=eg_cli.compare)
 
     command = eg_sub.add_parser("resume-check")
     command.add_argument("envelope")
     command.add_argument("handoff")
+    command.add_argument("--root", default=".")
+    command.add_argument("--trust-context")
     command.add_argument("--state", required=True)
     command.add_argument("--json", action="store_true")
     command.set_defaults(func=eg_cli.resume)
@@ -276,8 +290,14 @@ def main(argv=None) -> int:
     try:
         return args.func(args)
     except (ValueError, FileNotFoundError, KeyError) as exc:
+        if getattr(args.func, "__module__", "").startswith("noema.eg."):
+            print(f"EG configuration error: {type(exc).__name__}", file=sys.stderr)
+            return 2
         print(f"Configuration error: {exc}", file=sys.stderr)
         return 2
     except Exception as exc:  # defensive CLI boundary
+        if getattr(args.func, "__module__", "").startswith("noema.eg."):
+            print(f"EG internal error: {type(exc).__name__}", file=sys.stderr)
+            return 3
         print(f"Internal Noema error: {exc}", file=sys.stderr)
         return 3

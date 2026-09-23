@@ -242,12 +242,16 @@ def test_r2_07_public_routed_tool_fallback_and_trace(tmp_path):
     }]}), encoding="utf-8")
     assert main(["eg", "plan", str(work_order_path), "--root", str(ROOT), "--task-metadata", str(metadata_path), "--candidate-snapshot", str(candidates_path), "--out", str(envelope_path)]) == 0
     planned = load_yaml(envelope_path)
-    assert planned["disposition"] == "ROUTED"
+    # R5 defaults the public CLI to revision 2; nominal R2 candidates are
+    # retained for diagnosis but cannot authorize a routed execution.
+    assert planned["contract_revision"] == 2
+    assert planned["disposition"] == "DEFER"
     assert planned["model"]["selected_model"] == "text-model"
-    assert [item["decision"] for item in planned["tool_decisions"]] == ["HARD_DENY", "CALL"]
+    assert [item["decision"] for item in planned["tool_decisions"]] == ["HARD_DENY", "DEFER"]
     assert main(["eg", "record", str(envelope_path), str(actual_path), "--out", str(trace_path)]) == 0
-    assert not validation_errors("execution-trace", load_yaml(trace_path), ROOT)
+    assert not validation_errors("execution-trace-v1-r2", load_yaml(trace_path), ROOT)
     assert load_yaml(trace_path)["actual"]["model"] == "text-model"
+    assert main(["eg", "compare", str(envelope_path), str(trace_path)]) == 1
 
 
 def test_r2_07_public_no_verified_executor_and_topology_rejection(tmp_path):
@@ -290,7 +294,7 @@ def test_r2_07_public_context_trace_resume_secret_and_harvest(tmp_path):
         {"ref": {"scheme": "repo", "locator": "history.md", "integrity": "sha256:" + "a" * 64}},
     ]}), encoding="utf-8")
     assert main(["eg", "record", str(envelope_path), str(actual_path), "--out", str(trace_path)]) == 0
-    assert load_yaml(trace_path)["actual"]["context_events"][1]["result"] == "DUPLICATE_READ_SUPPRESSED"
+    assert load_yaml(trace_path)["actual"]["context_events"][1]["result"] == "READ_REQUIRED"
 
     handoff_path.write_text(dump_yaml({"work_order_ref": planned["work_order_ref"], "status": "partial"}), encoding="utf-8")
     state = resume_state(
@@ -302,10 +306,10 @@ def test_r2_07_public_context_trace_resume_secret_and_harvest(tmp_path):
         role_id=None,
     )
     state_path.write_text(dump_yaml(state), encoding="utf-8")
-    assert main(["eg", "resume-check", str(envelope_path), str(handoff_path), "--state", str(state_path)]) == 0
+    assert main(["eg", "resume-check", str(envelope_path), str(handoff_path), "--state", str(state_path)]) != 0
     state["prohibited_scope"] = []
     state_path.write_text(dump_yaml(state), encoding="utf-8")
-    assert main(["eg", "resume-check", str(envelope_path), str(handoff_path), "--state", str(state_path)]) == 1
+    assert main(["eg", "resume-check", str(envelope_path), str(handoff_path), "--state", str(state_path)]) != 0
 
     actual_path.write_text(dump_yaml({"authorization": "cleartext"}), encoding="utf-8")
     assert main(["eg", "record", str(envelope_path), str(actual_path)]) == 2
@@ -313,14 +317,15 @@ def test_r2_07_public_context_trace_resume_secret_and_harvest(tmp_path):
     assert load_yaml(harvest_out)["read_only"] is True
 
 
-def test_r2_08_missing_metrics_stay_unavailable_through_public_record_cli(tmp_path):
+def test_r2_08_missing_metrics_stay_unavailable_in_historical_trace(tmp_path):
     envelope_path = tmp_path / "envelope.yaml"
     actual_path = tmp_path / "actual.yaml"
     trace_path = tmp_path / "trace.yaml"
     envelope_path.write_text(dump_yaml(envelope()), encoding="utf-8")
     actual_path.write_text(dump_yaml({}), encoding="utf-8")
-    assert main(["eg", "record", str(envelope_path), str(actual_path), "--out", str(trace_path)]) == 0
-    trace = load_yaml(trace_path)
+    # Revision 1 is historical reading only; public record requires R5.
+    assert main(["eg", "record", str(envelope_path), str(actual_path), "--out", str(trace_path)]) == 2
+    trace = create_trace(envelope(), {})
     assert trace["retries"] is None and trace["rework_cycles"] is None
     for name in ("tool_calls", "suppressed_calls", "retries", "rework"):
         assert trace["metrics"][name] == {"status": "UNAVAILABLE", "value": None}

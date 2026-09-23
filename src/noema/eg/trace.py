@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from .context_plan import ReadSet
+from .bindings import envelope_digest, material_digest, read_subject
+from .evidence import VerificationContext, verify_assertion
 from .enums import MetricStatus
 from .semantics import raise_for_issues, sensitive_ref, validate_envelope_semantics, validate_trace_semantics
 
@@ -199,6 +201,7 @@ def create_trace(
     *,
     started_at: str | None = None,
     finished_at: str | None = None,
+    verification_context: VerificationContext | None = None,
 ) -> dict:
     """Create a trace from explicit observations, never raw tool payloads."""
     raise_for_issues(validate_envelope_semantics(envelope))
@@ -214,8 +217,11 @@ def create_trace(
         actual.get("envelope_ref", {"scheme": "memory", "locator": envelope["execution_id"]}),
         "envelope_ref",
     )
-    if actual.get("outcome", "SUCCESS") not in {
-        "SUCCESS", "PARTIAL", "BLOCKED", "FAILED", "ABORTED", "NO_ACTION"
+    revision2 = envelope.get("contract_revision") == 2
+    if revision2 and envelope_ref != {"scheme": "memory", "locator": envelope["execution_id"]}:
+        raise ValueError("R5 trace envelope reference does not match the selected envelope")
+    if actual.get("outcome", "UNKNOWN" if revision2 else "SUCCESS") not in {
+        "SUCCESS", "PARTIAL", "BLOCKED", "FAILED", "ABORTED", "NO_ACTION", "UNKNOWN"
     }:
         raise ValueError("Unknown execution outcome")
     for key in ("executor", "model"):
@@ -224,9 +230,25 @@ def create_trace(
     read_set = ReadSet()
     context_events = []
     context_refs = []
-    for read in raw_reads:
+    read_bindings = []
+    for index, read in enumerate(raw_reads):
         ref = _storage_ref(read.get("ref"), "context read ref")
-        result = read_set.record(ref, read.get("freshness"), low_signal=bool(read.get("low_signal")))
+        verified_identity = False
+        if revision2 and verification_context is not None and "integrity" in ref:
+            subject = read_subject(envelope, index, ref)
+            checked = verify_assertion(
+                verification_context, f"read:{index}", subject,
+                "HISTORICAL_READ_IDENTITY", "project:" + envelope["project_id"])
+            if checked.state == "VERIFIED" and checked.source_ref and checked.source_digest:
+                verified_identity = True
+                read_bindings.append({"event_index": index,
+                                      "subject_fingerprint": subject,
+                                      "source_ref": checked.source_ref,
+                                      "source_digest": checked.source_digest})
+        # A claimed hash alone cannot establish a historical observation.
+        identity_ref = ({key: value for key, value in ref.items() if key != "integrity"}
+                        if revision2 and not verified_identity else ref)
+        result = read_set.record(identity_ref, read.get("freshness"), low_signal=bool(read.get("low_signal")))
         context_events.append({
             "ref": ref,
             "result": result["reason_code"],
@@ -244,7 +266,7 @@ def create_trace(
         "project_id": envelope["project_id"],
         "started_at": started_at,
         "finished_at": finished_at or started_at,
-        "outcome": actual.get("outcome", "SUCCESS"),
+        "outcome": actual.get("outcome", "UNKNOWN" if revision2 else "SUCCESS"),
         "actual": {
             "role_bindings": role_bindings,
             "executor": actual.get("executor"),
@@ -260,6 +282,26 @@ def create_trace(
         "retries": _observed_count(actual, "retries"),
         "rework_cycles": _observed_count(actual, "rework_cycles"),
     }
+    if revision2:
+        trace.update({
+            "contract_revision": 2,
+            "work_order_id": envelope["work_order_id"],
+            "envelope_digest": envelope_digest(envelope),
+            "material_digest": material_digest(envelope),
+            "read_identity_bindings": read_bindings,
+            "observation_coverage": {
+                "executor": ("OBSERVED" if actual.get("executor") else "UNVERIFIED"
+                             if envelope["intent"]["planned_executor"] else "NOT_REQUIRED"),
+                "model": ("OBSERVED" if actual.get("model") else "UNVERIFIED"
+                          if envelope["intent"]["planned_model"] else "NOT_REQUIRED"),
+                "tools": ("OBSERVED" if "tool_events" in actual else "UNVERIFIED"
+                          if envelope["intent"]["planned_tools"] else "NOT_REQUIRED"),
+                "topology": ("OBSERVED" if "role_bindings" in actual else "UNVERIFIED"
+                             if envelope["topology"]["mode"] == "PARALLEL_ISOLATED"
+                             else "NOT_REQUIRED"),
+                "historical_reads": "OBSERVED" if "context_reads" in actual else "UNVERIFIED",
+            },
+        })
     raise_for_issues(validate_trace_semantics(trace))
     return trace
 

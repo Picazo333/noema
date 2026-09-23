@@ -32,6 +32,9 @@ from .provenance import LoadedWorkOrder, programmatic_work_order
 from .semantics import canonical_digest, contract_issues, raise_for_issues, sensitive_ref, validate_envelope_semantics
 from .tooling import decide_tools
 from .topology import derive_topology
+from .bindings import gate_fingerprint, material_digest
+from .evidence import VerificationContext, required_dependency_results
+from .persistence import assert_persistable, project_r2_inputs
 
 
 def _validate_work_order(work_order: dict, root: Path) -> None:
@@ -83,6 +86,10 @@ def build_execution_envelope(
     resolver_receipts: list[dict] | None = None,
     task_metadata: dict | None = None,
     baseline_sha: str | None = None,
+    revision: int | None = None,
+    verification_context: VerificationContext | None = None,
+    _replay_execution_id: str | None = None,
+    _replay_created_at: str | None = None,
 ) -> dict:
     """Create derived governance state; no tool call or host action occurs here."""
     root = root.resolve()
@@ -109,6 +116,8 @@ def build_execution_envelope(
     work_order_project_id = work_order["project_id"]
     metadata = task_metadata or {}
     candidates = candidate_snapshot or {}
+    if revision == 2:
+        metadata, candidates = project_r2_inputs(metadata, candidates)
     host = flattened_capabilities(host_capabilities or {})
     action = classify_action_effect(work_order, metadata.get("requested_action"))
     sensitivity = classify_data_sensitivity(work_order.get("inputs"), metadata)
@@ -117,7 +126,8 @@ def build_execution_envelope(
     deliberation = classify_deliberation(work_order, metadata)
     evaluation = derive_evaluation_constraints(work_order, metadata)
     topology = derive_topology(metadata, evaluation)
-    receipts = [validate_resolver_receipt(item) for item in resolver_receipts or []]
+    receipts = [validate_resolver_receipt(item, revision=2 if revision == 2 else 1)
+                for item in resolver_receipts or []]
     needs = derive_execution_needs(work_order, metadata)
     executor_requirements = metadata.get("executor_requirements", {})
     model_requirements = metadata.get("model_requirements", {})
@@ -225,13 +235,13 @@ def build_execution_envelope(
     )
     envelope = {
         "contract_version": "execution-envelope/v1",
-        "execution_id": f"exec-{uuid4().hex}",
+        "execution_id": _replay_execution_id or f"exec-{uuid4().hex}",
         "work_order_ref": loaded.canonical_source_ref,
         "work_order_id": work_order["work_order_id"],
         "project_id": work_order_project_id,
         "profile": profile,
         "policy_version": "eg-policy-v1",
-        "created_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "created_at": _replay_created_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "baseline_ref": baseline,
         "disposition": final["disposition"],
         "reason_codes": reasons,
@@ -250,8 +260,8 @@ def build_execution_envelope(
             "work_order": _binding(work_order, loaded.canonical_source_ref),
             "metadata": _binding(metadata),
             "runtime_pressure": _binding(runtime_pressure),
-            "candidate_snapshot": _binding(candidate_snapshot),
-            "resolver_receipts": _binding(resolver_receipts or []),
+            "candidate_snapshot": _binding(candidates if revision == 2 else candidate_snapshot),
+            "resolver_receipts": _binding(receipts if revision == 2 else resolver_receipts or []),
             "host_capabilities": _binding(host_capabilities),
             "manifest": _binding(manifest, {"scheme": "file", "locator": str(root / "noema.project.yaml"), "integrity": canonical_digest(manifest)}),
         },
@@ -269,5 +279,49 @@ def build_execution_envelope(
         ),
         "evidence_refs": [],
     }
+    if revision == 2:
+        planned_tools = sorted({item["candidate"] for item in tool_decisions
+                                if item["decision"] == "CALL"})
+        envelope["contract_revision"] = 2
+        envelope["intent"] = {
+            "attempt_id": str(metadata.get("attempt_id") or envelope["execution_id"]),
+            "action_id": str(metadata.get("action_id") or "action-1"),
+            "action_effect": action.value,
+            "target_ref": metadata.get("target_ref"),
+            "planned_executor": executor["selected_executor"],
+            "planned_model": model["selected_model"],
+            "planned_tools": planned_tools,
+            "planned_topology": topology,
+        }
+        envelope["verification_requirements"] = []
+        envelope["evidence_bindings"] = list(metadata.get("evidence_bindings", []))
+        envelope["material_binding"] = {"algorithm": "EG-C14N-1", "digest": ""}
+        envelope["material_binding"]["digest"] = material_digest(envelope)
+        envelope["verification_requirements"] = [
+            {"id": f"gate:{gate}", "predicate": "HUMAN_APPROVAL",
+             "subject_fingerprint": gate_fingerprint(envelope, gate),
+             "required_for_execution": True}
+            for gate in work_order.get("human_gates", [])
+        ]
+        context_for_dependencies = verification_context or VerificationContext.from_host(
+            root, schema_root())
+        dependency_observations, dependency_reasons = required_dependency_results(
+            envelope, context_for_dependencies)
+        envelope["verification_requirements"].extend(
+            {"id": item["requirement_id"], "predicate": item["predicate"],
+             "subject_fingerprint": item["subject_fingerprint"],
+             "required_for_execution": True} for item in dependency_observations
+        )
+        if dependency_reasons and envelope["disposition"] not in {"BLOCKED", "ROUTE_ELSEWHERE"}:
+            envelope["disposition"] = "DEFER"
+            envelope["reason_codes"] = list(dict.fromkeys(
+                envelope["reason_codes"] + ["DEPENDENCY_EVIDENCE_UNVERIFIED"]))
+            for item in envelope["tool_decisions"]:
+                if item["decision"] == "CALL":
+                    item["decision"] = "DEFER"
+                    item["reason_codes"] = ["DEPENDENCY_EVIDENCE_UNVERIFIED"]
+        assert_persistable(envelope)
+    elif revision is not None:
+        raise ValueError("Unsupported EG contract revision")
     raise_for_issues(validate_envelope_semantics(envelope))
     return envelope

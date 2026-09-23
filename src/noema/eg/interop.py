@@ -10,7 +10,7 @@ from .semantics import raise_for_issues, validate_resolver_receipt_semantics
 _STATUSES = {"RESOLVED", "PARTIAL", "UNRESOLVED", "NOT_REQUIRED", "BLOCKED"}
 
 
-def validate_resolver_receipt(receipt: dict) -> dict:
+def validate_resolver_receipt(receipt: dict, *, revision: int = 1) -> dict:
     if not isinstance(receipt, dict):
         raise ValueError("Resolver receipt must be an object")
     if not isinstance(receipt.get("resolver"), str) or not receipt["resolver"]:
@@ -31,5 +31,7 @@ def validate_resolver_receipt(receipt: dict) -> dict:
         "integrity": receipt.get("integrity"),
         "observed_at": observed,
     }
+    if revision == 2:
+        normalized["satisfied_capabilities"] = list(receipt.get("satisfied_capabilities", []))
     raise_for_issues(validate_resolver_receipt_semantics(normalized))
     return normalized

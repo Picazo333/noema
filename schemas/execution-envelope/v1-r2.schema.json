@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:execution-envelope:1:r2",
+  "type": "object",
+  "required": ["contract_version", "contract_revision", "execution_id", "work_order_ref", "work_order_id", "project_id", "profile", "policy_version", "created_at", "baseline_ref", "disposition", "reason_codes", "decision", "context", "runtime_resource_policy", "capability_requirements", "resolver_receipts", "tool_decisions", "executor", "model", "topology", "evaluation_constraints", "recovery", "evidence_refs", "effective_needs", "input_bindings", "intent", "material_binding", "verification_requirements", "evidence_bindings"],
+  "properties": {
+    "contract_version": {"const": "execution-envelope/v1"},
+    "contract_revision": {"const": 2},
+    "execution_id": {"type": "string", "pattern": "^exec-[a-z0-9-]+$"},
+    "work_order_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"},
+    "work_order_id": {"$ref": "urn:noema:schema:common:1#/$defs/identifier"},
+    "project_id": {"$ref": "urn:noema:schema:common:1#/$defs/identifier"},
+    "profile": {"type": "string"},
+    "policy_version": {"const": "eg-policy-v1"},
+    "created_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+    "baseline_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"},
+    "disposition": {"enum": ["DIRECT_EXECUTION", "ROUTED", "NO_ACTION", "DEFER", "ROUTE_ELSEWHERE", "BLOCKED"]},
+    "reason_codes": {"type": "array", "items": {"type": "string"}},
+    "decision": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/decision"},
+    "context": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/context"},
+    "runtime_resource_policy": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/runtimePolicy"},
+    "capability_requirements": {"type": "array", "items": {"type": "object"}},
+    "resolver_receipts": {"type": "array", "items": {"$ref": "#/$defs/resolverReceipt"}},
+    "tool_decisions": {"type": "array", "items": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/toolDecision"}},
+    "executor": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/executor"},
+    "model": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/model"},
+    "topology": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/topology"},
+    "evaluation_constraints": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/evaluation"},
+    "recovery": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/recovery"},
+    "evidence_refs": {"type": "array", "items": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"}},
+    "effective_needs": {"$ref": "urn:noema:schema:execution-envelope:1#/$defs/needs"},
+    "input_bindings": {"type": "object", "required": ["work_order", "metadata", "runtime_pressure", "candidate_snapshot", "resolver_receipts", "host_capabilities", "manifest"], "properties": {
+      "work_order": {"$ref": "urn:noema:schema:execution-envelope:1#/$defs/binding"},
+      "metadata": {"$ref": "urn:noema:schema:execution-envelope:1#/$defs/binding"},
+      "runtime_pressure": {"$ref": "urn:noema:schema:execution-envelope:1#/$defs/binding"},
+      "candidate_snapshot": {"$ref": "urn:noema:schema:execution-envelope:1#/$defs/binding"},
+      "resolver_receipts": {"$ref": "urn:noema:schema:execution-envelope:1#/$defs/binding"},
+      "host_capabilities": {"$ref": "urn:noema:schema:execution-envelope:1#/$defs/binding"},
+      "manifest": {"$ref": "urn:noema:schema:execution-envelope:1#/$defs/binding"}
+    }, "additionalProperties": false},
+    "intent": {"$ref": "#/$defs/intent"},
+    "material_binding": {"$ref": "#/$defs/materialBinding"},
+    "verification_requirements": {"type": "array", "items": {"$ref": "#/$defs/verificationRequirement"}},
+    "evidence_bindings": {"type": "array", "items": {"$ref": "#/$defs/evidenceBinding"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "resolverReceipt": {"type": "object", "required": ["resolver", "status", "resolution_ref", "unresolved_capabilities", "satisfied_capabilities", "integrity", "observed_at"], "properties": {
+      "resolver": {"type": "string", "minLength": 1},
+      "status": {"enum": ["RESOLVED", "PARTIAL", "UNRESOLVED", "NOT_REQUIRED", "BLOCKED"]},
+      "resolution_ref": {"type": ["object", "null"]},
+      "unresolved_capabilities": {"type": "array", "items": {"type": "string", "minLength": 1}},
+      "satisfied_capabilities": {"type": "array", "items": {"type": "string", "minLength": 1}},
+      "integrity": {"type": ["string", "null"]},
+      "observed_at": {"type": ["string", "null"]}
+    }, "additionalProperties": false},
+    "intent": {"type": "object", "required": ["attempt_id", "action_id", "action_effect", "target_ref", "planned_executor", "planned_model", "planned_tools", "planned_topology"], "properties": {
+      "attempt_id": {"type": "string", "minLength": 1},
+      "action_id": {"type": "string", "minLength": 1},
+      "action_effect": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/decision/properties/action_effect"},
+      "target_ref": {"type": ["object", "null"]},
+      "planned_executor": {"type": ["string", "null"]},
+      "planned_model": {"type": ["string", "null"]},
+      "planned_tools": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+      "planned_topology": {"$ref": "urn:noema:schema:execution-envelope:0#/$defs/topology"}
+    }, "additionalProperties": false},
+    "materialBinding": {"type": "object", "required": ["algorithm", "digest"], "properties": {
+      "algorithm": {"const": "EG-C14N-1"},
+      "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+    }, "additionalProperties": false},
+    "verificationRequirement": {"type": "object", "required": ["id", "predicate", "subject_fingerprint", "required_for_execution"], "properties": {
+      "id": {"type": "string", "minLength": 1},
+      "predicate": {"type": "string", "minLength": 1},
+      "subject_fingerprint": {"type": "string", "minLength": 1},
+      "required_for_execution": {"type": "boolean"}
+    }, "additionalProperties": false},
+    "evidenceBinding": {"type": "object", "required": ["requirement_id", "evidence_ref"], "properties": {
+      "requirement_id": {"type": "string", "minLength": 1},
+      "evidence_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"}
+    }, "additionalProperties": false}
+  }
+}

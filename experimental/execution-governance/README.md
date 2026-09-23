@@ -29,3 +29,16 @@ python -m noema.eg.dogfood . validation/experimental/execution-governance/CANARY
 
 Use `python -m noema eg doctor .` to inspect available host evidence and
 `python -m noema eg --help` for the read-only/planning commands.
+
+T1 keeps envelope v1-r2 and emits trace v1-r3. `eg explain --json` lists
+occurrence-bound material obligations. `record` may preserve partial reports;
+`compare` and `validate trace --envelope` compute coverage and require a
+host-pinned observation snapshot before certifying material conformance.
+Historical r2 traces remain readable without invented actor attributes.
+
+After the T1 commit is frozen, run `.github/scripts/verify_t1.py` from a
+separate clean checkout with `--root`, `--expected-sha`, and an empty external
+`--output-dir`. It repeats all five required checks and 30 canaries. Only a
+successful clean local run permits publishing the frozen experimental branch
+for exact-SHA GitHub Actions. Keep results outside Git; Actions green is not
+a substitute for independent audit.

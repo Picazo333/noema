@@ -39,3 +39,13 @@ does not issue human approvals or own external qualification truth. If that
 context cannot be established, material execution remains unverified. R5 does
 not authorize another public artifact type, service, registry, provider-specific
 core, or a change to WorkOrder, Handoff, EvalResult, or RC0 routing semantics.
+
+## R5 targeted closure T1
+
+The v1 envelope remains at revision 2. The v1 trace may use revision 3 to
+report occurrence-bound tool and actor observations, including explicit
+nonparticipation and material workspace, branch, and write scope. Trace r2
+remains readable without invented observations. Coverage is computed during
+comparison, not trusted from a trace field. Material PASS additionally needs
+an independently pinned host observation snapshot. GitHub Actions checks the
+frozen commit operationally and does not supply domain authority.

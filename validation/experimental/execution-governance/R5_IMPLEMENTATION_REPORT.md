@@ -54,3 +54,20 @@ git diff --check
 The CLI result is relative to a host-selected trust context. A separate consumer must pin the expected trust-root identity; arbitrary standalone invocation is not an external authority. Fixture projections demonstrate the mechanics without asserting live StackIA or other provider integration. Credential detection covers the defined families, not every possible encoded secret. Stateless Noema cannot prove single-use consumption of an approval. Current byte integrity alone does not prove a past agent read; historical suppression requires a separately accepted event-bound assertion. No verified executor currently exists in the project registry; routed positives therefore use evidence-bound tools and resolver output, not a fabricated executor.
 
 The final SHA cannot be written into a file inside its own commit. The exact final/parent SHA, clean canary checkout, results, and imported module path belong in external post-commit evidence. The pre-existing `Noema-vNext-R4-2cf6e84.zip` in the repository root is user-owned and must not be included in the R5 commit; use an isolated clean checkout for canaries. For independent reauditing, inspect the frozen commit, run the five validation commands on that SHA, execute all R5 canaries from the same clean checkout, and adversarially challenge the host trust boundary and all seven P1 families. Do not merge or push based on this tracked report alone.
+
+## T1 implementation and post-commit procedure
+
+T1 keeps envelope v1-r2 and adds trace v1-r3 for occurrence-level tool and
+actor observations. Comparison recalculates reported coverage and requires
+independently host-pinned `EXECUTION_OBSERVATIONS` for material PASS. Mandatory
+resolver readiness binds current bytes and an authority assertion to the same
+receipt. The 30-scenario definitions file contains no observed results.
+
+After local regression, freeze a single commit. Use an isolated clean checkout
+and `.github/scripts/verify_t1.py` with the full SHA and an empty external
+output directory. Only after that local gate passes, publish exactly the
+experimental branch at that SHA. `.github/workflows/ci.yml` runs the same gate
+on Ubuntu and uploads four allowlisted evidence files to the matching run.
+Cross-check run ID, attempt, head SHA, artifact ID and remote ref before asking
+for independent Sol reaudit. A correction requires a new SHA and fresh local
+and CI evidence. CI success does not certify external authority or architecture.

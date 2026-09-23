@@ -6,9 +6,10 @@ import json
 import os
 from pathlib import Path
 import argparse
-import re
 import subprocess
 import sys
+import tempfile
+from xml.etree import ElementTree
 
 from .persistence import assert_persistable, atomic_write
 
@@ -35,6 +36,20 @@ def _git(root: Path, *args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=root, text=True).strip()
 
 
+def _junit_counts(path: Path) -> dict[str, int] | None:
+    try:
+        root = ElementTree.parse(path).getroot()
+    except (OSError, ElementTree.ParseError):
+        return None
+    cases = list(root.iter("testcase"))
+    failed = sum(case.find("failure") is not None for case in cases)
+    errors = sum(case.find("error") is not None for case in cases)
+    skipped = sum(case.find("skipped") is not None for case in cases)
+    return {"passed": len(cases) - failed - errors - skipped,
+            "failed": failed, "errors": errors, "skipped": skipped,
+            "total": len(cases)}
+
+
 def run_dogfood(root: Path, definitions: Path, output_dir: Path,
                 expected_sha: str) -> dict:
     """Run each declared canary against a clean commit and write external evidence."""
@@ -51,6 +66,9 @@ def run_dogfood(root: Path, definitions: Path, output_dir: Path,
     cases = definition["canaries"]
     if not isinstance(cases, list) or not cases:
         raise ValueError("At least one required canary is needed")
+    identifiers = [case.get("id") for case in cases]
+    if any(not isinstance(ident, str) or not ident for ident in identifiers) or len(set(identifiers)) != len(identifiers):
+        raise ValueError("Required canary IDs must be unique and non-empty")
     environment = {**os.environ, "PYTHONPATH": str(root / "src")}
     imported = subprocess.run(
         [sys.executable, "-c", "import pathlib, noema; print(pathlib.Path(noema.__file__).resolve())"],
@@ -60,24 +78,24 @@ def run_dogfood(root: Path, definitions: Path, output_dir: Path,
             or not Path(imported.stdout.strip()).resolve().is_relative_to(root / "src")):
         raise ValueError("Canary import does not resolve to the tested checkout")
     rows = []
-    for case in cases:
-        process = subprocess.run(
-            [sys.executable, "-m", "pytest", "-q", "-rs", case["evidence"]],
-            cwd=root, env=environment, capture_output=True, text=True, check=False,
-        )
-        output = process.stdout + process.stderr
-        skipped = bool(re.search(r"\b\d+ skipped\b|\bSKIPPED\b", output))
-        zero = "no tests ran" in output or "0 passed" in output
-        unchanged = _git(root, "rev-parse", "HEAD") == sha and not _git(root, "status", "--porcelain")
-        passed = process.returncode == 0 and not skipped and not zero and unchanged
-        rows.append({**case, "observed": "PASS" if passed else "FAIL",
-                     "sha": sha, "status": "PASS" if passed else "FAIL",
-                     "exit_code": process.returncode,
-                     "reason_codes": ([] if passed else [
-                         "REQUIRED_SKIP" if skipped else
-                         "ZERO_TESTS" if zero else
-                         "TREE_MUTATION" if not unchanged else "CANARY_FAILED"
-                     ])})
+    with tempfile.TemporaryDirectory(prefix="noema-canary-") as temporary:
+        for index, case in enumerate(cases):
+            xml = Path(temporary) / f"case-{index}.xml"
+            process = subprocess.run(
+                [sys.executable, "-m", "pytest", "-q", f"--junitxml={xml}", case["evidence"]],
+                cwd=root, env=environment, capture_output=True, text=True, check=False,
+            )
+            counts = _junit_counts(xml)
+            unchanged = _git(root, "rev-parse", "HEAD") == sha and not _git(root, "status", "--porcelain")
+            passed = (process.returncode == 0 and unchanged and counts is not None
+                      and counts["passed"] > 0 and counts["failed"] == counts["errors"] == counts["skipped"] == 0)
+            reason = ("TREE_MUTATION" if not unchanged else "CANARY_RESULTS_MISSING" if counts is None
+                      else "REQUIRED_SKIP_OR_XFAIL" if counts["skipped"] else
+                      "ZERO_TESTS" if not counts["passed"] else "CANARY_FAILED")
+            rows.append({**case, "observed": "PASS" if passed else "FAIL",
+                         "sha": sha, "status": "PASS" if passed else "FAIL",
+                         "exit_code": process.returncode, "test_counts": counts,
+                         "reason_codes": [] if passed else [reason]})
     results = {"suite": definition.get("suite", "R5"), "tested_sha": sha, "status": "PASS" if all(
         row["status"] == "PASS" for row in rows) else "FAIL", "canaries": rows}
     assert_persistable(results)

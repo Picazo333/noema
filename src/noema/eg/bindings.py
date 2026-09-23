@@ -101,3 +101,33 @@ def read_subject(envelope: dict, index: int, ref: dict) -> str:
         "event_index": index,
         "ref": ref,
     })
+
+
+def obligation_ref(envelope: dict, kind: str, expected_binding: dict,
+                   occurrence: int) -> str:
+    """Identify one material occurrence, not merely a candidate or role name."""
+    return digest("noema-eg-obligation-t1", {
+        "envelope_digest": envelope_digest(envelope),
+        "attempt_id": envelope["intent"]["attempt_id"],
+        "action_id": envelope["intent"]["action_id"],
+        "kind": kind,
+        "expected_binding": expected_binding,
+        "occurrence": occurrence,
+    })
+
+
+def observation_projection(envelope: dict, trace: dict,
+                           required_dimensions: list[str]) -> dict:
+    return {
+        "envelope_digest": envelope_digest(envelope),
+        "material_digest": material_digest(envelope),
+        "attempt_id": envelope["intent"]["attempt_id"],
+        "action_id": envelope["intent"]["action_id"],
+        "required_dimensions": required_dimensions,
+        "actual": trace["actual"],
+        "outcome": trace["outcome"],
+    }
+
+
+def observation_subject(projection: dict) -> str:
+    return digest("noema-eg-execution-observations-t1", projection)

@@ -23,6 +23,7 @@ SCHEMA_FILES = {
     "execution-trace-v1": "schemas/execution-trace/v1.schema.json",
     "execution-envelope-v1-r2": "schemas/execution-envelope/v1-r2.schema.json",
     "execution-trace-v1-r2": "schemas/execution-trace/v1-r2.schema.json",
+    "execution-trace-v1-r3": "schemas/execution-trace/v1-r3.schema.json",
 }
 
 
@@ -57,6 +58,7 @@ def validator_for(name: str, protocol_root: Path | None = None) -> Draft202012Va
 def validation_errors(name: str, data, protocol_root: Path | None = None):
     if name in {"execution-envelope", "execution-trace"} and isinstance(data, dict):
         if data.get("contract_version") == f"{name}/v1":
-            name += "-v1-r2" if data.get("contract_revision") == 2 else "-v1"
+            revision = data.get("contract_revision")
+            name += "-v1-r3" if name == "execution-trace" and revision == 3 else "-v1-r2" if revision == 2 else "-v1"
     validator = validator_for(name, protocol_root)
     return sorted(validator.iter_errors(data), key=lambda e: list(e.absolute_path))

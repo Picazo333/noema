@@ -230,8 +230,12 @@ def validate_trace_semantics(trace: object) -> list[SemanticIssue]:
     if isinstance(actual, dict):
         bindings = trace.get("read_identity_bindings", [])
         binding_by_index = {}
-        if trace.get("contract_revision") == 2:
+        if trace.get("contract_revision") in {2, 3}:
             from .bindings import read_subject
+            if actual.get("context_events") is None:
+                if bindings or actual.get("context_refs"):
+                    issues.append(issue("EG-READ-OMITTED-CHANNEL", "actual.context_events", "omitted read channel cannot contain read references or bindings"))
+                return issues
             for binding in bindings:
                 index = binding.get("event_index")
                 if (not isinstance(index, int) or index < 0
@@ -249,7 +253,7 @@ def validate_trace_semantics(trace: object) -> list[SemanticIssue]:
                 issues.append(issue("EG-READ-UNKNOWN-FINGERPRINT", f"actual.context_events[{index}]", "unknown read identity cannot claim a fingerprint"))
             if kind != "UNKNOWN" and (not isinstance(fingerprint, str) or not fingerprint):
                 issues.append(issue("EG-READ-FINGERPRINT", f"actual.context_events[{index}]", "read identity evidence requires a stable fingerprint"))
-            if trace.get("contract_revision") == 2:
+            if trace.get("contract_revision") in {2, 3}:
                 binding = binding_by_index.get(index)
                 ref = event.get("ref", {})
                 if binding is None:
@@ -397,9 +401,9 @@ def contract_issues(kind: str, data: object, root: Path) -> list[SemanticIssue]:
             if version != f"{kind}/v1":
                 return [issue("EG-VERSION", "contract_version", "unsupported contract version")]
             revision = data.get("contract_revision")
-            if revision not in (None, 2):
+            if revision not in ((None, 2, 3) if kind == "execution-trace" else (None, 2)):
                 return [issue("EG-REVISION", "contract_revision", "unsupported contract revision")]
-            versioned_kind = kind + ("-v1-r2" if revision == 2 else "-v1")
+            versioned_kind = kind + ("-v1-r3" if revision == 3 else "-v1-r2" if revision == 2 else "-v1")
     structural = [issue("EG-SCHEMA", ".".join(map(str, error.absolute_path)) or "$", error.message) for error in validation_errors(versioned_kind, data, root)]
     if structural:
         return structural

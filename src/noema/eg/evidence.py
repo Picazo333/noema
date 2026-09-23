@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
+import re
 
 from ..loader import load_yaml
 from .bindings import digest, read_subject
@@ -239,6 +240,7 @@ def required_dependency_results(envelope: dict, context: VerificationContext) ->
 
     for capability in needs.get("capability_requirements", []):
         matched = False
+        failures: list[VerificationResult] = []
         for receipt in envelope.get("resolver_receipts", []):
             if receipt.get("status") not in {"RESOLVED", "PARTIAL"}:
                 continue
@@ -249,6 +251,20 @@ def required_dependency_results(envelope: dict, context: VerificationContext) ->
             ref = receipt.get("resolution_ref")
             if not isinstance(ref, dict):
                 continue
+            subject = candidate_subject("resolver", receipt, {"capability": capability})
+            integrity = receipt.get("integrity")
+            if not isinstance(integrity, str) or not integrity:
+                failures.append(result(f"resolver:{capability}", subject,
+                                       "RESOLVER_SATISFACTION", "UNVERIFIED", "RESOLVER_INTEGRITY_MISSING"))
+                continue
+            if re.fullmatch(r"sha256:[0-9a-f]{64}", integrity) is None:
+                failures.append(result(f"resolver:{capability}", subject,
+                                       "RESOLVER_SATISFACTION", "INVALID", "RESOLVER_INTEGRITY_INVALID"))
+                continue
+            if ref.get("integrity") is not None and ref["integrity"] != integrity:
+                failures.append(result(f"resolver:{capability}", subject,
+                                       "RESOLVER_SATISFACTION", "INVALID", "RESOLVER_INTEGRITY_CONTRADICTORY"))
+                continue
             scheme, locator = ref.get("scheme"), ref.get("locator")
             if scheme == "repo" and isinstance(locator, str):
                 path = (context.project_root / locator).resolve()
@@ -258,31 +274,46 @@ def required_dependency_results(envelope: dict, context: VerificationContext) ->
                 path = Path(locator).resolve()
             else:
                 continue
-            if not path.is_file():
+            checked_content = verify_content(path, integrity, f"resolver:{capability}", subject)
+            if checked_content.state != "VERIFIED":
+                failures.append(checked_content)
                 continue
-            if receipt.get("integrity"):
-                observed = "sha256:" + sha256(path.read_bytes()).hexdigest()
-                if receipt["integrity"] != observed:
-                    continue
+            checked_authority = verify_assertion(
+                context, f"resolver:{capability}", subject, "RESOLVER_SATISFACTION", scope)
+            if checked_authority.state != "VERIFIED":
+                failures.append(checked_authority)
+                continue
+            observations.append(checked_authority.to_dict())
             matched = True
-            require(f"resolver:{capability}", candidate_subject("resolver", receipt, {
-                "capability": capability,
-            }),
-                    "RESOLVER_SATISFACTION")
             break
         if not matched:
-            missing(f"resolver:{capability}", f"resolver:{capability}",
-                    "RESOLVER_SATISFACTION", "RESOLVER_RESULT_UNVERIFIED")
+            if failures:
+                failure = next((item for item in failures if item.state == "INVALID"), failures[0])
+                observations.append(failure.to_dict())
+                reasons.append("RESOLVER_SATISFACTION_UNVERIFIED")
+            else:
+                missing(f"resolver:{capability}", f"resolver:{capability}",
+                        "RESOLVER_SATISFACTION", "RESOLVER_RESULT_UNVERIFIED")
+    if needs.get("resolution_required") and not needs.get("capability_requirements"):
+        missing("resolver:requirement", "resolver:unidentified", "RESOLVER_SATISFACTION",
+                "RESOLVER_REQUIREMENT_UNIDENTIFIED")
 
     tool_requirements = metadata.get("tool_requirements", {})
-    tools = {item.get("id"): item for item in candidates.get("tools", [])
-             if isinstance(item, dict) and item.get("id")}
+    tools: dict[str, list[dict]] = {}
+    for item in candidates.get("tools", []):
+        if isinstance(item, dict) and item.get("id"):
+            tools.setdefault(item["id"], []).append(item)
     selected_tools = envelope["intent"]["planned_tools"]
     if tool_requirements and not selected_tools:
         missing("tool:selection", digest("noema-eg-tool-requirement-r2", tool_requirements),
                 "TOOL_SELECTION", "TOOL_NOT_SELECTED")
     for tool_id in selected_tools:
-        candidate = tools.get(tool_id)
+        options = tools.get(tool_id, [])
+        if len(options) > 1:
+            missing(f"tool:{tool_id}", f"tool:{tool_id}",
+                    "TOOL_QUALIFICATION", "TOOL_CANDIDATE_AMBIGUOUS")
+            continue
+        candidate = options[0] if options else None
         if not isinstance(candidate, dict):
             missing(f"tool:{tool_id}", f"tool:{tool_id}",
                     "TOOL_QUALIFICATION", "TOOL_CANDIDATE_MISSING")

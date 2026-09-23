@@ -31,12 +31,13 @@ _ACTUAL_KEYS = {
     "context_reads", "tool_events", "eval_refs", "artifact_refs", "permission_events",
     "metrics", "retries", "rework_cycles",
 }
-_TOOL_EVENT_KEYS = {"candidate", "action", "result", "reason_codes", "evidence_refs", "occurred_at"}
+_TOOL_EVENT_KEYS = {"candidate", "action", "result", "reason_codes", "evidence_refs", "occurred_at", "obligation_ref"}
 _CONTEXT_READ_KEYS = {"ref", "freshness", "low_signal"}
 _PERMISSION_EVENT_KEYS = {"action", "decision", "reason_codes", "occurred_at"}
-_ROLE_BINDING_KEYS = {"role_id", "executor_id", "model_id", "provenance_refs"}
+_ROLE_BINDING_KEYS = {"role_id", "executor_id", "model_id", "provenance_refs", "obligation_ref", "workspace", "branch", "scope", "participation"}
 _STORAGE_REF_KEYS = {"scheme", "locator", "version", "integrity"}
 _METRIC_KEYS = {"status", "value", "methodology_ref"}
+_DIGEST = re.compile(r"sha256:[0-9a-f]{64}\Z")
 
 
 def _normalized_key(key: object) -> str:
@@ -130,6 +131,16 @@ def _role_bindings(value: object) -> list[dict]:
             raise ValueError("role_bindings requires role_id")
         if "provenance_refs" in item:
             _storage_refs(item["provenance_refs"], "role binding provenance_refs")
+        if "obligation_ref" in item and (not isinstance(item["obligation_ref"], str)
+                                         or _DIGEST.fullmatch(item["obligation_ref"]) is None):
+            raise ValueError("role obligation_ref must be a canonical digest")
+        if "participation" in item and item["participation"] not in {
+            "REPORTED_EXECUTED", "REPORTED_NOT_EXECUTED"
+        }:
+            raise ValueError("role participation is invalid")
+        if "scope" in item and (not isinstance(item["scope"], list)
+                                or any(not isinstance(scope, str) for scope in item["scope"])):
+            raise ValueError("role scope must be a list of paths")
         bindings.append(item)
     return bindings
 
@@ -146,6 +157,9 @@ def _typed_event_lists(
         ):
             raise ValueError("tool_events does not match the persistable event contract")
         _storage_refs(event.get("evidence_refs"), "tool event evidence_refs")
+        if "obligation_ref" in event and (not isinstance(event["obligation_ref"], str)
+                                          or _DIGEST.fullmatch(event["obligation_ref"]) is None):
+            raise ValueError("tool obligation_ref must be a canonical digest")
     for event in permission_events:
         if (
             not isinstance(event.get("action"), str)
@@ -228,7 +242,7 @@ def create_trace(
         if actual.get(key) is not None and not isinstance(actual.get(key), str):
             raise ValueError(f"{key} must be a string or null")
     read_set = ReadSet()
-    context_events = []
+    context_events = [] if "context_reads" in actual or not revision2 else None
     context_refs = []
     read_bindings = []
     for index, read in enumerate(raw_reads):
@@ -284,23 +298,11 @@ def create_trace(
     }
     if revision2:
         trace.update({
-            "contract_revision": 2,
+            "contract_revision": 3,
             "work_order_id": envelope["work_order_id"],
             "envelope_digest": envelope_digest(envelope),
             "material_digest": material_digest(envelope),
             "read_identity_bindings": read_bindings,
-            "observation_coverage": {
-                "executor": ("OBSERVED" if actual.get("executor") else "UNVERIFIED"
-                             if envelope["intent"]["planned_executor"] else "NOT_REQUIRED"),
-                "model": ("OBSERVED" if actual.get("model") else "UNVERIFIED"
-                          if envelope["intent"]["planned_model"] else "NOT_REQUIRED"),
-                "tools": ("OBSERVED" if "tool_events" in actual else "UNVERIFIED"
-                          if envelope["intent"]["planned_tools"] else "NOT_REQUIRED"),
-                "topology": ("OBSERVED" if "role_bindings" in actual else "UNVERIFIED"
-                             if envelope["topology"]["mode"] == "PARALLEL_ISOLATED"
-                             else "NOT_REQUIRED"),
-                "historical_reads": "OBSERVED" if "context_reads" in actual else "UNVERIFIED",
-            },
         })
     raise_for_issues(validate_trace_semantics(trace))
     return trace

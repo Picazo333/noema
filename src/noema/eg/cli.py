@@ -11,7 +11,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 from ..loader import dump_yaml, load_json, load_yaml
 from ..manifest import load_manifest
 from ..schemas import schema_root
-from .compare import compare_execution
+from .compare import compare_execution, expected_observations
 from .plan import build_execution_envelope
 from .provenance import load_work_order
 from .profiles import load_host_capabilities
@@ -136,6 +136,7 @@ def explain(args) -> int:
             result["requirement_id"] for result in assessment["evidence_results"]
             if result["state"] != "VERIFIED"
         ]
+        report["expected_observations"] = expected_observations(envelope)
     else:
         report["current_readiness"] = "NOT_EXECUTION_READY"
         report["current_reason_codes"] = ["LEGACY_CONTRACT_UNVERIFIED"]
@@ -174,19 +175,23 @@ def validate(args) -> int:
     if issues:
         print(("UNVERIFIED: " if issues[0].severity == "UNVERIFIED" else "FAIL: ") + issues[0].code)
         return 1
-    if kind == "execution-trace" and data.get("contract_revision") == 2:
+    if kind == "execution-trace" and data.get("contract_revision") in {2, 3}:
         if not args.envelope:
             report = {"status": "INCOMPLETE", "reason_codes": ["EXACT_ENVELOPE_REQUIRED"]}
             _write(report, None, args.json)
             return 1 if args.require_ready else 0
         envelope = load_yaml(Path(args.envelope))
         raise_for_issues(contract_issues("execution-envelope", envelope, context.package_root))
-        comparison = compare_execution(envelope, data)
+        comparison = compare_execution(envelope, data, context)
         if data.get("read_identity_bindings") and not verify_trace_read_bindings(data, context):
-            comparison["status"] = "INCOMPLETE"
+            if comparison["status"] != "FAIL":
+                comparison["status"] = "INCOMPLETE"
+                comparison["conformance"] = "NOT_CERTIFIABLE"
             comparison.setdefault("missing_observations", []).append("historical_read_identity")
         if args.require_ready and assess_envelope(envelope, context)["readiness"] != "EXECUTION_READY":
-            comparison["status"] = "INCOMPLETE"
+            if comparison["status"] != "FAIL":
+                comparison["status"] = "INCOMPLETE"
+                comparison["conformance"] = "NOT_CERTIFIABLE"
             comparison.setdefault("missing_observations", []).append("envelope_readiness")
         _write(comparison, None, args.json)
         return 0 if comparison["status"] == "PASS" else 1
@@ -222,17 +227,19 @@ def compare(args) -> int:
     trace = load_yaml(Path(args.trace))
     raise_for_issues(contract_issues("execution-envelope", envelope, schema_root()))
     raise_for_issues(contract_issues("execution-trace", trace, schema_root()))
-    if envelope.get("contract_revision") != 2 or trace.get("contract_revision") != 2:
+    if envelope.get("contract_revision") != 2 or trace.get("contract_revision") not in {2, 3}:
         _write({"status": "INCOMPLETE", "reason_codes": ["LEGACY_CONTRACT_UNVERIFIED"]},
                None, args.json)
         return 1
-    report = compare_execution(envelope, trace)
-    if trace.get("contract_revision") == 2 and trace.get("read_identity_bindings"):
-        context = VerificationContext.from_host(
-            Path(args.root), schema_root(),
-            Path(args.trust_context) if args.trust_context else None)
+    context = VerificationContext.from_host(
+        Path(args.root), schema_root(),
+        Path(args.trust_context) if args.trust_context else None)
+    report = compare_execution(envelope, trace, context)
+    if trace.get("read_identity_bindings"):
         if not verify_trace_read_bindings(trace, context):
-            report["status"] = "INCOMPLETE"
+            if report["status"] != "FAIL":
+                report["status"] = "INCOMPLETE"
+                report["conformance"] = "NOT_CERTIFIABLE"
             report.setdefault("missing_observations", []).append("historical_read_identity")
     _write(report, None, args.json)
     return 0 if report.get("status", "PASS") == "PASS" else 1

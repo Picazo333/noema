@@ -9,7 +9,9 @@ import subprocess
 import sys
 
 from noema.loader import dump_yaml, load_yaml
-from noema.eg.bindings import gate_fingerprint, material_digest, read_subject
+from noema.eg.bindings import (gate_fingerprint, material_digest, read_subject,
+                               observation_projection, observation_subject)
+from noema.eg.compare import expected_observations
 from noema.eg.evidence import candidate_subject
 
 
@@ -655,3 +657,249 @@ def test_changed_read_content_never_uses_old_identity(tmp_path: Path) -> None:
                   "--trust-context", trust, "--out", trace_path).returncode == 0
     results = [item["result"] for item in load_yaml(trace_path)["actual"]["context_events"]]
     assert results == ["READ_REQUIRED", "READ_REQUIRED"]
+
+
+def _t1_tool_plan(tmp_path: Path) -> tuple[Path, dict, list[dict]]:
+    candidate = {"id": "reader", "allowed": True, "available": True,
+                 "availability": "AVAILABLE", "qualification": "VERIFIED",
+                 "capabilities": ["read"]}
+    requirements = {"capabilities": ["read"]}
+    subject = candidate_subject("tool", candidate, requirements)
+    sources = [trusted_source(tmp_path, "t1-tool-qualification", "TOOL_QUALIFICATION", subject),
+               trusted_source(tmp_path, "t1-tool-availability", "TOOL_AVAILABILITY", subject)]
+    trust = write(tmp_path, "tool-trust.yaml", {"sources": sources})
+    envelope_path = tmp_path / "tool-envelope.yaml"
+    planned_result = invoke("plan", write(tmp_path, "tool-order.yaml", order()),
+                            "--root", ROOT, "--trust-context", trust,
+                            "--task-metadata", write(tmp_path, "tool-metadata.yaml", {"tool_requirements": requirements}),
+                            "--candidate-snapshot", write(tmp_path, "tool-candidates.yaml", {"tools": [candidate]}),
+                            "--require-ready", "--out", envelope_path)
+    assert planned_result.returncode == 0, planned_result.stderr
+    envelope = load_yaml(envelope_path)
+    assert len(expected_observations(envelope)["tools"]) == 1
+    return envelope_path, envelope, sources
+
+
+def _t1_observation_source(tmp_path: Path, envelope: dict, trace: dict) -> dict:
+    dimensions = [name for name in ("tools", "actors", "executor", "model")
+                  if name == "tools" and expected_observations(envelope)["tools"]
+                  or name == "actors" and expected_observations(envelope)["actors"]
+                  or name == "executor" and envelope["executor"]["selected_executor"]
+                  or name == "model" and envelope["model"]["selected_model"]]
+    projection = observation_projection(envelope, trace, dimensions)
+    snapshot = write(tmp_path, "observed-snapshot.yaml", projection)
+    return {"ref": {"scheme": "file", "locator": str(snapshot)},
+            "digest": "sha256:" + sha256(snapshot.read_bytes()).hexdigest(),
+            "predicate": "EXECUTION_OBSERVATIONS", "subject": observation_subject(projection),
+            "scope": "project:noema", "authority": "host-fixture",
+            "valid_until": "2099-01-01T00:00:00Z"}
+
+
+def test_t1_cov_tools_empty(tmp_path: Path) -> None:
+    envelope_path, _, sources = _t1_tool_plan(tmp_path)
+    trace_path = tmp_path / "empty-tool-trace.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "empty-tool-actual.yaml",
+           {"outcome": "SUCCESS", "context_reads": [], "tool_events": []}),
+           "--out", trace_path).returncode == 0
+    compared = invoke("compare", envelope_path, trace_path, "--json")
+    assert compared.returncode != 0
+    report = json.loads(compared.stdout)
+    assert report["status"] == "INCOMPLETE"
+    assert report["coverage"]["tools"]["status"] == "INCOMPLETE"
+    assert report["coverage"]["tools"]["missing"]
+    trust = write(tmp_path, "empty-tool-trust.yaml", {"sources": sources + [
+        _t1_observation_source(tmp_path, load_yaml(envelope_path), load_yaml(trace_path))]})
+    assert json.loads(invoke("compare", envelope_path, trace_path, "--trust-context", trust,
+                             "--json").stdout)["status"] == "INCOMPLETE"
+
+
+def test_t1_duplicate_candidate_identifier_never_selects_last_silently(tmp_path: Path) -> None:
+    first = {"id": "same-id", "allowed": True, "available": True,
+             "availability": "AVAILABLE", "qualification": "VERIFIED",
+             "capabilities": ["read"], "source_relation": "DIRECT"}
+    second = {**first, "source_relation": "BROAD"}
+    requirements = {"capabilities": ["read"]}
+    subject = candidate_subject("tool", second, requirements)
+    trust = write(tmp_path, "duplicate-candidate-trust.yaml", {"sources": [
+        trusted_source(tmp_path, "duplicate-candidate-q", "TOOL_QUALIFICATION", subject),
+        trusted_source(tmp_path, "duplicate-candidate-a", "TOOL_AVAILABILITY", subject)]})
+    envelope_path = tmp_path / "duplicate-candidate-envelope.yaml"
+    assert invoke("plan", write(tmp_path, "duplicate-candidate-order.yaml", order()),
+                  "--root", ROOT, "--trust-context", trust,
+                  "--task-metadata", write(tmp_path, "duplicate-candidate-metadata.yaml",
+                                            {"tool_requirements": requirements}),
+                  "--candidate-snapshot", write(tmp_path, "duplicate-candidate-snapshot.yaml",
+                                                 {"tools": [first, second]}),
+                  "--out", envelope_path).returncode == 0
+    checked = invoke("validate", envelope_path, "--root", ROOT, "--trust-context", trust,
+                     "--require-ready", "--json")
+    assert checked.returncode != 0
+    assert "TOOL_CANDIDATE_AMBIGUOUS" in checked.stdout
+
+
+def test_t1_cov_tools_complete(tmp_path: Path) -> None:
+    envelope_path, envelope, sources = _t1_tool_plan(tmp_path)
+    obligation = expected_observations(envelope)["tools"][0]["obligation_ref"]
+    actual = {"outcome": "SUCCESS", "context_reads": [], "tool_events": [{
+        "candidate": "reader", "action": "CALL", "result": "SUCCESS",
+        "reason_codes": [], "evidence_refs": [], "obligation_ref": obligation}]}
+    trace_path = tmp_path / "complete-tool-trace.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "complete-tool-actual.yaml", actual),
+                  "--out", trace_path).returncode == 0
+    without = invoke("compare", envelope_path, trace_path, "--json")
+    assert json.loads(without.stdout)["status"] == "INCOMPLETE"
+    source = _t1_observation_source(tmp_path, envelope, load_yaml(trace_path))
+    trust = write(tmp_path, "complete-tool-trust.yaml", {"sources": sources + [source]})
+    compared = invoke("compare", envelope_path, trace_path, "--trust-context", trust, "--json")
+    assert compared.returncode == 0, compared.stdout + compared.stderr
+    assert json.loads(compared.stdout)["coverage"]["tools"]["status"] == "COMPLETE"
+    validated = invoke("validate", trace_path, "--envelope", envelope_path, "--root", ROOT,
+                       "--trust-context", trust, "--require-ready", "--json")
+    assert validated.returncode == 0, validated.stdout + validated.stderr
+    assert json.loads(validated.stdout)["status"] == "PASS"
+
+
+def test_t1_obligation_duplicates_absence_and_fail_precedence(tmp_path: Path) -> None:
+    envelope_path, envelope, _ = _t1_tool_plan(tmp_path)
+    obligation = expected_observations(envelope)["tools"][0]["obligation_ref"]
+    explained = invoke("explain", envelope_path, "--json")
+    assert explained.returncode == 0
+    assert json.loads(explained.stdout)["expected_observations"]["tools"][0]["obligation_ref"] == obligation
+    event = {"candidate": "reader", "action": "CALL", "result": "SUCCESS",
+             "reason_codes": [], "evidence_refs": [], "obligation_ref": obligation}
+    trace_path = tmp_path / "duplicate-trace.yaml"
+    actual = {"outcome": "SUCCESS", "context_reads": [], "tool_events": [event, event]}
+    assert invoke("record", envelope_path, write(tmp_path, "duplicate-actual.yaml", actual),
+                  "--out", trace_path).returncode == 0
+    compared = invoke("compare", envelope_path, trace_path, "--json")
+    assert compared.returncode != 0
+    report = json.loads(compared.stdout)
+    assert report["status"] == "FAIL"
+    assert report["coverage"]["tools"]["duplicates"] == [obligation]
+    validated = invoke("validate", trace_path, "--envelope", envelope_path,
+                       "--require-ready", "--json")
+    assert json.loads(validated.stdout)["status"] == "FAIL"
+    absent = {**event, "result": "NOT_CALLED"}
+    absent_actual = {"outcome": "SUCCESS", "context_reads": [], "tool_events": [absent]}
+    absent_trace = tmp_path / "absent-tool-trace.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "absent-tool-actual.yaml", absent_actual),
+                  "--out", absent_trace).returncode == 0
+    absent_report = json.loads(invoke("compare", envelope_path, absent_trace, "--json").stdout)
+    assert absent_report["status"] == "FAIL"
+    assert absent_report["coverage"]["tools"]["explicitly_absent"] == [obligation]
+
+
+def test_t1_actor_wrong_workspace_and_partial_fields(tmp_path: Path) -> None:
+    envelope_path, envelope, _ = _t1_parallel_plan(tmp_path)
+    obligations = expected_observations(envelope)["actors"]
+    complete = [{**item["binding"], "participation": "REPORTED_EXECUTED",
+                 "obligation_ref": item["obligation_ref"]} for item in obligations]
+    complete[0]["workspace"] = "wrong-workspace"
+    wrong_trace = tmp_path / "wrong-actor-trace.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "wrong-actor-actual.yaml",
+           {"outcome": "SUCCESS", "context_reads": [], "role_bindings": complete}),
+           "--out", wrong_trace).returncode == 0
+    report = json.loads(invoke("compare", envelope_path, wrong_trace, "--json").stdout)
+    assert report["status"] == "FAIL"
+    assert "ACTOR_BINDING_MISMATCH" in report["deviations"]
+    complete[0].pop("workspace")
+    partial_trace = tmp_path / "partial-actor-trace.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "partial-actor-actual.yaml",
+           {"outcome": "SUCCESS", "context_reads": [], "role_bindings": complete}),
+           "--out", partial_trace).returncode == 0
+    partial = json.loads(invoke("compare", envelope_path, partial_trace, "--json").stdout)
+    assert partial["status"] == "INCOMPLETE"
+    assert obligations[0]["obligation_ref"] in partial["coverage"]["actors"]["missing"]
+
+
+def _t1_parallel_plan(tmp_path: Path) -> tuple[Path, dict, list[dict]]:
+    metadata = {"parallel_isolated": True, "serialized_publication": True,
+                "write_scopes": ["src/a", "src/b"], "role_bindings": [
+                    {"role_id": "a", "scope": ["src/a"], "workspace": "a-work", "branch": "a-branch"},
+                    {"role_id": "b", "scope": ["src/b"], "workspace": "b-work", "branch": "b-branch"}]}
+    envelope_path = tmp_path / "parallel-envelope.yaml"
+    assert invoke("plan", write(tmp_path, "parallel-order.yaml",
+           order(allowed_writes=["src/a", "src/b"])), "--root", ROOT,
+           "--host-capabilities", write(tmp_path, "parallel-host.yaml",
+           {"profile": "eg.repo-agent.v0", "capabilities": {"repo_write_reversible": True}}),
+           "--task-metadata", write(tmp_path, "parallel-metadata.yaml", metadata),
+           "--out", envelope_path).returncode == 0
+    envelope = load_yaml(envelope_path)
+    sources = [trusted_source(tmp_path, "t1-isolation", "HOST_ISOLATION",
+                              envelope["material_binding"]["digest"])]
+    return envelope_path, envelope, sources
+
+
+def test_t1_cov_actor_empty(tmp_path: Path) -> None:
+    envelope_path, _, _ = _t1_parallel_plan(tmp_path)
+    trace_path = tmp_path / "empty-actor-trace.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "empty-actor-actual.yaml",
+           {"outcome": "SUCCESS", "context_reads": [], "role_bindings": []}),
+           "--out", trace_path).returncode == 0
+    compared = invoke("compare", envelope_path, trace_path, "--json")
+    assert compared.returncode != 0
+    report = json.loads(compared.stdout)
+    assert report["status"] == "INCOMPLETE"
+    assert len(report["coverage"]["actors"]["missing"]) == 2
+
+
+def test_t1_cov_actors_complete(tmp_path: Path) -> None:
+    envelope_path, envelope, sources = _t1_parallel_plan(tmp_path)
+    actors = [{**item["binding"], "participation": "REPORTED_EXECUTED",
+               "obligation_ref": item["obligation_ref"]}
+              for item in expected_observations(envelope)["actors"]]
+    trace_path = tmp_path / "complete-actors-trace.yaml"
+    actual = {"outcome": "SUCCESS", "context_reads": [], "role_bindings": actors}
+    assert invoke("record", envelope_path, write(tmp_path, "complete-actors-actual.yaml", actual),
+                  "--out", trace_path).returncode == 0
+    without = invoke("compare", envelope_path, trace_path, "--json")
+    assert json.loads(without.stdout)["status"] == "INCOMPLETE"
+    source = _t1_observation_source(tmp_path, envelope, load_yaml(trace_path))
+    trust = write(tmp_path, "complete-actors-trust.yaml", {"sources": sources + [source]})
+    compared = invoke("compare", envelope_path, trace_path, "--trust-context", trust, "--json")
+    assert compared.returncode == 0, compared.stdout + compared.stderr
+    validated = invoke("validate", trace_path, "--envelope", envelope_path, "--root", ROOT,
+                       "--trust-context", trust, "--require-ready", "--json")
+    assert validated.returncode == 0, validated.stdout + validated.stderr
+
+
+def _t1_resolver_plan(tmp_path: Path, integrity: str | None) -> tuple[Path, Path, Path]:
+    target = tmp_path / "resolver-result.txt"
+    target.write_bytes(b"verified result")
+    receipt = {"resolver": "external-resolver", "status": "RESOLVED",
+               "resolution_ref": {"scheme": "file", "locator": str(target)},
+               "satisfied_capabilities": ["cap-a"], "unresolved_capabilities": [],
+               "integrity": integrity, "observed_at": None}
+    subject = candidate_subject("resolver", receipt, {"capability": "cap-a"})
+    trust = write(tmp_path, "t1-resolver-trust.yaml", {"sources": [
+        trusted_source(tmp_path, "t1-resolver-assertion", "RESOLVER_SATISFACTION", subject)]})
+    envelope_path = tmp_path / "t1-resolver-envelope.yaml"
+    assert invoke("plan", write(tmp_path, "t1-resolver-order.yaml",
+           order(capability_requirements=[{"id": "cap-a"}])), "--root", ROOT,
+           "--trust-context", trust, "--resolver-receipt", write(tmp_path, "t1-receipt.yaml", receipt),
+           "--out", envelope_path).returncode == 0
+    return envelope_path, trust, target
+
+
+def test_t1_resolver_drift(tmp_path: Path) -> None:
+    target = tmp_path / "resolver-result.txt"
+    digest = "sha256:" + sha256(b"verified result").hexdigest()
+    envelope_path, trust, target = _t1_resolver_plan(tmp_path, digest)
+    assert invoke("validate", envelope_path, "--root", ROOT, "--trust-context", trust,
+                  "--require-ready").returncode == 0
+    target.write_bytes(b"mutated result")
+    checked = invoke("validate", envelope_path, "--root", ROOT, "--trust-context", trust,
+                     "--require-ready", "--json")
+    assert checked.returncode != 0
+    assert json.loads(checked.stdout)["readiness"] == "NOT_EXECUTION_READY"
+
+
+def test_t1_resolver_no_integrity(tmp_path: Path) -> None:
+    envelope_path, trust, _ = _t1_resolver_plan(tmp_path, None)
+    checked = invoke("validate", envelope_path, "--root", ROOT, "--trust-context", trust,
+                     "--require-ready", "--json")
+    assert checked.returncode != 0
+    report = json.loads(checked.stdout)
+    assert report["readiness"] == "NOT_EXECUTION_READY"
+    assert any(item["predicate"] == "RESOLVER_SATISFACTION" and item["state"] == "UNVERIFIED"
+               for item in report["evidence_results"])

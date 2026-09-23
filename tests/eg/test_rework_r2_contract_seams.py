@@ -249,7 +249,7 @@ def test_r2_07_public_routed_tool_fallback_and_trace(tmp_path):
     assert planned["model"]["selected_model"] == "text-model"
     assert [item["decision"] for item in planned["tool_decisions"]] == ["HARD_DENY", "DEFER"]
     assert main(["eg", "record", str(envelope_path), str(actual_path), "--out", str(trace_path)]) == 0
-    assert not validation_errors("execution-trace-v1-r2", load_yaml(trace_path), ROOT)
+    assert not validation_errors("execution-trace-v1-r3", load_yaml(trace_path), ROOT)
     assert load_yaml(trace_path)["actual"]["model"] == "text-model"
     assert main(["eg", "compare", str(envelope_path), str(trace_path)]) == 1
 

@@ -20,6 +20,17 @@ from noema.loader import dump_yaml
 from noema.loader import load_json
 
 
+def _t1_script():
+    import importlib.util
+
+    path = ROOT / ".github" / "scripts" / "verify_t1.py"
+    spec = importlib.util.spec_from_file_location("noema_verify_t1", path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -224,3 +235,43 @@ def test_canary_runner_rejects_import_outside_checkout_and_tree_mutation(
     report = dogfood.run_dogfood(ROOT, definitions, tmp_path / "results", sha)
     assert report["status"] == "FAIL"
     assert report["canaries"][0]["reason_codes"] == ["TREE_MUTATION"]
+
+
+def test_t1_junit_summary_rejects_missing_zero_skip_xfail_and_failure(tmp_path: Path) -> None:
+    gate = _t1_script()
+    xml = tmp_path / "results.xml"
+    assert gate._junit_summary(xml, 0)["status"] == "FAIL"
+    xml.write_text("<testsuite/>", encoding="utf-8")
+    assert gate._junit_summary(xml, 0)["status"] == "FAIL"
+    xml.write_text('<testsuite><testcase name="one"><skipped type="pytest.xfail"/></testcase></testsuite>', encoding="utf-8")
+    assert gate._junit_summary(xml, 0)["status"] == "FAIL"
+    xml.write_text('<testsuite><testcase name="one"><failure/></testcase></testsuite>', encoding="utf-8")
+    assert gate._junit_summary(xml, 0)["status"] == "FAIL"
+    xml.write_text('<testsuite><testcase name="one"/></testsuite>', encoding="utf-8")
+    assert gate._junit_summary(xml, 1)["status"] == "FAIL"
+    assert gate._junit_summary(xml, 0)["status"] == "PASS"
+
+
+def test_t1_checkout_import_and_result_gate_fail_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    gate = _t1_script()
+    sha = "a" * 40
+    monkeypatch.setattr(gate, "_git", lambda root, *args: "b" * 40 if args[-1] == "HEAD" else "")
+    with pytest.raises(ValueError, match="SHA mismatch"):
+        gate.verify_checkout(ROOT, sha)
+    monkeypatch.setattr(gate.subprocess, "run", lambda command, **kwargs:
+        subprocess.CompletedProcess(command, 0, stdout=json.dumps([str(tmp_path / "foreign.py")]), stderr=""))
+    with pytest.raises(ValueError, match="outside"):
+        gate.verify_imports(ROOT, {})
+    results = tmp_path / "results"
+    results.mkdir()
+    definitions = json.loads((ROOT / "validation/experimental/execution-governance/R5_CANARY_DEFINITIONS.json").read_text(encoding="utf-8"))
+    rows = [{**case, "status": "PASS", "observed": "PASS", "sha": sha,
+             "exit_code": 0, "test_counts": {"passed": 1, "failed": 0, "errors": 0, "skipped": 0}}
+            for case in definitions["canaries"]]
+    (results / "CANARY_RESULTS.json").write_text(json.dumps({"tested_sha": sha, "status": "PASS", "canaries": rows}), encoding="utf-8")
+    (results / "DOGFOOD_REPORT.md").write_text("Observed", encoding="utf-8")
+    assert gate.validate_results(ROOT, results, sha)["passed"] == 30
+    rows[0]["status"] = "FAIL"
+    (results / "CANARY_RESULTS.json").write_text(json.dumps({"tested_sha": sha, "status": "PASS", "canaries": rows}), encoding="utf-8")
+    with pytest.raises(ValueError, match="incomplete or failed"):
+        gate.validate_results(ROOT, results, sha)

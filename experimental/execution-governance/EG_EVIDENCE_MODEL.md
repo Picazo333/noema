@@ -118,3 +118,20 @@ Post-commit canary evidence is generated outside Git for the exact frozen SHA.
 A report inside its own commit cannot contain that commit's final SHA without
 a hash self-reference; the in-repo implementation report must point to the
 external post-commit evidence rather than claim its own final SHA.
+
+## T1 reported observations and operational evidence
+
+Trace r3 records explicit tool and actor observations. `compare` calculates
+coverage by occurrence: an empty or omitted list cannot satisfy a material
+obligation, and explicit nonexecution is information but a deviation. Coverage
+is `REPORTED`, not authenticated telemetry. Material PASS requires the
+host-selected `VerificationContext` to pin the exact `EXECUTION_OBSERVATIONS`
+projection for the same envelope, attempt, action, actual report, and outcome.
+The source cannot create missing events. Mandatory resolver content and
+authority must verify the same receipt and capability; a nullable digest is
+valid documentary data but cannot establish readiness.
+
+Local post-commit and GitHub-hosted checks publish evidence outside Git for
+the frozen SHA. Their run identities and artifacts establish operational
+reproducibility, not human approval, external qualification, or architectural
+correctness. The workflow, runner, and tests are part of the audited commit.

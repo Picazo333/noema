@@ -25,3 +25,16 @@ evidence paths as defined in `../EG_EVIDENCE_MODEL.md`. If it cannot, stop with
 `TRUST_BOOTSTRAP_UNRESOLVED`. G1-G5 then implement and verify the evidence
 boundary. G6 is an independent audit of a frozen SHA and is not performed by
 the implementer.
+
+T1 narrowly permits `execution-trace/v1` revision 3 while keeping envelope
+revision 2 and both artifact types unchanged. Obligations bind the envelope,
+attempt, action, material binding, and occurrence. Partial traces remain valid;
+comparison derives coverage and demands independently accepted observation
+evidence for material PASS. Mandatory resolver satisfaction requires matching
+bytes and authority for the same receipt.
+
+One local commit freezes the candidate SHA. A second clean local checkout and
+GitHub Actions Ubuntu must verify that same SHA, with evidence outside Git.
+Only the frozen experimental branch may be pushed after the clean local gate;
+no merge, release, or consumer-pin update is authorized. CI success never
+replaces independent adversarial review or domain authority.

@@ -35,10 +35,14 @@ occurrence-bound material obligations. `record` may preserve partial reports;
 `compare` and `validate trace --envelope` compute coverage and require a
 host-pinned observation snapshot before certifying material conformance.
 Historical r2 traces remain readable without invented actor attributes.
+For material tool or actor obligations, r3 observations need the exact
+`obligation_ref` shown by `explain`; unbound events remain in the trace but
+cannot complete coverage. An r2 name association is diagnostic, not a
+material conformance PASS.
 
 After the T1 commit is frozen, run `.github/scripts/verify_t1.py` from a
 separate clean checkout with `--root`, `--expected-sha`, and an empty external
-`--output-dir`. It repeats all five required checks and 30 canaries. Only a
+`--output-dir`. It repeats all five required checks and 31 canaries. Only a
 successful clean local run permits publishing the frozen experimental branch
 for exact-SHA GitHub Actions. Keep results outside Git; Actions green is not
 a substitute for independent audit.

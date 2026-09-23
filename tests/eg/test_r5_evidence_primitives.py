@@ -12,6 +12,7 @@ import pytest
 
 from noema.eg.bindings import gate_fingerprint, material_digest
 from noema.eg.bindings import FIELD_CLASS
+from noema.eg.compare import _dimension, evaluate_material_coverage, expected_observations
 from noema.eg.evidence import VerificationContext, verify_assertion, verify_content
 from noema.eg.persistence import assert_persistable
 from noema.eg.plan import build_execution_envelope
@@ -270,8 +271,94 @@ def test_t1_checkout_import_and_result_gate_fail_closed(tmp_path: Path, monkeypa
             for case in definitions["canaries"]]
     (results / "CANARY_RESULTS.json").write_text(json.dumps({"tested_sha": sha, "status": "PASS", "canaries": rows}), encoding="utf-8")
     (results / "DOGFOOD_REPORT.md").write_text("Observed", encoding="utf-8")
-    assert gate.validate_results(ROOT, results, sha)["passed"] == 30
+    assert gate.validate_results(ROOT, results, sha)["passed"] == 31
     rows[0]["status"] = "FAIL"
     (results / "CANARY_RESULTS.json").write_text(json.dumps({"tested_sha": sha, "status": "PASS", "canaries": rows}), encoding="utf-8")
     with pytest.raises(ValueError, match="incomplete or failed"):
         gate.validate_results(ROOT, results, sha)
+
+    old_root = tmp_path / "old-checkout"
+    old_definitions = old_root / "validation" / "experimental" / "execution-governance" / "R5_CANARY_DEFINITIONS.json"
+    old_definitions.parent.mkdir(parents=True)
+    old_definitions.write_text(json.dumps({"canaries": definitions["canaries"][:-1]}), encoding="utf-8")
+    with pytest.raises(ValueError, match="absent or duplicated"):
+        gate.validate_results(old_root, results, sha)
+    rows[0]["status"] = "PASS"
+    rows[-1] = rows[0]
+    (results / "CANARY_RESULTS.json").write_text(json.dumps({"tested_sha": sha, "status": "PASS", "canaries": rows}), encoding="utf-8")
+    with pytest.raises(ValueError, match="incomplete or failed"):
+        gate.validate_results(ROOT, results, sha)
+
+
+def test_final_repeated_tool_occurrences_require_distinct_exact_refs() -> None:
+    envelope = r2_envelope()
+    envelope["input_bindings"]["candidate_snapshot"]["snapshot"] = {
+        "tools": [{"id": "reader", "capabilities": ["read"]}]
+    }
+    decision = {"candidate": "reader", "decision": "CALL"}
+    envelope["tool_decisions"] = [decision, deepcopy(decision)]
+    expected = expected_observations(envelope)["tools"]
+    assert len(expected) == 2
+    assert expected[0]["obligation_ref"] != expected[1]["obligation_ref"]
+    event = {"candidate": "reader", "action": "CALL", "result": "SUCCESS"}
+    first = {**event, "obligation_ref": expected[0]["obligation_ref"]}
+    second = {**event, "obligation_ref": expected[1]["obligation_ref"]}
+    cases = (
+        ([first, second], "COMPLETE", 2, 0, 0),
+        ([second, first], "COMPLETE", 2, 0, 0),
+        ([first], "INCOMPLETE", 1, 1, 0),
+        ([event, event], "INCOMPLETE", 0, 2, 2),
+        ([first, first], "INCOMPLETE", 1, 2, 0),
+    )
+    for events, status, matched, missing, unexpected in cases:
+        coverage, _ = _dimension(expected, events, "tools", 3)
+        assert coverage["status"] == status
+        assert len(coverage["matched"]) == matched
+        assert len(coverage["missing"]) == missing
+        assert len(coverage["unexpected"]) == unexpected
+    duplicate, deviations = _dimension(expected, [first, first], "tools", 3)
+    assert duplicate["duplicates"] == [first["obligation_ref"]]
+    assert "DUPLICATE_OBLIGATION_OBSERVATION" in deviations
+    wrong_name, deviations = _dimension(expected, [{**first, "candidate": "other"}, second], "tools", 3)
+    assert wrong_name["status"] == "INCOMPLETE"
+    assert "TOOL_BINDING_MISMATCH" in deviations
+    legacy, _ = _dimension(expected, [event], "tools", 2)
+    assert legacy["status"] == "INCOMPLETE"
+
+
+def test_final_original_tool_event_index_survives_nonexecutable_filter() -> None:
+    envelope = r2_envelope()
+    envelope["tool_decisions"] = [{"candidate": "suppressed", "decision": "SOFT_SUPPRESS"}]
+    trace = {"contract_revision": 3, "actual": {"tool_events": [
+        {"candidate": "suppressed", "action": "SOFT_SUPPRESS", "result": "NOT_CALLED"},
+        {"candidate": "rogue", "action": "CALL", "result": "SUCCESS"},
+    ]}}
+    coverage, deviations = evaluate_material_coverage(envelope, trace)
+    assert coverage["tools"]["unexpected"] == [1]
+    assert "UNPLANNED_TOOL_CALL" in deviations
+
+
+def test_final_actor_occurrence_binding_and_absence_are_explicit() -> None:
+    envelope = r2_envelope()
+    envelope["topology"]["role_bindings"] = [{
+        "role_id": "builder", "workspace": "work", "branch": "topic", "scope": ["src"]
+    }]
+    expected = expected_observations(envelope)["actors"]
+    ref = expected[0]["obligation_ref"]
+    actor = {**expected[0]["binding"], "participation": "REPORTED_EXECUTED"}
+    complete, deviations = _dimension(expected, [{**actor, "obligation_ref": ref}], "actors", 3)
+    assert complete["status"] == "COMPLETE" and not deviations
+    unbound, deviations = _dimension(expected, [actor], "actors", 3)
+    assert unbound["missing"] == [ref] and unbound["unexpected"] == [0]
+    assert "ACTOR_OBLIGATION_UNBOUND" in deviations
+    wrong, deviations = _dimension(expected, [{**actor, "obligation_ref": "sha256:" + "f" * 64}], "actors", 3)
+    assert wrong["missing"] == [ref] and wrong["unexpected"] == [0]
+    assert "UNEXPECTED_ACTOR" in deviations
+    duplicate, deviations = _dimension(expected, [{**actor, "obligation_ref": ref}] * 2, "actors", 3)
+    assert duplicate["status"] == "INCOMPLETE"
+    assert duplicate["duplicates"] == [ref]
+    assert "DUPLICATE_OBLIGATION_OBSERVATION" in deviations
+    absent, deviations = _dimension(expected, [{**actor, "obligation_ref": ref,
+                                                 "participation": "REPORTED_NOT_EXECUTED"}], "actors", 3)
+    assert absent["explicitly_absent"] == [ref] and absent["status"] == "COMPLETE"
+    assert "EXPECTED_ACTOR_NOT_EXECUTED" in deviations

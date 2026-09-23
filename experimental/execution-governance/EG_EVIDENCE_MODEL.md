@@ -131,6 +131,15 @@ The source cannot create missing events. Mandatory resolver content and
 authority must verify the same receipt and capability; a nullable digest is
 valid documentary data but cannot establish readiness.
 
+Final conformance repair: a trace r3 tool or actor observation satisfies an
+occurrence only when its own `obligation_ref` equals the expected reference.
+An unbound observation remains reportable and unexpected; the planned
+obligation remains missing even when a protected snapshot verifies that
+partial report. Trace r2 retains unambiguous name association for historical
+diagnosis, but cannot receive material PASS when tool or actor obligations
+exist. A protected snapshot verifies the fields it contains; it cannot supply
+an occurrence reference omitted by the observation.
+
 Local post-commit and GitHub-hosted checks publish evidence outside Git for
 the frozen SHA. Their run identities and artifacts establish operational
 reproducibility, not human approval, external qualification, or architectural

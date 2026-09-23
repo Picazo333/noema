@@ -61,7 +61,9 @@ T1 keeps envelope v1-r2 and adds trace v1-r3 for occurrence-level tool and
 actor observations. Comparison recalculates reported coverage and requires
 independently host-pinned `EXECUTION_OBSERVATIONS` for material PASS. Mandatory
 resolver readiness binds current bytes and an authority assertion to the same
-receipt. The 30-scenario definitions file contains no observed results.
+receipt. The final repair requires explicit r3 tool/actor occurrence references
+for material coverage and limits r2 name association to historical diagnosis.
+The 31-scenario definitions file contains no observed results.
 
 After local regression, freeze a single commit. Use an isolated clean checkout
 and `.github/scripts/verify_t1.py` with the full SHA and an empty external

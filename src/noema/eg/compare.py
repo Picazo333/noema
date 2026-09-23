@@ -48,7 +48,7 @@ def expected_observations(envelope: dict) -> dict:
 
 
 def _dimension(expected: list[dict], observed: list[dict], kind: str,
-               revision: int) -> tuple[dict, list[str]]:
+               revision: int, observation_indices: list[int] | None = None) -> tuple[dict, list[str]]:
     matched: list[str] = []
     absent: list[str] = []
     unexpected: list[int] = []
@@ -60,14 +60,18 @@ def _dimension(expected: list[dict], observed: list[dict], kind: str,
         by_name[item["id"]].append(item)
     consumed: set[str] = set()
     for index, event in enumerate(observed):
+        original_index = observation_indices[index] if observation_indices is not None else index
         ref = event.get("obligation_ref")
         item = by_ref.get(ref) if ref else None
         name = event.get("candidate" if kind == "tools" else "role_id")
-        if item is None and ref is None and len(by_name.get(name, [])) == 1:
+        if revision == 2 and item is None and ref is None and len(by_name.get(name, [])) == 1:
             item = by_name[name][0]
         if item is None:
-            unexpected.append(index)
-            if kind == "tools" and event.get("action") == "CALL":
+            unexpected.append(original_index)
+            if revision == 3 and ref is None and by_name.get(name):
+                deviations.append("TOOL_OBLIGATION_UNBOUND" if kind == "tools"
+                                  else "ACTOR_OBLIGATION_UNBOUND")
+            elif kind == "tools" and event.get("action") == "CALL":
                 deviations.append("UNPLANNED_TOOL_CALL" if not ref else "TOOL_OBLIGATION_MISMATCH")
             elif kind == "actors":
                 deviations.append("UNEXPECTED_ACTOR")
@@ -79,7 +83,7 @@ def _dimension(expected: list[dict], observed: list[dict], kind: str,
             continue
         consumed.add(identity)
         if name != item["id"]:
-            unexpected.append(index)
+            unexpected.append(original_index)
             deviations.append("TOOL_BINDING_MISMATCH" if kind == "tools" else "ACTOR_BINDING_MISMATCH")
             continue
         if kind == "tools":
@@ -137,14 +141,18 @@ def evaluate_material_coverage(envelope: dict, trace: dict) -> tuple[dict, list[
     deviations: list[str] = []
     for dimension, field in (("tools", "tool_events"), ("actors", "role_bindings")):
         events = actual.get(field, [])
+        indices = list(range(len(events)))
         if dimension == "tools":
             non_executable = {(item["candidate"], item["decision"])
                               for item in envelope.get("tool_decisions", [])
                               if item.get("decision") != "CALL"}
-            events = [event for event in events if event.get("obligation_ref") or
-                      (event.get("candidate"), event.get("action")) not in non_executable]
+            retained = [(index, event) for index, event in enumerate(events)
+                        if event.get("obligation_ref") or
+                        (event.get("candidate"), event.get("action")) not in non_executable]
+            indices = [index for index, _ in retained]
+            events = [event for _, event in retained]
         coverage[dimension], found = _dimension(obligations[dimension], events,
-                                                dimension, revision)
+                                                dimension, revision, indices)
         deviations.extend(found)
     for dimension, expected_value in (
         ("executor", envelope.get("executor", {}).get("selected_executor")),
@@ -201,6 +209,10 @@ def compare_execution(envelope: dict, trace: dict,
         verified = result("execution:observations", subject, "EXECUTION_OBSERVATIONS",
                           "NOT_REQUIRED", "NO_MATERIAL_OBLIGATIONS")
     missing = [name for name, item in coverage.items() if item["status"] == "INCOMPLETE"]
+    if trace.get("contract_revision") == 2 and (
+        coverage["tools"]["expected"] or coverage["actors"]["expected"]
+    ):
+        missing.append("legacy_obligation_binding")
     if trace.get("outcome") == "UNKNOWN":
         missing.append("outcome")
     if actual.get("context_events") is None:

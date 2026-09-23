@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import json
 from hashlib import sha256
 from pathlib import Path
@@ -757,6 +758,164 @@ def test_t1_cov_tools_complete(tmp_path: Path) -> None:
                        "--trust-context", trust, "--require-ready", "--json")
     assert validated.returncode == 0, validated.stdout + validated.stderr
     assert json.loads(validated.stdout)["status"] == "PASS"
+
+
+def test_final_r3_unbound_tool_never_certifies_with_host_snapshot(tmp_path: Path) -> None:
+    envelope_path, envelope, sources = _t1_tool_plan(tmp_path)
+    explained = invoke("explain", envelope_path, "--json")
+    assert explained.returncode == 0
+    obligation = json.loads(explained.stdout)["expected_observations"]["tools"][0]["obligation_ref"]
+    actual = {"outcome": "SUCCESS", "context_reads": [], "tool_events": [{
+        "candidate": "reader", "action": "CALL", "result": "SUCCESS",
+        "reason_codes": [], "evidence_refs": []}]}
+    trace_path = tmp_path / "unbound-tool-trace.yaml"
+    recorded = invoke("record", envelope_path, write(tmp_path, "unbound-tool-actual.yaml", actual),
+                      "--out", trace_path)
+    assert recorded.returncode == 0, recorded.stdout + recorded.stderr
+    trace = load_yaml(trace_path)
+    assert "obligation_ref" not in trace["actual"]["tool_events"][0]
+    source = _t1_observation_source(tmp_path, envelope, trace)
+    trust = write(tmp_path, "unbound-tool-trust.yaml", {"sources": sources + [source]})
+    compared = invoke("compare", envelope_path, trace_path, "--trust-context", trust, "--json")
+    validated = invoke("validate", trace_path, "--envelope", envelope_path,
+                       "--root", ROOT, "--trust-context", trust, "--require-ready", "--json")
+    assert compared.returncode != 0
+    assert validated.returncode != 0
+    for response in (compared, validated):
+        report = json.loads(response.stdout)
+        assert report["status"] == "FAIL"
+        assert report["coverage"]["tools"]["status"] == "INCOMPLETE"
+        assert report["coverage"]["tools"]["missing"] == [obligation]
+        assert report["coverage"]["tools"]["unexpected"] == [0]
+        assert "TOOL_OBLIGATION_UNBOUND" in report["deviations"]
+        assert report["observation_verification"]["state"] == "VERIFIED"
+
+
+def test_final_r2_legacy_tool_binding_cannot_certify(tmp_path: Path) -> None:
+    envelope_path, envelope, sources = _t1_tool_plan(tmp_path)
+    actual = {"outcome": "SUCCESS", "context_reads": [], "tool_events": [{
+        "candidate": "reader", "action": "CALL", "result": "SUCCESS",
+        "reason_codes": [], "evidence_refs": []}]}
+    trace_path = tmp_path / "legacy-tool-trace.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "legacy-tool-actual.yaml", actual),
+                  "--out", trace_path).returncode == 0
+    trace = load_yaml(trace_path)
+    trace["contract_revision"] = 2
+    trace["observation_coverage"] = {
+        name: "OBSERVED" for name in ("executor", "model", "tools", "topology", "historical_reads")
+    }
+    write(tmp_path, "legacy-tool-trace.yaml", trace)
+    source = _t1_observation_source(tmp_path, envelope, trace)
+    trust = write(tmp_path, "legacy-tool-trust.yaml", {"sources": sources + [source]})
+    checked = invoke("validate", trace_path, "--envelope", envelope_path,
+                     "--root", ROOT, "--trust-context", trust, "--require-ready", "--json")
+    assert checked.returncode != 0
+    report = json.loads(checked.stdout)
+    assert report["coverage"]["tools"]["status"] == "COMPLETE"
+    assert report["observation_verification"]["state"] == "VERIFIED"
+    assert report["status"] == "INCOMPLETE"
+    assert "legacy_obligation_binding" in report["missing_observations"]
+
+
+def test_final_unbound_actor_cannot_certify_with_host_snapshot(tmp_path: Path) -> None:
+    envelope_path, envelope, sources = _t1_parallel_plan(tmp_path)
+    obligations = expected_observations(envelope)["actors"]
+    actors = [{**item["binding"], "participation": "REPORTED_EXECUTED",
+               "obligation_ref": item["obligation_ref"]} for item in obligations]
+    actors[0].pop("obligation_ref")
+    trace_path = tmp_path / "unbound-actor-trace.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "unbound-actor-actual.yaml",
+           {"outcome": "SUCCESS", "context_reads": [], "role_bindings": actors}),
+           "--out", trace_path).returncode == 0
+    snapshot = _t1_observation_source(tmp_path, envelope, load_yaml(trace_path))
+    trust = write(tmp_path, "unbound-actor-trust.yaml", {"sources": sources + [snapshot]})
+    compared = invoke("compare", envelope_path, trace_path, "--trust-context", trust, "--json")
+    validated = invoke("validate", trace_path, "--envelope", envelope_path,
+                       "--root", ROOT, "--trust-context", trust, "--require-ready", "--json")
+    assert compared.returncode != 0 and validated.returncode != 0
+    for response in (compared, validated):
+        report = json.loads(response.stdout)
+        assert report["status"] == "FAIL"
+        assert report["coverage"]["actors"]["missing"] == [obligations[0]["obligation_ref"]]
+        assert report["coverage"]["actors"]["matched"] == [obligations[1]["obligation_ref"]]
+        assert report["coverage"]["actors"]["unexpected"] == [0]
+        assert "ACTOR_OBLIGATION_UNBOUND" in report["deviations"]
+        assert report["observation_verification"]["state"] == "VERIFIED"
+
+
+def test_final_foreign_tool_refs_never_fall_back_to_candidate(tmp_path: Path) -> None:
+    envelope_path, envelope, _ = _t1_tool_plan(tmp_path)
+    expected_ref = expected_observations(envelope)["tools"][0]["obligation_ref"]
+    variants = []
+    for field in ("attempt_id", "action_id"):
+        foreign = deepcopy(envelope)
+        foreign["intent"][field] += "-other"
+        variants.append(expected_observations(foreign)["tools"][0]["obligation_ref"])
+    foreign = deepcopy(envelope)
+    foreign["execution_id"] = "exec-other"
+    variants.append(expected_observations(foreign)["tools"][0]["obligation_ref"])
+    variants.append("sha256:" + "f" * 64)
+    for index, ref in enumerate(variants):
+        trace_path = tmp_path / f"foreign-{index}.yaml"
+        actual = {"outcome": "SUCCESS", "context_reads": [], "tool_events": [{
+            "candidate": "reader", "action": "CALL", "result": "SUCCESS",
+            "reason_codes": [], "evidence_refs": [], "obligation_ref": ref}]}
+        assert invoke("record", envelope_path, write(tmp_path, f"actual-{index}.yaml", actual),
+                      "--out", trace_path).returncode == 0
+        compared = invoke("compare", envelope_path, trace_path, "--json")
+        assert compared.returncode != 0
+        report = json.loads(compared.stdout)
+        assert report["status"] == "FAIL"
+        assert report["coverage"]["tools"]["missing"] == [expected_ref]
+        assert report["coverage"]["tools"]["unexpected"] == [0]
+        assert "TOOL_OBLIGATION_MISMATCH" in report["deviations"]
+
+
+def test_final_snapshot_without_ref_cannot_verify_bound_trace(tmp_path: Path) -> None:
+    envelope_path, envelope, sources = _t1_tool_plan(tmp_path)
+    event = {"candidate": "reader", "action": "CALL", "result": "SUCCESS",
+             "reason_codes": [], "evidence_refs": []}
+    unbound_path = tmp_path / "unbound.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "unbound-actual.yaml",
+           {"outcome": "SUCCESS", "context_reads": [], "tool_events": [event]}),
+           "--out", unbound_path).returncode == 0
+    unbound = load_yaml(unbound_path)
+    stale_source = _t1_observation_source(tmp_path, envelope, unbound)
+    bound = deepcopy(unbound)
+    bound["actual"]["tool_events"][0]["obligation_ref"] = expected_observations(envelope)["tools"][0]["obligation_ref"]
+    bound_path = write(tmp_path, "manually-bound.yaml", bound)
+    checked = invoke("compare", envelope_path, bound_path,
+                     "--trust-context", write(tmp_path, "stale-trust.yaml",
+                     {"sources": sources + [stale_source]}), "--json")
+    report = json.loads(checked.stdout)
+    assert report["status"] == "INCOMPLETE"
+    assert report["observation_verification"]["state"] == "UNVERIFIED"
+    relabeled = {**stale_source, "subject": observation_subject(
+        observation_projection(envelope, bound, ["tools"]))}
+    checked = invoke("compare", envelope_path, bound_path,
+                     "--trust-context", write(tmp_path, "relabeled-trust.yaml",
+                     {"sources": sources + [relabeled]}), "--json")
+    report = json.loads(checked.stdout)
+    assert report["status"] == "INCOMPLETE"
+    assert report["observation_verification"]["state"] == "INVALID"
+
+
+def test_final_r2_without_occurrence_obligations_keeps_prior_result(tmp_path: Path) -> None:
+    envelope_path, _ = planned(tmp_path, order())
+    trace_path = tmp_path / "legacy-direct.yaml"
+    assert invoke("record", envelope_path, write(tmp_path, "direct-actual.yaml",
+           {"outcome": "SUCCESS", "context_reads": []}), "--out", trace_path).returncode == 0
+    trace = load_yaml(trace_path)
+    trace["contract_revision"] = 2
+    trace["observation_coverage"] = {
+        name: "OBSERVED" for name in ("executor", "model", "tools", "topology", "historical_reads")
+    }
+    write(tmp_path, "legacy-direct.yaml", trace)
+    compared = invoke("compare", envelope_path, trace_path, "--json")
+    assert compared.returncode == 0, compared.stdout + compared.stderr
+    report = json.loads(compared.stdout)
+    assert report["status"] == "PASS"
+    assert "legacy_obligation_binding" not in report["missing_observations"]
 
 
 def test_t1_obligation_duplicates_absence_and_fail_precedence(tmp_path: Path) -> None:

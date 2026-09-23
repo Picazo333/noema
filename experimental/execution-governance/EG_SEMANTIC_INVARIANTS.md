@@ -15,7 +15,7 @@ shape; `src/noema/eg/semantics.py` proves these cross-field rules.
 | INV-EG-008 | A public valid result has passed schema and semantic validation. | `contract_issues` | `plan`, `validate`, `record` | R3 public topology seam |
 | INV-EG-009 | Observable provenance is derived from loaded/programmatic input. | `LoadedWorkOrder` | `plan` | R3 provenance |
 | INV-EG-010 | Canary claims are rendered from machine-readable results. | `render_dogfood_report` | dogfood evidence | R3 canary evidence |
-| INV-EG-011 | Material tool and actor coverage is computed one-to-one by occurrence, not list presence. | `evaluate_material_coverage` | `record`, `compare`, `validate` | T1 coverage |
+| INV-EG-011 | Trace r3 material tool and actor coverage requires each observation's exact occurrence `obligation_ref`; a unique name cannot supply it. Trace r2 name association remains historical and cannot certify material PASS. | `evaluate_material_coverage`, `compare_execution` | `record`, `compare`, `validate` | Final conformance repair |
 | INV-EG-012 | A complete material report needs an independently pinned host snapshot for PASS. | `verify_host_snapshot` | `compare`, `validate` | T1 observation evidence |
 | INV-EG-013 | Mandatory resolver satisfaction binds current bytes and external authority to one receipt. | `required_dependency_results` | `plan`, `validate`, `resume-check` | T1 resolver drift |
 | INV-EG-014 | Known deviations remain FAIL despite missing readiness or other evidence. | `compare_execution` | `compare`, `validate` | T1 precedence |

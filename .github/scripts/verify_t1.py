@@ -18,6 +18,8 @@ from xml.etree import ElementTree
 BASE_IDS = {f"R5-C{index:02d}" for index in range(1, 25)}
 T1_IDS = {"COV-TOOLS-EMPTY", "COV-ACTOR-EMPTY", "COV-TOOLS-COMPLETE",
           "COV-ACTORS-COMPLETE", "RESOLVER-DRIFT", "RESOLVER-NO-INTEGRITY"}
+FINAL_REPAIR_IDS = {"COV-TOOLS-UNBOUND-R3"}
+REQUIRED_IDS = BASE_IDS | T1_IDS | FINAL_REPAIR_IDS
 ARTIFACTS = ("CANARY_RESULTS.json", "DOGFOOD_REPORT.md", "TEST_SUMMARY.json", "VERIFICATION.json")
 
 
@@ -80,8 +82,8 @@ def _junit_summary(path: Path, exit_code: int) -> dict:
 def validate_results(root: Path, output: Path, sha: str) -> dict:
     definitions = json.loads((root / "validation/experimental/execution-governance/R5_CANARY_DEFINITIONS.json").read_text(encoding="utf-8"))
     ids = [item["id"] for item in definitions["canaries"]]
-    if len(ids) != 30 or set(ids) != BASE_IDS | T1_IDS or len(set(ids)) != 30:
-        raise ValueError("required 30 canary definitions are absent or duplicated")
+    if len(ids) != len(REQUIRED_IDS) or set(ids) != REQUIRED_IDS or len(set(ids)) != len(REQUIRED_IDS):
+        raise ValueError("required canary definitions are absent or duplicated")
     observed = json.loads((output / "CANARY_RESULTS.json").read_text(encoding="utf-8"))
     rows = observed.get("canaries", [])
     observed_ids = [item.get("id") for item in rows]
@@ -95,7 +97,7 @@ def validate_results(root: Path, output: Path, sha: str) -> dict:
         raise ValueError("required canary result is incomplete or failed")
     if not (output / "DOGFOOD_REPORT.md").is_file():
         raise ValueError("dogfood report is missing")
-    return {"status": "PASS", "required": 30, "passed": len(rows)}
+    return {"status": "PASS", "required": len(REQUIRED_IDS), "passed": len(rows)}
 
 
 def write_evidence(output: Path, verification: dict, test_summary: dict) -> None:

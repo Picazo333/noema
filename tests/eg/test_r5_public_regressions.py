@@ -843,6 +843,42 @@ def test_final_unbound_actor_cannot_certify_with_host_snapshot(tmp_path: Path) -
         assert report["observation_verification"]["state"] == "VERIFIED"
 
 
+def test_final_actor_absence_binding_diagnostics_public(tmp_path: Path) -> None:
+    envelope_path, envelope, sources = _t1_parallel_plan(tmp_path)
+    explained = invoke("explain", envelope_path, "--json")
+    assert explained.returncode == 0
+    obligations = json.loads(explained.stdout)["expected_observations"]["actors"]
+    assert len(obligations) == 2
+    base = [{**item["binding"], "obligation_ref": item["obligation_ref"],
+             "participation": "REPORTED_EXECUTED"} for item in obligations]
+    for label, contradictory in (("exact", False), ("wrong", True)):
+        actors = deepcopy(base)
+        actors[0]["participation"] = "REPORTED_NOT_EXECUTED"
+        if contradictory:
+            actors[0].update({"workspace": "wrong-workspace", "branch": "wrong-branch",
+                              "scope": ["wrong/scope"]})
+        trace_path = tmp_path / f"{label}-absence-trace.yaml"
+        recorded = invoke("record", envelope_path, write(tmp_path, f"{label}-absence-actual.yaml",
+                          {"outcome": "SUCCESS", "context_reads": [], "role_bindings": actors}),
+                          "--out", trace_path)
+        assert recorded.returncode == 0, recorded.stdout + recorded.stderr
+        snapshot = _t1_observation_source(tmp_path, envelope, load_yaml(trace_path))
+        trust = write(tmp_path, f"{label}-absence-trust.yaml", {"sources": sources + [snapshot]})
+        compared = invoke("compare", envelope_path, trace_path, "--trust-context", trust, "--json")
+        validated = invoke("validate", trace_path, "--envelope", envelope_path,
+                           "--root", ROOT, "--trust-context", trust, "--require-ready", "--json")
+        assert compared.returncode != 0 and validated.returncode != 0
+        for response in (compared, validated):
+            report = json.loads(response.stdout)
+            assert report["status"] == "FAIL"
+            assert report["coverage"]["actors"]["status"] == "COMPLETE"
+            assert report["coverage"]["actors"]["explicitly_absent"] == [obligations[0]["obligation_ref"]]
+            assert report["coverage"]["actors"]["matched"] == [obligations[1]["obligation_ref"]]
+            assert "EXPECTED_ACTOR_NOT_EXECUTED" in report["deviations"]
+            assert ("ACTOR_BINDING_MISMATCH" in report["deviations"]) is contradictory
+            assert report["observation_verification"]["state"] == "VERIFIED"
+
+
 def test_final_foreign_tool_refs_never_fall_back_to_candidate(tmp_path: Path) -> None:
     envelope_path, envelope, _ = _t1_tool_plan(tmp_path)
     expected_ref = expected_observations(envelope)["tools"][0]["obligation_ref"]

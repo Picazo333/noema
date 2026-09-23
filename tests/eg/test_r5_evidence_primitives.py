@@ -271,7 +271,7 @@ def test_t1_checkout_import_and_result_gate_fail_closed(tmp_path: Path, monkeypa
             for case in definitions["canaries"]]
     (results / "CANARY_RESULTS.json").write_text(json.dumps({"tested_sha": sha, "status": "PASS", "canaries": rows}), encoding="utf-8")
     (results / "DOGFOOD_REPORT.md").write_text("Observed", encoding="utf-8")
-    assert gate.validate_results(ROOT, results, sha)["passed"] == 31
+    assert gate.validate_results(ROOT, results, sha)["passed"] == 32
     rows[0]["status"] = "FAIL"
     (results / "CANARY_RESULTS.json").write_text(json.dumps({"tested_sha": sha, "status": "PASS", "canaries": rows}), encoding="utf-8")
     with pytest.raises(ValueError, match="incomplete or failed"):
@@ -361,4 +361,47 @@ def test_final_actor_occurrence_binding_and_absence_are_explicit() -> None:
     absent, deviations = _dimension(expected, [{**actor, "obligation_ref": ref,
                                                  "participation": "REPORTED_NOT_EXECUTED"}], "actors", 3)
     assert absent["explicitly_absent"] == [ref] and absent["status"] == "COMPLETE"
+    assert "EXPECTED_ACTOR_NOT_EXECUTED" in deviations
+
+
+@pytest.mark.parametrize("field,wrong_value", [
+    ("workspace", "other-work"),
+    ("branch", "other-topic"),
+    ("scope", ["other"]),
+    ("executor_id", "other-executor"),
+    ("model_id", "other-model"),
+])
+def test_actor_absence_preserves_material_binding_mismatch(field: str, wrong_value: object) -> None:
+    envelope = r2_envelope()
+    envelope["topology"]["role_bindings"] = [{
+        "role_id": "builder", "workspace": "work", "branch": "topic",
+        "scope": ["src"], "executor_id": "executor", "model_id": "model",
+    }]
+    expected = expected_observations(envelope)["actors"]
+    ref = expected[0]["obligation_ref"]
+    actor = {**expected[0]["binding"], "obligation_ref": ref,
+             "participation": "REPORTED_NOT_EXECUTED", field: wrong_value}
+    coverage, deviations = _dimension(expected, [actor], "actors", 3)
+    assert coverage["status"] == "COMPLETE"
+    assert coverage["explicitly_absent"] == [ref]
+    assert "EXPECTED_ACTOR_NOT_EXECUTED" in deviations
+    assert "ACTOR_BINDING_MISMATCH" in deviations
+
+
+def test_actor_absence_exact_and_multiple_wrong_attributes() -> None:
+    envelope = r2_envelope()
+    envelope["topology"]["role_bindings"] = [{
+        "role_id": "builder", "workspace": "work", "branch": "topic", "scope": ["src"],
+    }]
+    expected = expected_observations(envelope)["actors"]
+    ref = expected[0]["obligation_ref"]
+    actor = {**expected[0]["binding"], "obligation_ref": ref,
+             "participation": "REPORTED_NOT_EXECUTED"}
+    exact, deviations = _dimension(expected, [actor], "actors", 3)
+    assert exact["status"] == "COMPLETE" and exact["explicitly_absent"] == [ref]
+    assert deviations == ["EXPECTED_ACTOR_NOT_EXECUTED"]
+    wrong = {**actor, "workspace": "other", "branch": "elsewhere", "scope": ["other"]}
+    coverage, deviations = _dimension(expected, [wrong], "actors", 3)
+    assert coverage["status"] == "COMPLETE" and coverage["explicitly_absent"] == [ref]
+    assert deviations.count("ACTOR_BINDING_MISMATCH") == 1
     assert "EXPECTED_ACTOR_NOT_EXECUTED" in deviations

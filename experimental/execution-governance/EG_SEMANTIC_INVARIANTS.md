@@ -19,3 +19,4 @@ shape; `src/noema/eg/semantics.py` proves these cross-field rules.
 | INV-EG-012 | A complete material report needs an independently pinned host snapshot for PASS. | `verify_host_snapshot` | `compare`, `validate` | T1 observation evidence |
 | INV-EG-013 | Mandatory resolver satisfaction binds current bytes and external authority to one receipt. | `required_dependency_results` | `plan`, `validate`, `resume-check` | T1 resolver drift |
 | INV-EG-014 | Known deviations remain FAIL despite missing readiness or other evidence. | `compare_execution` | `compare`, `validate` | T1 precedence |
+| INV-EG-015 | Explicit actor nonparticipation does not suppress validation of the reported material binding; contradictory attributes retain `ACTOR_BINDING_MISMATCH` alongside `EXPECTED_ACTOR_NOT_EXECUTED`. | `evaluate_material_coverage` | `record`, `compare`, `validate` | Final diagnostic repair |

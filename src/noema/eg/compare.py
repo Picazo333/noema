@@ -95,10 +95,6 @@ def _dimension(expected: list[dict], observed: list[dict], kind: str,
                 absent.append(identity)
                 deviations.append("EXPECTED_TOOL_NOT_CALLED")
         else:
-            if event.get("participation") == "REPORTED_NOT_EXECUTED":
-                absent.append(identity)
-                deviations.append("EXPECTED_ACTOR_NOT_EXECUTED")
-                continue
             missing_fields = []
             wrong_fields = []
             for field, expected_value in item["binding"].items():
@@ -116,11 +112,16 @@ def _dimension(expected: list[dict], observed: list[dict], kind: str,
                         continue
                 if actual_value != expected_value:
                     wrong_fields.append(field)
+            if wrong_fields:
+                deviations.append("ACTOR_BINDING_MISMATCH")
+            if event.get("participation") == "REPORTED_NOT_EXECUTED":
+                absent.append(identity)
+                deviations.append("EXPECTED_ACTOR_NOT_EXECUTED")
+                continue
             if revision == 3 and event.get("participation") != "REPORTED_EXECUTED":
                 missing_fields.append("participation")
             if wrong_fields:
                 matched.append(identity)
-                deviations.append("ACTOR_BINDING_MISMATCH")
             elif not missing_fields:
                 matched.append(identity)
     missing = [item["obligation_ref"] for item in expected

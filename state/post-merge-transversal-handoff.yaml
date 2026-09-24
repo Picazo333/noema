@@ -1,0 +1,33 @@
+handoff_id: noema-vnext-post-merge-transversal-handoff
+work_order_ref: repo://state/transversal-rollout-work-order.yaml
+status: partial
+summary: Noema vNext passed independent reaudit and fresh global release review, was merged through PR #10, and passed post-merge CI on main. Architecture is frozen; the next phase is transversal dogfood across governed repositories using repo-specific authority and current state.
+changes:
+  - Audited vNext SHA 36ceacd8d37ab45964ca512b83b67d68941a0549 merged into main through PR #10.
+  - Main integration SHA ecf4f0ae0878dbbe4c8e4f09b65846698f6c8e3b passed CI run 36047015874.
+  - Noema vNext implementation and release-closure architecture are frozen pending evidence from real dogfood.
+artifacts:
+  - scheme: repo
+    locator: registry/ecosystem.yaml
+  - scheme: repo
+    locator: noema.project.yaml
+evidence:
+  - scheme: github
+    locator: Picazo333/noema/commit/36ceacd8d37ab45964ca512b83b67d68941a0549
+  - scheme: github
+    locator: Picazo333/noema/commit/ecf4f0ae0878dbbe4c8e4f09b65846698f6c8e3b
+  - scheme: github
+    locator: Picazo333/noema/actions/runs/36047015874
+decisions:
+  - ADR-0008
+remaining:
+  - Scan governed and candidate repositories from their current authoritative state.
+  - Decide per repository whether Noema adoption is ALREADY_COVERED, KEEP, MODIFY, ADD, DEFER, or NOT_APPLICABLE.
+  - Apply changes only through repo-specific branches and authority after each repository is assessed.
+  - Execute the Skill Foundry Process Auditor handoff as external dogfood when appropriate.
+next_action: Start transversal Noema rollout from a fresh control-plane conversation, beginning with an authoritative inventory and repo-by-repo adoption matrix.
+intentionally_unchanged:
+  - RC0 authority boundaries
+  - StackIA ownership of tool/account/capability truth
+  - Skill Foundry ownership of Skill/workflow/process-audit semantics
+  - Project repositories remain owners of their domain state and implementation truth

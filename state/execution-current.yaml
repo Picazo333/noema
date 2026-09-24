@@ -1,29 +1,31 @@
-# Operational checkpoint snapshot at the imported baseline, not a self-certifying
-# assertion about this file's future commit. A later writer must refresh it safely.
+# Post-merge operational snapshot.
+# The SHA below is the integrated main baseline observed before this checkpoint
+# update. Because this file is versioned, the commit containing it necessarily
+# advances Git again; recover must therefore fail closed as STALE_CHECKPOINT
+# until an authorized host refreshes the checkpoint outside the frozen snapshot.
 project_id: noema
-role_id: implementation-owner
-executor_id: codex
-branch: codex/noema-vnext-final-closure
+role_id: protocol-owner
+branch: main
 workspace: C:/Users/migue/Desktop/noema
-sha: 9d46af31c4271d55f14af2eb64cf7d0b76ea10c8
+sha: ecf4f0ae0878dbbe4c8e4f09b65846698f6c8e3b
 frontier_ref: null
-closed_claims: []
-closed_evidence_refs: []
+closed_claims:
+  - contract-conformance
+  - recoverability
+  - provenance
+closed_evidence_refs:
+  - scheme: github
+    locator: Picazo333/noema/commit/36ceacd8d37ab45964ca512b83b67d68941a0549
+  - scheme: github
+    locator: Picazo333/noema/actions/runs/36047015874
 active_blockers: []
-outstanding_human_gates:
-  - independent-audit
+outstanding_human_gates: []
 prohibited_scope:
   - secrets
-effective_allowed_writes:
-  - src/noema
-  - tests/eg
-  - experimental/execution-governance
-  - validation/experimental/execution-governance
-  - state
-  - noema.project.yaml
-next_action: Complete verification and request independent audit.
-next_action_kind: AWAIT_HUMAN
+effective_allowed_writes: []
+next_action: Start transversal Noema rollout from each target repository's authoritative current state and produce repo-specific adoption decisions before any mutation.
+next_action_kind: VERIFY
 handoff_ref:
   scheme: repo
-  locator: state/execution-handoff.yaml
+  locator: state/post-merge-transversal-handoff.yaml
 envelope_ref: null

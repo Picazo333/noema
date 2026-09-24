@@ -1,10 +1,23 @@
 program_id: noema-vnext-execution-governance
-status: VNEXT_FINAL_CLOSURE_PENDING_EXACT_SHA_VERIFICATION
+status: VNEXT_MERGED_TRANSVERSAL_DOGFOOD_READY
 baseline:
   reference_sha: 0e49538c24e51af98a3f3c12706afdbe2e8d812d
   drift: D0
   main_incorporated_sha: 530751b471e07a3b2a6acc31a864d408442b56c5
   eg_source_sha: 971a6ef962341e5be1e485621e2cf10a1a40f141
+release_closure:
+  audited_sha: 36ceacd8d37ab45964ca512b83b67d68941a0549
+  independent_reaudit: INDEPENDENT_REAUDIT_PASS
+  global_review: GLOBAL_REVIEW_PASS
+  merged_via_pr: 10
+  integrated_main_sha: ecf4f0ae0878dbbe4c8e4f09b65846698f6c8e3b
+  integration_ci_run: 36047015874
+  integration_ci: PASS
+current_phase: transversal-dogfood
+next:
+  - authoritative-repository-inventory
+  - repo-specific-adoption-matrix
+  - skill-foundry-process-auditor-dogfood
 contracts: [execution-envelope/v1, execution-trace/v1]
 gates: [G-DELTA, G0, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10]
 forbidden:

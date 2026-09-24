@@ -38,6 +38,9 @@ sources_of_truth:
   decisions:
     scheme: repo
     locator: decisions/
+  state.execution:
+    scheme: repo
+    locator: state/execution-current.yaml
 
 context:
   entrypoint: AGENTS.md
@@ -79,4 +82,7 @@ relations:
     notes: Candidate descriptors require explicit promotion into Noema registry/executors.yaml before RC0 can route to them.
 
 exceptions: []
-extensions: {}
+extensions:
+  x-execution-governance:
+    profile: eg.repo-agent.v0
+    status: experimental-dogfood

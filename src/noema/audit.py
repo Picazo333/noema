@@ -47,7 +47,9 @@ def audit_project(
                 detail = {
                     **stats,
                     "paths": [
-                        str(path.relative_to(root)) if path.is_relative_to(root) else str(path)
+                        path.relative_to(root).as_posix()
+                        if path.is_relative_to(root)
+                        else str(path)
                         for path in paths
                     ],
                 }

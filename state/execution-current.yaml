@@ -1,0 +1,29 @@
+# Operational checkpoint snapshot at the imported baseline, not a self-certifying
+# assertion about this file's future commit. A later writer must refresh it safely.
+project_id: noema
+role_id: implementation-owner
+executor_id: codex
+branch: codex/noema-vnext-final-closure
+workspace: C:/Users/migue/Desktop/noema
+sha: 9d46af31c4271d55f14af2eb64cf7d0b76ea10c8
+frontier_ref: null
+closed_claims: []
+closed_evidence_refs: []
+active_blockers: []
+outstanding_human_gates:
+  - independent-audit
+prohibited_scope:
+  - secrets
+effective_allowed_writes:
+  - src/noema
+  - tests/eg
+  - experimental/execution-governance
+  - validation/experimental/execution-governance
+  - state
+  - noema.project.yaml
+next_action: Complete verification and request independent audit.
+next_action_kind: AWAIT_HUMAN
+handoff_ref:
+  scheme: repo
+  locator: state/execution-handoff.yaml
+envelope_ref: null

@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["profile"],"properties":{"profile":{"type":"string"},"host_id":{"type":"string"},"capabilities":{"type":"object","additionalProperties":{"type":"boolean"}},"telemetry":{"type":"object","additionalProperties":{"type":"boolean"}}},"additionalProperties":false}

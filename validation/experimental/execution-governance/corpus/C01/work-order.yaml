@@ -1,0 +1,11 @@
+work_order_id: wo-eg-c01
+project_id: noema
+objective: read known Noema file
+scope: {allowed: [PROTOCOL.md], excluded: []}
+context_mode: patch
+inputs: []
+capability_requirements: []
+allowed_writes: []
+forbidden_effects: []
+expected_artifacts: []
+quality_claims: [contract-conformance]

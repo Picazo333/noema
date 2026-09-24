@@ -90,6 +90,13 @@ def lint_project(root: Path, protocol_root: Path | None = None) -> Report:
     else:
         checks.append(Check("NOEMA-CTX-003", "INFO", "PASS", f"Default context mode `{default_mode}` is declared."))
 
+    from .manifest import state_scopes, resolve_state_scope
+
+    try:
+        for scope in state_scopes(manifest):
+            resolve_state_scope(root, manifest, scope)
+    except ValueError:
+        checks.append(Check("NOEMA-STATE-001", "ERROR", "FAIL", "Invalid scoped current-state cursor.", "sources_of_truth"))
     for name, ref in manifest.get("sources_of_truth", {}).items():
         if ref.get("scheme") == "repo":
             value = f"repo://{ref['locator']}"

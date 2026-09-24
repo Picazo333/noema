@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:execution-trace:1:r2",
+  "type": "object",
+  "required": ["contract_version", "contract_revision", "trace_id", "execution_id", "work_order_id", "envelope_ref", "envelope_digest", "material_digest", "project_id", "started_at", "finished_at", "outcome", "actual", "metrics", "retries", "rework_cycles", "observation_coverage", "read_identity_bindings"],
+  "properties": {
+    "contract_version": {"const": "execution-trace/v1"},
+    "contract_revision": {"const": 2},
+    "trace_id": {"type": "string", "pattern": "^trace-[a-z0-9-]+$"},
+    "execution_id": {"type": "string", "pattern": "^exec-[a-z0-9-]+$"},
+    "work_order_id": {"$ref": "urn:noema:schema:common:1#/$defs/identifier"},
+    "envelope_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"},
+    "envelope_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "material_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "project_id": {"$ref": "urn:noema:schema:common:1#/$defs/identifier"},
+    "started_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+    "finished_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+    "outcome": {"enum": ["SUCCESS", "PARTIAL", "BLOCKED", "FAILED", "ABORTED", "NO_ACTION", "UNKNOWN"]},
+    "actual": {"$ref": "urn:noema:schema:execution-trace:0#/$defs/actual"},
+    "metrics": {"$ref": "urn:noema:schema:execution-trace:0#/$defs/metrics"},
+    "retries": {"type": ["integer", "null"], "minimum": 0},
+    "rework_cycles": {"type": ["integer", "null"], "minimum": 0},
+    "observation_coverage": {"$ref": "#/$defs/coverage"},
+    "read_identity_bindings": {"type": "array", "items": {"$ref": "#/$defs/readIdentityBinding"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "readIdentityBinding": {"type": "object", "required": ["event_index", "subject_fingerprint", "source_ref", "source_digest"], "properties": {
+      "event_index": {"type": "integer", "minimum": 0},
+      "subject_fingerprint": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+      "source_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"},
+      "source_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+    }, "additionalProperties": false},
+    "coverage": {"type": "object", "required": ["executor", "model", "tools", "topology", "historical_reads"], "properties": {
+      "executor": {"enum": ["OBSERVED", "UNVERIFIED", "NOT_REQUIRED"]},
+      "model": {"enum": ["OBSERVED", "UNVERIFIED", "NOT_REQUIRED"]},
+      "tools": {"enum": ["OBSERVED", "UNVERIFIED", "NOT_REQUIRED"]},
+      "topology": {"enum": ["OBSERVED", "UNVERIFIED", "NOT_REQUIRED"]},
+      "historical_reads": {"enum": ["OBSERVED", "UNVERIFIED", "NOT_REQUIRED"]}
+    }, "additionalProperties": false}
+  }
+}

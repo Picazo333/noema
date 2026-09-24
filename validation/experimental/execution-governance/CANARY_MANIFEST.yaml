@@ -1,0 +1,15 @@
+canaries:
+  - {id: R2-C01, scenario: work-order-direct-trace, level: END_TO_END}
+  - {id: R2-C02, scenario: routed-tool-model-trace, level: END_TO_END}
+  - {id: R2-C03, scenario: invalid-work-order, level: END_TO_END}
+  - {id: R2-C04, scenario: runtime-pressure-enforcement, level: END_TO_END}
+  - {id: R2-C05, scenario: resolver-blocked, level: END_TO_END}
+  - {id: R2-C06, scenario: no-verified-executor, level: END_TO_END}
+  - {id: R2-C07, scenario: denied-tool-fallback, level: END_TO_END}
+  - {id: R2-C08, scenario: parallel-isolation-rejection, level: END_TO_END}
+  - {id: R2-C09, scenario: context-promotion-readset, level: END_TO_END}
+  - {id: R2-C10, scenario: resume-success, level: END_TO_END}
+  - {id: R2-C11, scenario: resume-prohibition-failure, level: END_TO_END}
+  - {id: R2-C12, scenario: secret-trace-protection, level: END_TO_END}
+  - {id: R2-C13, scenario: unavailable-metrics, level: END_TO_END}
+  - {id: R2-C14, scenario: harvest-public-read-only, level: END_TO_END}

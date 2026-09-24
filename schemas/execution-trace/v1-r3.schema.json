@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:execution-trace:1:r3",
+  "type": "object",
+  "required": ["contract_version", "contract_revision", "trace_id", "execution_id", "work_order_id", "envelope_ref", "envelope_digest", "material_digest", "project_id", "started_at", "finished_at", "outcome", "actual", "metrics", "retries", "rework_cycles", "read_identity_bindings"],
+  "properties": {
+    "contract_version": {"const": "execution-trace/v1"},
+    "contract_revision": {"const": 3},
+    "trace_id": {"type": "string", "pattern": "^trace-[a-z0-9-]+$"},
+    "execution_id": {"type": "string", "pattern": "^exec-[a-z0-9-]+$"},
+    "work_order_id": {"$ref": "urn:noema:schema:common:1#/$defs/identifier"},
+    "envelope_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"},
+    "envelope_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "material_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "project_id": {"$ref": "urn:noema:schema:common:1#/$defs/identifier"},
+    "started_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+    "finished_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+    "outcome": {"enum": ["SUCCESS", "PARTIAL", "BLOCKED", "FAILED", "ABORTED", "NO_ACTION", "UNKNOWN"]},
+    "actual": {"$ref": "#/$defs/actual"},
+    "metrics": {"$ref": "urn:noema:schema:execution-trace:0#/$defs/metrics"},
+    "retries": {"type": ["integer", "null"], "minimum": 0},
+    "rework_cycles": {"type": ["integer", "null"], "minimum": 0},
+    "read_identity_bindings": {"type": "array", "items": {"$ref": "urn:noema:schema:execution-trace:1:r2#/$defs/readIdentityBinding"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "toolEvent": {
+      "type": "object", "required": ["candidate", "action", "result", "reason_codes", "evidence_refs"],
+      "properties": {
+        "candidate": {"type": "string"}, "action": {"enum": ["CALL", "SOFT_SUPPRESS", "HARD_DENY", "DEFER"]},
+        "result": {"enum": ["SUCCESS", "FAILED", "UNAVAILABLE", "NOT_CALLED"]},
+        "reason_codes": {"type": "array", "items": {"type": "string"}},
+        "evidence_refs": {"type": "array", "items": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"}},
+        "occurred_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+        "obligation_ref": {"$ref": "#/$defs/digest"}
+      }, "additionalProperties": false
+    },
+    "roleBinding": {
+      "type": "object", "required": ["role_id"],
+      "properties": {
+        "role_id": {"type": "string"}, "executor_id": {"type": ["string", "null"]},
+        "model_id": {"type": ["string", "null"]}, "workspace": {"type": ["string", "null"]},
+        "branch": {"type": ["string", "null"]},
+        "scope": {"type": "array", "items": {"type": "string"}},
+        "participation": {"enum": ["REPORTED_EXECUTED", "REPORTED_NOT_EXECUTED"]},
+        "obligation_ref": {"$ref": "#/$defs/digest"},
+        "provenance_refs": {"type": "array", "items": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"}}
+      }, "additionalProperties": false
+    },
+    "actual": {
+      "type": "object",
+      "required": ["role_bindings", "executor", "model", "context_refs", "context_events", "tool_events", "eval_refs", "artifact_refs", "permission_events"],
+      "properties": {
+        "role_bindings": {"type": "array", "items": {"$ref": "#/$defs/roleBinding"}},
+        "executor": {"type": ["string", "null"]}, "model": {"type": ["string", "null"]},
+        "context_refs": {"type": "array", "items": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"}},
+        "context_events": {"type": ["array", "null"], "items": {"$ref": "urn:noema:schema:execution-trace:0#/$defs/contextEvent"}},
+        "tool_events": {"type": "array", "items": {"$ref": "#/$defs/toolEvent"}},
+        "eval_refs": {"type": "array", "items": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"}},
+        "artifact_refs": {"type": "array", "items": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"}},
+        "permission_events": {"type": "array", "items": {"$ref": "urn:noema:schema:execution-trace:0#/$defs/permissionEvent"}}
+      }, "additionalProperties": false
+    }
+  }
+}

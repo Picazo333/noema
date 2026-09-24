@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:execution-trace:0",
+  "type": "object",
+  "required": ["trace_id", "execution_id", "envelope_ref", "project_id", "started_at", "finished_at", "outcome", "actual", "metrics", "retries", "rework_cycles"],
+  "properties": {
+    "trace_id": {"type": "string", "pattern": "^trace-[a-z0-9-]+$"},
+    "execution_id": {"type": "string", "pattern": "^exec-[a-z0-9-]+$"},
+    "envelope_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"},
+    "project_id": {"$ref": "urn:noema:schema:common:1#/$defs/identifier"},
+    "started_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+    "finished_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+    "outcome": {"enum": ["SUCCESS", "PARTIAL", "BLOCKED", "FAILED", "ABORTED", "NO_ACTION"]},
+    "actual": {"$ref": "#/$defs/actual"},
+    "metrics": {"$ref": "#/$defs/metrics"},
+    "retries": {"type": ["integer", "null"], "minimum": 0},
+    "rework_cycles": {"type": ["integer", "null"], "minimum": 0}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "storageRef": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"},
+    "toolEvent": {"type": "object", "required": ["candidate", "action", "result", "reason_codes", "evidence_refs"], "properties": {"candidate": {"type": "string"}, "action": {"enum": ["CALL", "SOFT_SUPPRESS", "HARD_DENY", "DEFER"]}, "result": {"enum": ["SUCCESS", "FAILED", "UNAVAILABLE", "NOT_CALLED"]}, "reason_codes": {"type": "array", "items": {"type": "string"}}, "evidence_refs": {"type": "array", "items": {"$ref": "#/$defs/storageRef"}}, "occurred_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"}}, "additionalProperties": false},
+    "permissionEvent": {"type": "object", "required": ["action", "decision", "reason_codes"], "properties": {"action": {"type": "string"}, "decision": {"enum": ["ALLOW", "ALLOW_SCOPED", "REQUIRE_HUMAN", "DENY", "DEFER", "ROUTE_ELSEWHERE"]}, "reason_codes": {"type": "array", "items": {"type": "string"}}, "occurred_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"}}, "additionalProperties": false},
+    "contextEvent": {"type": "object", "required": ["ref", "result", "identity_kind", "identity_fingerprint"], "properties": {"ref": {"$ref": "#/$defs/storageRef"}, "result": {"enum": ["READ_REQUIRED", "DUPLICATE_READ_SUPPRESSED", "CONTEXT_THRASH"]}, "identity_kind": {"enum": ["INTEGRITY", "VERSION", "FRESHNESS", "UNKNOWN"]}, "identity_fingerprint": {"type": ["string", "null"]}}, "additionalProperties": false},
+    "actual": {"type": "object", "required": ["role_bindings", "executor", "model", "context_refs", "context_events", "tool_events", "eval_refs", "artifact_refs", "permission_events"], "properties": {"role_bindings": {"type": "array", "items": {"type": "object", "required": ["role_id"], "properties": {"role_id": {"type": "string"}, "executor_id": {"type": ["string", "null"]}, "model_id": {"type": ["string", "null"]}, "provenance_refs": {"type": "array", "items": {"$ref": "#/$defs/storageRef"}}}, "additionalProperties": false}}, "executor": {"type": ["string", "null"]}, "model": {"type": ["string", "null"]}, "context_refs": {"type": "array", "items": {"$ref": "#/$defs/storageRef"}}, "context_events": {"type": "array", "items": {"$ref": "#/$defs/contextEvent"}}, "tool_events": {"type": "array", "items": {"$ref": "#/$defs/toolEvent"}}, "eval_refs": {"type": "array", "items": {"$ref": "#/$defs/storageRef"}}, "artifact_refs": {"type": "array", "items": {"$ref": "#/$defs/storageRef"}}, "permission_events": {"type": "array", "items": {"$ref": "#/$defs/permissionEvent"}}}, "additionalProperties": false},
+    "metric": {"type": "object", "required": ["status", "value"], "properties": {"status": {"enum": ["MEASURED", "ESTIMATED", "UNAVAILABLE"]}, "value": {"type": ["number", "null"]}, "methodology_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"}}, "allOf": [{"if": {"properties": {"status": {"const": "UNAVAILABLE"}}}, "then": {"properties": {"value": {"type": "null"}}}, "else": {"properties": {"value": {"type": "number"}}}}, {"if": {"properties": {"status": {"const": "ESTIMATED"}}}, "then": {"required": ["methodology_ref"]}}], "additionalProperties": false},
+    "metrics": {"type": "object", "required": ["context_units", "tool_calls", "suppressed_calls", "retries", "rework", "human_interventions", "wall_time_ms", "provider_tokens", "monetary_cost"], "properties": {"context_units": {"$ref": "#/$defs/metric"}, "tool_calls": {"$ref": "#/$defs/metric"}, "suppressed_calls": {"$ref": "#/$defs/metric"}, "retries": {"$ref": "#/$defs/metric"}, "rework": {"$ref": "#/$defs/metric"}, "human_interventions": {"$ref": "#/$defs/metric"}, "wall_time_ms": {"$ref": "#/$defs/metric"}, "provider_tokens": {"$ref": "#/$defs/metric"}, "monetary_cost": {"$ref": "#/$defs/metric"}}, "additionalProperties": false}
+  }
+}

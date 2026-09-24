@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:noema:schema:execution-trace:1",
+  "type": "object",
+  "required": ["contract_version", "trace_id", "execution_id", "envelope_ref", "project_id", "started_at", "finished_at", "outcome", "actual", "metrics", "retries", "rework_cycles"],
+  "properties": {
+    "contract_version": {"const": "execution-trace/v1"},
+    "trace_id": {"type": "string", "pattern": "^trace-[a-z0-9-]+$"},
+    "execution_id": {"type": "string", "pattern": "^exec-[a-z0-9-]+$"},
+    "envelope_ref": {"$ref": "urn:noema:schema:common:1#/$defs/storageRef"},
+    "project_id": {"$ref": "urn:noema:schema:common:1#/$defs/identifier"},
+    "started_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+    "finished_at": {"$ref": "urn:noema:schema:common:1#/$defs/timestamp"},
+    "outcome": {"enum": ["SUCCESS", "PARTIAL", "BLOCKED", "FAILED", "ABORTED", "NO_ACTION"]},
+    "actual": {"$ref": "urn:noema:schema:execution-trace:0#/$defs/actual"},
+    "metrics": {"$ref": "urn:noema:schema:execution-trace:0#/$defs/metrics"},
+    "retries": {"type": ["integer", "null"], "minimum": 0},
+    "rework_cycles": {"type": ["integer", "null"], "minimum": 0}
+  },
+  "additionalProperties": false
+}

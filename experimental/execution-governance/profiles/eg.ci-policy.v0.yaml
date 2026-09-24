@@ -1,0 +1,4 @@
+id: eg.ci-policy.v0
+kind: experimental-host-profile
+capabilities_are_runtime_inputs: true
+no_runtime_ownership: true

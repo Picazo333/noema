@@ -1,0 +1,27 @@
+# Explicit advisory handoff target: Skill Foundry owns this capability's semantics.
+work_order_id: noema-vnext-process-audit-advisory
+project_id: noema
+objective: Assess the Noema vNext execution process against its frozen Plan Lock and observed exact-SHA evidence; return an advisory report to the requester.
+scope:
+  allowed:
+    - validation/experimental/execution-governance
+    - experimental/execution-governance
+  excluded:
+    - secrets
+context_mode: audit
+inputs:
+  - scheme: repo
+    locator: experimental/execution-governance/program/PLAN_LOCK.md
+  - scheme: repo
+    locator: validation/experimental/execution-governance/R5_CANARY_DEFINITIONS.json
+capability_requirements:
+  - id: execution-process-auditor
+allowed_writes: []
+forbidden_effects:
+  - mutate-repository
+  - automatic-trigger
+expected_artifacts:
+  - advisory process-audit report returned to requester
+quality_claims:
+  - provenance
+human_gates: []

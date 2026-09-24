@@ -192,6 +192,74 @@ def test_scoped_state_cursor_and_recovery_without_transcript(tmp_path: Path) -> 
     assert report["decision_ids"] == []
 
 
+@pytest.mark.parametrize("foreign_checkpoint", [False, True])
+def test_recover_project_identity_bound_to_manifest(
+    tmp_path: Path, foreign_checkpoint: bool,
+) -> None:
+    project, _ = _recovery_project(tmp_path)
+    order_path = project / "work-order.yaml"
+    order = load_yaml(order_path)
+    order["project_id"] = "foreign-project"
+    order_path.write_text(dump_yaml(order), encoding="utf-8")
+    if foreign_checkpoint:
+        checkpoint = project / "state/execution-current.yaml"
+        state = load_yaml(checkpoint)
+        state["project_id"] = "foreign-project"
+        checkpoint.write_text(dump_yaml(state), encoding="utf-8")
+
+    result = _invoke("recover", project, "--json")
+    report = json.loads(result.stdout)
+    assert result.returncode != 0
+    assert report["status"] != "PASS"
+    assert report["continuation"] != "PASS"
+    assert "RECOVERY_PROJECT_MISMATCH" in report["reason_codes"]
+
+
+@pytest.mark.parametrize("scope", [
+    "C:/outside-project", "C:\\outside-project", "D:/other",
+    "\\\\server\\share", "//server/share", "/outside-project",
+    "../outside", "src/../../outside",
+])
+def test_recover_rejects_non_project_relative_write_scope(
+    tmp_path: Path, scope: str,
+) -> None:
+    project, _ = _recovery_project(tmp_path)
+    order_path = project / "work-order.yaml"
+    order = load_yaml(order_path)
+    order["allowed_writes"] = [scope]
+    order_path.write_text(dump_yaml(order), encoding="utf-8")
+    checkpoint = project / "state/execution-current.yaml"
+    state = load_yaml(checkpoint)
+    state["effective_allowed_writes"] = [scope]
+    checkpoint.write_text(dump_yaml(state), encoding="utf-8")
+
+    result = _invoke("recover", project, "--json")
+    report = json.loads(result.stdout)
+    assert result.returncode != 0
+    assert report["status"] != "PASS"
+    assert report["continuation"] != "PASS"
+    assert "RECOVERY_SCOPE_INVALID" in report["reason_codes"]
+
+
+@pytest.mark.parametrize("scope", ["src", "src/noema", "validation/process-audits"])
+def test_recover_accepts_authorized_relative_write_scope(tmp_path: Path, scope: str) -> None:
+    project, _ = _recovery_project(tmp_path)
+    order_path = project / "work-order.yaml"
+    order = load_yaml(order_path)
+    order["allowed_writes"] = [scope]
+    order_path.write_text(dump_yaml(order), encoding="utf-8")
+    checkpoint = project / "state/execution-current.yaml"
+    state = load_yaml(checkpoint)
+    state["effective_allowed_writes"] = [scope]
+    checkpoint.write_text(dump_yaml(state), encoding="utf-8")
+
+    result = _invoke("recover", project, "--json")
+    report = json.loads(result.stdout)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert report["status"] == "PASS"
+    assert report["continuation"] == "PASS"
+
+
 def test_stale_session_and_checkpoint_fail_closed(tmp_path: Path) -> None:
     project, sha = _recovery_project(tmp_path)
     stale_session = _invoke("recover", project, "--last-seen-sha", "0" * 40, "--json")

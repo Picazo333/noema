@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import posixpath
 from pathlib import Path
 import re
 import subprocess
@@ -12,7 +11,7 @@ from ..manifest import load_manifest, resolve_state_scope
 from ..refs import safe_project_path
 from ..schemas import schema_root
 
-from .semantics import contract_issues, raise_for_issues, validate_envelope_semantics, validate_resume_semantics
+from .semantics import contract_issues, normalize_scope, raise_for_issues, validate_envelope_semantics, validate_resume_semantics
 
 
 _RECOVERY_FIELDS = {
@@ -82,6 +81,7 @@ def recover_current_execution(root: Path, *, last_seen_sha: str | None = None,
                     "context_pressure": context_pressure_advisory(runtime_pressure)}
     try:
         manifest = load_manifest(root)
+        manifest_project_id = manifest["project"]["id"]
         state_path = resolve_state_scope(root, manifest, "execution")
     except (OSError, ValueError, KeyError, TypeError):
         reasons.append("CURRENT_STATE_CURSOR_UNAVAILABLE")
@@ -99,6 +99,10 @@ def recover_current_execution(root: Path, *, last_seen_sha: str | None = None,
     if reasons:
         return report
     report["checkpoint"] = state
+    if state["project_id"] != manifest_project_id:
+        report["status"] = "FAIL"
+        reasons.append("RECOVERY_PROJECT_MISMATCH")
+        return report
     try:
         observed_sha = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True, stderr=subprocess.DEVNULL).strip()
         observed_branch = subprocess.check_output(["git", "branch", "--show-current"], cwd=root, text=True, stderr=subprocess.DEVNULL).strip()
@@ -140,8 +144,8 @@ def recover_current_execution(root: Path, *, last_seen_sha: str | None = None,
     if contract_issues("work-order", work_order, schema_root()):
         reasons.append("WORK_ORDER_INVALID")
         return report
-    if work_order.get("project_id") != state["project_id"]:
-        reasons.append("WORK_ORDER_PROJECT_MISMATCH")
+    if work_order.get("project_id") != manifest_project_id:
+        reasons.append("RECOVERY_PROJECT_MISMATCH")
     report["work_order"] = work_order
     required_gates = set(work_order.get("human_gates", []))
     if required_gates - set(state["outstanding_human_gates"]):
@@ -197,7 +201,7 @@ def recover_current_execution(root: Path, *, last_seen_sha: str | None = None,
         report["continuation"] = "INCOMPLETE" if envelope is not None else "PASS"
     elif report["status"] != "STALE_CHECKPOINT" and (
         report.get("resume_semantics", {}).get("status") == "FAIL" or set(reasons) & {
-        "WORK_ORDER_PROJECT_MISMATCH", "HUMAN_GATE_DROPPED_WITHOUT_EVIDENCE",
+        "RECOVERY_PROJECT_MISMATCH", "HUMAN_GATE_DROPPED_WITHOUT_EVIDENCE",
         "EFFECTIVE_WRITES_BROADENED", "PROHIBITED_SCOPE_DROPPED",
         "PROHIBITED_SCOPE_ACCESS", "MODEL_MISMATCH", "HANDOFF_NOT_CONTINUABLE",
         }
@@ -402,12 +406,7 @@ def _scope_set(values: object) -> set[str]:
         raise ValueError("Resume scope state must be a list")
     normalized = set()
     for value in values:
-        if not isinstance(value, str) or not value.strip():
-            raise ValueError("Resume scopes must be non-empty strings")
-        candidate = posixpath.normpath(value.replace("\\", "/").strip())
-        if candidate.startswith("/") or candidate == "." or ".." in candidate.split("/"):
-            raise ValueError("Resume scopes must be project-relative")
-        normalized.add(candidate.casefold())
+        normalized.add(normalize_scope(value).casefold())
     return normalized
 
 

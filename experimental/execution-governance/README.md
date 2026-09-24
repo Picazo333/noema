@@ -42,7 +42,7 @@ material conformance PASS.
 
 After the T1 commit is frozen, run `.github/scripts/verify_t1.py` from a
 separate clean checkout with `--root`, `--expected-sha`, and an empty external
-`--output-dir`. It repeats all five required checks and 35 canaries. Only a
+`--output-dir`. It repeats all five required checks and 37 canaries. Only a
 successful clean local run permits publishing the frozen experimental branch
 for exact-SHA GitHub Actions. Keep results outside Git; Actions green is not
 a substitute for independent audit.

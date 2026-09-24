@@ -6,7 +6,7 @@ No PR or `NOEMA PASS` below certifies domain quality or a completed migration.
 
 | Order | Observed baseline | Result on 2026-09-24 | Next boundary |
 | --- | --- | --- | --- |
-| N0 Noema | remote `main` `1c3b6fc` | [PR #12](https://github.com/Picazo333/noema/pull/12) updates the derived index and adjudicates visual binding as `LOCAL_GUARD`; CI PASS | Independent EG audit is separate; no consumer EG pin. |
+| N0 Noema | remote `main` `1c3b6fc` | [PR #12](https://github.com/Picazo333/noema/pull/12) updates the derived index and adjudicates visual binding as `LOCAL_GUARD`; local lint/audit/Ruff PASS | Independent EG audit is separate; no consumer EG pin. |
 | C01 Skill Foundry | `203e1c4` | [PR #23](https://github.com/Picazo333/skill-foundry/pull/23) repairs the scoped state reference; Foundry and Noema CI PASS | Process Auditor remains advisory until Foundry accepts an intake. |
 | C02 StackIA | `main` `91bd6eb`; V2.1 branch `44cfb16` | [PR #32](https://github.com/Picazo333/stack-ia/pull/32) targets the active V2.1 branch, repairs context refs, and records a partial pilot handoff; local G9 check-only and Noema checks PASS | Decision 0026 supersedes old R7 QA-only assumptions; G10 domain review remains. |
 | C03 Agency Foundation | `4cfb2df` | Manifest, Noema lint/audit, and repo health PASS; no mutation | Next authorized visual generation must attest attachment and domain QA locally. |

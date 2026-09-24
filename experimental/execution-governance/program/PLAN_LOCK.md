@@ -56,3 +56,22 @@ an authorized external writer must refresh current operational state. The
 advisory Process Auditor WorkOrder is explicitly addressed to Skill Foundry,
 which owns its semantics. Exact-SHA tests and Actions evidence belong outside
 the audited commit; independent audit remains a separate gate.
+
+## Post-merge release closure (2026-09-24)
+
+The vNext candidate `36ceacd8d37ab45964ca512b83b67d68941a0549`
+received `INDEPENDENT_REAUDIT_PASS` and a fresh
+`GLOBAL_REVIEW_PASS`, then merged through PR #10. The integrated main baseline
+`ecf4f0ae0878dbbe4c8e4f09b65846698f6c8e3b` passed post-merge CI run
+`36047015874`.
+
+The vNext architecture is frozen. Further changes require material evidence
+from dogfood, a bounded defect, or an explicit ArchitectureException. The
+operational next phase is transversal adoption across governed repositories,
+performed from each target repository's own authoritative state and write
+authority. Noema itself does not perform cross-repository writes.
+
+The versioned `state.execution` checkpoint remains a snapshot rather than a
+self-certifying reference to the commit that contains it. Any later commit
+advances Git and can therefore make that snapshot stale; `eg recover` must
+continue to fail closed until an authorized host refreshes operational state.

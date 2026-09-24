@@ -13,7 +13,7 @@ import pytest
 
 from noema.loader import dump_yaml, load_yaml
 from noema.eg.persistence import project_r2_inputs
-from noema.eg.semantics import contract_issues
+from noema.eg.semantics import contract_issues, normalize_scope
 from noema.eg.tooling import decide_tools
 from noema.eg.context_plan import ReadSet
 from noema.eg.plan import build_execution_envelope
@@ -218,7 +218,9 @@ def test_recover_project_identity_bound_to_manifest(
 @pytest.mark.parametrize("scope", [
     "C:/outside-project", "C:\\outside-project", "D:/other",
     "\\\\server\\share", "//server/share", "/outside-project",
-    "../outside", "src/../../outside",
+    "../outside", "src/../../outside", "src/../outside",
+    "src/a/../../outside", "a/..", "a/../b",
+    r"src\..\outside", "foo/bar/../../../outside",
 ])
 def test_recover_rejects_non_project_relative_write_scope(
     tmp_path: Path, scope: str,
@@ -241,7 +243,38 @@ def test_recover_rejects_non_project_relative_write_scope(
     assert "RECOVERY_SCOPE_INVALID" in report["reason_codes"]
 
 
-@pytest.mark.parametrize("scope", ["src", "src/noema", "validation/process-audits"])
+@pytest.mark.parametrize("scope", [
+    "src/../outside", "src/a/../../outside", "a/..",
+    "a/../b", r"src\..\outside", "foo/bar/../../../outside",
+])
+def test_canonical_scope_rejects_raw_parent_navigation(scope: str) -> None:
+    with pytest.raises(ValueError):
+        normalize_scope(scope)
+
+
+def test_recover_rejects_parent_alias_that_widens_effective_writes(tmp_path: Path) -> None:
+    project, _ = _recovery_project(tmp_path)
+    order_path = project / "work-order.yaml"
+    order = load_yaml(order_path)
+    order["scope"]["allowed"] = ["src"]
+    order["allowed_writes"] = ["src/../outside"]
+    order_path.write_text(dump_yaml(order), encoding="utf-8")
+    checkpoint = project / "state/execution-current.yaml"
+    state = load_yaml(checkpoint)
+    state["effective_allowed_writes"] = ["outside"]
+    checkpoint.write_text(dump_yaml(state), encoding="utf-8")
+
+    result = _invoke("recover", project, "--json")
+    report = json.loads(result.stdout)
+    assert result.returncode != 0
+    assert report["status"] != "PASS"
+    assert report["continuation"] != "PASS"
+    assert "RECOVERY_SCOPE_INVALID" in report["reason_codes"]
+
+
+@pytest.mark.parametrize("scope", [
+    "src", "src/noema", "validation/process-audits", "src/./noema",
+])
 def test_recover_accepts_authorized_relative_write_scope(tmp_path: Path, scope: str) -> None:
     project, _ = _recovery_project(tmp_path)
     order_path = project / "work-order.yaml"
@@ -258,6 +291,10 @@ def test_recover_accepts_authorized_relative_write_scope(tmp_path: Path, scope: 
     assert result.returncode == 0, result.stdout + result.stderr
     assert report["status"] == "PASS"
     assert report["continuation"] == "PASS"
+
+
+def test_canonical_scope_keeps_harmless_dot_segment() -> None:
+    assert normalize_scope("src/./noema") == "src/noema"
 
 
 def test_stale_session_and_checkpoint_fail_closed(tmp_path: Path) -> None:

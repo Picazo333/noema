@@ -83,6 +83,8 @@ def normalize_scope(scope: object) -> str:
     value = scope.replace("\\", "/").strip()
     if value.startswith(("/", "//")) or re.match(r"^[A-Za-z]:", value) or any(char in value for char in "*?["):
         raise ValueError("scope must be project-relative")
+    if ".." in value.split("/"):
+        raise ValueError("scope must not contain parent navigation")
     normalized = posixpath.normpath(value)
     if normalized in {"", "."} or ".." in normalized.split("/"):
         raise ValueError("scope must not escape the project")

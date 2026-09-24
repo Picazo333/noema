@@ -271,7 +271,7 @@ def test_t1_checkout_import_and_result_gate_fail_closed(tmp_path: Path, monkeypa
             for case in definitions["canaries"]]
     (results / "CANARY_RESULTS.json").write_text(json.dumps({"tested_sha": sha, "status": "PASS", "canaries": rows}), encoding="utf-8")
     (results / "DOGFOOD_REPORT.md").write_text("Observed", encoding="utf-8")
-    assert gate.validate_results(ROOT, results, sha)["passed"] == 37
+    assert gate.validate_results(ROOT, results, sha)["passed"] == 38
     rows[0]["status"] = "FAIL"
     (results / "CANARY_RESULTS.json").write_text(json.dumps({"tested_sha": sha, "status": "PASS", "canaries": rows}), encoding="utf-8")
     with pytest.raises(ValueError, match="incomplete or failed"):

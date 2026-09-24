@@ -1,10 +1,12 @@
-program_id: noema-vnext-execution-governance-r4
-status: R4_IMPLEMENTED_PENDING_POST_COMMIT_EVIDENCE_AND_REAUDIT
+program_id: noema-vnext-execution-governance
+status: VNEXT_FINAL_CLOSURE_PENDING_EXACT_SHA_VERIFICATION
 baseline:
   reference_sha: 0e49538c24e51af98a3f3c12706afdbe2e8d812d
   drift: D0
+  main_incorporated_sha: 530751b471e07a3b2a6acc31a864d408442b56c5
+  eg_source_sha: 971a6ef962341e5be1e485621e2cf10a1a40f141
 contracts: [execution-envelope/v1, execution-trace/v1]
-gates: [G0, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10, G11, G12]
+gates: [G-DELTA, G0, G1, G2, G3, G4, G5, G6, G7, G8, G9, G10]
 forbidden:
   - second-context-router
   - second-executor-router

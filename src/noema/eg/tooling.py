@@ -18,11 +18,14 @@ def _qualified(candidate: dict) -> bool:
 def decide_tools(candidates: list[dict], requirements: dict | None = None, *, control: str = "ALLOW") -> list[dict]:
     requirements = requirements or {}
     required = set(requirements.get("capabilities", []))
+    required_interfaces = set(requirements.get("interfaces", []))
+    material_need = bool(required or required_interfaces)
     eligible = []
     for candidate in candidates:
         supplied = set(candidate.get("capabilities", []))
         if (
-            control not in {"DENY", "ROUTE_ELSEWHERE"}
+            material_need
+            and control not in {"DENY", "ROUTE_ELSEWHERE"}
             and _qualified(candidate)
             and required.issubset(supplied)
         ):
@@ -37,6 +40,8 @@ def decide_tools(candidates: list[dict], requirements: dict | None = None, *, co
         supplied = set(candidate.get("capabilities", []))
         if control in {"DENY", "ROUTE_ELSEWHERE"} or candidate.get("allowed") is False:
             decision, reason = ToolDecision.HARD_DENY, "CONTROL_INELIGIBLE"
+        elif not material_need:
+            decision, reason = ToolDecision.SOFT_SUPPRESS, "NO_MATERIAL_TOOL_NEED"
         elif not required.issubset(supplied):
             decision, reason = ToolDecision.HARD_DENY, "CAPABILITY_INSUFFICIENT"
         elif candidate.get("allowed") is not True:

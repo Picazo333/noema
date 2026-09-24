@@ -1,0 +1,35 @@
+work_order_id: noema-vnext-final-closure
+project_id: noema
+objective: Implement the frozen Noema vNext final closure and hand off an exact-SHA audit target.
+scope:
+  allowed:
+    - src/noema
+    - tests/eg
+    - experimental/execution-governance
+    - validation/experimental/execution-governance
+    - state
+    - noema.project.yaml
+  excluded:
+    - secrets
+context_mode: build
+inputs:
+  - scheme: repo
+    locator: experimental/execution-governance/program/PLAN_LOCK.md
+capability_requirements: []
+allowed_writes:
+  - src/noema
+  - tests/eg
+  - experimental/execution-governance
+  - validation/experimental/execution-governance
+  - state
+  - noema.project.yaml
+forbidden_effects:
+  - merge
+  - release
+expected_artifacts:
+  - exact-SHA audit target
+quality_claims:
+  - contract-conformance
+  - recoverability
+human_gates:
+  - independent-audit

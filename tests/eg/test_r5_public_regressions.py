@@ -725,17 +725,15 @@ def test_t1_duplicate_candidate_identifier_never_selects_last_silently(tmp_path:
         trusted_source(tmp_path, "duplicate-candidate-q", "TOOL_QUALIFICATION", subject),
         trusted_source(tmp_path, "duplicate-candidate-a", "TOOL_AVAILABILITY", subject)]})
     envelope_path = tmp_path / "duplicate-candidate-envelope.yaml"
-    assert invoke("plan", write(tmp_path, "duplicate-candidate-order.yaml", order()),
-                  "--root", ROOT, "--trust-context", trust,
-                  "--task-metadata", write(tmp_path, "duplicate-candidate-metadata.yaml",
-                                            {"tool_requirements": requirements}),
-                  "--candidate-snapshot", write(tmp_path, "duplicate-candidate-snapshot.yaml",
-                                                 {"tools": [first, second]}),
-                  "--out", envelope_path).returncode == 0
-    checked = invoke("validate", envelope_path, "--root", ROOT, "--trust-context", trust,
-                     "--require-ready", "--json")
-    assert checked.returncode != 0
-    assert "TOOL_CANDIDATE_AMBIGUOUS" in checked.stdout
+    planned = invoke("plan", write(tmp_path, "duplicate-candidate-order.yaml", order()),
+                     "--root", ROOT, "--trust-context", trust,
+                     "--task-metadata", write(tmp_path, "duplicate-candidate-metadata.yaml",
+                                               {"tool_requirements": requirements}),
+                     "--candidate-snapshot", write(tmp_path, "duplicate-candidate-snapshot.yaml",
+                                                    {"tools": [first, second]}),
+                     "--out", envelope_path)
+    assert planned.returncode != 0
+    assert not envelope_path.exists()
 
 
 def test_t1_cov_tools_complete(tmp_path: Path) -> None:

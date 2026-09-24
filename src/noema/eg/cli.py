@@ -15,11 +15,11 @@ from .compare import compare_execution, expected_observations
 from .plan import build_execution_envelope
 from .provenance import load_work_order
 from .profiles import load_host_capabilities
-from .recovery import resume_check
+from .recovery import recover_current_execution, resume_check
 from .runtime import classify_runtime_posture
 from .scan import scan_harvest
 from .trace import create_trace
-from .semantics import contract_issues, raise_for_issues, validate_runtime_pressure_semantics
+from .semantics import contract_issues, raise_for_issues, validate_candidate_snapshot_semantics, validate_runtime_pressure_semantics
 from .semantics import assess_envelope
 from .evidence import VerificationContext, context_identity, verify_host_snapshot
 from .evidence import verify_trace_read_bindings
@@ -53,6 +53,8 @@ def _validate_runtime(kind: str, data: object, root: Path) -> None:
         raise ValueError(f"Invalid {kind}: {errors[0].message}")
     if kind == "runtime-pressure":
         raise_for_issues(validate_runtime_pressure_semantics(data))
+    if kind == "candidate-snapshot":
+        raise_for_issues(validate_candidate_snapshot_semantics(data))
 
 
 def _optional_runtime(kind: str, value: str | None, root: Path) -> dict | None:
@@ -297,6 +299,16 @@ def resume(args) -> int:
     report = resume_check(envelope, handoff, state, verified_gates=verified_gates)
     _write(report, None, args.json)
     return 0 if report["status"] == "PASS" else 1
+
+
+def recover(args) -> int:
+    pressure = load_yaml(Path(args.runtime_pressure)) if args.runtime_pressure else None
+    report = recover_current_execution(
+        Path(args.root), last_seen_sha=args.last_seen_sha,
+        last_seen_state_ref=args.last_seen_state_ref, runtime_pressure=pressure,
+    )
+    _write(report, None, args.json)
+    return 0 if report["status"] == "PASS" and report["continuation"] == "PASS" else 1
 
 
 def harvest_scan(args) -> int:

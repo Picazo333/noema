@@ -38,3 +38,21 @@ GitHub Actions Ubuntu must verify that same SHA, with evidence outside Git.
 Only the frozen experimental branch may be pushed after the clean local gate;
 no merge, release, or consumer-pin update is authorized. CI success never
 replaces independent adversarial review or domain authority.
+
+## vNext final-closure scope (Sol 6, 2026-09-23)
+
+The later frozen implementation package
+`NOEMA_VNEXT_FINAL_PLAN_LOCK_SOL6_2026-09-23.md` governs this bounded closure;
+the earlier R4/R5 history above is not the current audit verdict. The
+implementation branch incorporates main `530751b471e07a3b2a6acc31a864d408442b56c5`
+without mutating the historical EG branch. It adds strict YAML loading,
+CandidateSnapshot identity rejection, the `state.execution` current cursor,
+an operational recovery checkpoint and read-only `noema eg recover`. It does
+not add a public contract type or transfer authority to Noema.
+
+The tracked checkpoint is a snapshot, not a self-certifying claim for its own
+commit. A later exact-SHA checkout must classify an older checkpoint as stale;
+an authorized external writer must refresh current operational state. The
+advisory Process Auditor WorkOrder is explicitly addressed to Skill Foundry,
+which owns its semantics. Exact-SHA tests and Actions evidence belong outside
+the audited commit; independent audit remains a separate gate.

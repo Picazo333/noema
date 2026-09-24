@@ -38,6 +38,9 @@ sources_of_truth:
   decisions:
     scheme: repo
     locator: decisions/
+  state.execution:
+    scheme: repo
+    locator: state/execution-current.yaml
 
 context:
   entrypoint: AGENTS.md

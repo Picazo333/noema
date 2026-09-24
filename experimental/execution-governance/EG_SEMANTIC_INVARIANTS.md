@@ -20,3 +20,7 @@ shape; `src/noema/eg/semantics.py` proves these cross-field rules.
 | INV-EG-013 | Mandatory resolver satisfaction binds current bytes and external authority to one receipt. | `required_dependency_results` | `plan`, `validate`, `resume-check` | T1 resolver drift |
 | INV-EG-014 | Known deviations remain FAIL despite missing readiness or other evidence. | `compare_execution` | `compare`, `validate` | T1 precedence |
 | INV-EG-015 | Explicit actor nonparticipation does not suppress validation of the reported material binding; contradictory attributes retain `ACTOR_BINDING_MISMATCH` alongside `EXPECTED_ACTOR_NOT_EXECUTED`. | `evaluate_material_coverage` | `record`, `compare`, `validate` | Final diagnostic repair |
+| INV-EG-016 | Candidate IDs are exact, nonempty and unique within each category at planning, standalone validation and envelope replay. | `validate_candidate_snapshot_semantics` | `plan`, `validate` | vNext candidate identity |
+| INV-EG-017 | Duplicate YAML mapping keys cannot silently replace authoritative input. | strict `load_yaml` | all YAML entrypoints | vNext YAML integrity |
+| INV-EG-018 | The manifest's `state.<scope>` cursor outranks historical status prose; incomplete or stale execution checkpoints cannot authorize continuation. | `resolve_state_scope`, `recover_current_execution` | `eg recover` | vNext continuity |
+| INV-EG-019 | Context pressure only recommends; no material tool need creates no material CALL. | `context_pressure_advisory`, `decide_tools` | `eg recover`, `eg plan` | vNext lifecycle and tool efficiency |

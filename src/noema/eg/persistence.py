@@ -63,6 +63,9 @@ def project_r2_inputs(metadata: dict, candidates: dict) -> tuple[dict, dict]:
         for value in values:
             if not isinstance(value, dict) or set(value) - _CANDIDATE_FIELDS:
                 raise ValueError("EG candidate contains unsupported fields")
+    from .semantics import raise_for_issues, validate_candidate_snapshot_semantics
+
+    raise_for_issues(validate_candidate_snapshot_semantics(candidates))
     assert_persistable(metadata)
     assert_persistable(candidates)
     return dict(metadata), dict(candidates)

@@ -275,6 +275,14 @@ def build_parser() -> argparse.ArgumentParser:
     command.add_argument("--json", action="store_true")
     command.set_defaults(func=eg_cli.resume)
 
+    command = eg_sub.add_parser("recover")
+    command.add_argument("root", nargs="?", default=".")
+    command.add_argument("--runtime-pressure")
+    command.add_argument("--last-seen-state-ref")
+    command.add_argument("--last-seen-sha")
+    command.add_argument("--json", action="store_true")
+    command.set_defaults(func=eg_cli.recover)
+
     command = eg_sub.add_parser("scan-harvest")
     command.add_argument("harvest")
     command.add_argument("manifests", nargs="+")

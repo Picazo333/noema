@@ -29,7 +29,7 @@ from .runtime import (
     resource_disposition_constraint,
 )
 from .provenance import LoadedWorkOrder, programmatic_work_order
-from .semantics import canonical_digest, contract_issues, raise_for_issues, sensitive_ref, validate_envelope_semantics
+from .semantics import canonical_digest, contract_issues, raise_for_issues, sensitive_ref, validate_candidate_snapshot_semantics, validate_envelope_semantics
 from .tooling import decide_tools
 from .topology import derive_topology
 from .bindings import gate_fingerprint, material_digest
@@ -116,6 +116,7 @@ def build_execution_envelope(
     work_order_project_id = work_order["project_id"]
     metadata = task_metadata or {}
     candidates = candidate_snapshot or {}
+    raise_for_issues(validate_candidate_snapshot_semantics(candidates))
     if revision == 2:
         metadata, candidates = project_r2_inputs(metadata, candidates)
     host = flattened_capabilities(host_capabilities or {})
@@ -132,6 +133,7 @@ def build_execution_envelope(
     executor_requirements = metadata.get("executor_requirements", {})
     model_requirements = metadata.get("model_requirements", {})
     tool_requirements = metadata.get("tool_requirements", {})
+    material_tool_need = bool(needs.tool_capabilities or tool_requirements.get("interfaces"))
     resolver_required = needs.resolution_required
     unexpected_receipts = bool(receipts) and not resolver_required
     needs_resolution = needs.external_required
@@ -195,7 +197,7 @@ def build_execution_envelope(
 
     if final["disposition"] == "ROUTED":
         tool_decisions = decide_tools(candidates.get("tools", []), tool_requirements, control=control["control"])
-        if tool_requirements and not any(item["decision"] == "CALL" for item in tool_decisions):
+        if material_tool_need and not any(item["decision"] == "CALL" for item in tool_decisions):
             final = _terminal("DEFER", "NO_ELIGIBLE_TOOL")
         if final["disposition"] == "ROUTED" and executor_requirements:
             selected = select_existing_executor(

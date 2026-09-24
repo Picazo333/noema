@@ -54,6 +54,29 @@ def canonical_digest(value: object) -> str:
     return "sha256:" + sha256(payload.encode("utf-8")).hexdigest()
 
 
+def validate_candidate_snapshot_semantics(snapshot: object) -> list[SemanticIssue]:
+    """Reject ambiguous candidate identities before selection or evidence lookup."""
+    if not isinstance(snapshot, dict):
+        return [issue("EG-CANDIDATE-SNAPSHOT", "$", "candidate snapshot must be an object")]
+    problems: list[SemanticIssue] = []
+    for category in ("tools", "models", "resources", "interfaces"):
+        values = snapshot.get(category, [])
+        if not isinstance(values, list):
+            problems.append(issue("EG-CANDIDATE-CATEGORY", category, "candidate category must be a list"))
+            continue
+        seen: set[str] = set()
+        for index, candidate in enumerate(values):
+            path = f"{category}[{index}].id"
+            if not isinstance(candidate, dict) or not isinstance(candidate.get("id"), str) or not candidate["id"].strip():
+                problems.append(issue("EG-CANDIDATE-ID", path, "candidate id must be a non-empty string"))
+                continue
+            ident = candidate["id"]
+            if ident in seen:
+                problems.append(issue("EG-CANDIDATE-ID-DUPLICATE", path, "candidate id is duplicated within its category"))
+            seen.add(ident)
+    return problems
+
+
 def normalize_scope(scope: object) -> str:
     if not isinstance(scope, str) or not scope.strip():
         raise ValueError("scope must be a non-empty project-relative path")
@@ -415,8 +438,12 @@ def contract_issues(kind: str, data: object, root: Path) -> list[SemanticIssue]:
     }
     validator = validators.get(kind)
     problems = validator(data) if validator else []
-    if not problems and kind == "execution-envelope" and versioned_kind.endswith("-v1"):
-        problems.extend(validate_v1_bindings(data, root))
+    if not problems and kind == "execution-envelope" and isinstance(data, dict):
+        if data.get("contract_revision") == 2:
+            binding = data.get("input_bindings", {}).get("candidate_snapshot", {})
+            problems.extend(validate_candidate_snapshot_semantics(binding.get("snapshot")))
+        elif versioned_kind.endswith("-v1"):
+            problems.extend(validate_v1_bindings(data, root))
     return problems
 
 

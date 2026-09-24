@@ -1,0 +1,34 @@
+work_order_id: noema-post-merge-transversal-rollout
+project_id: noema
+objective: Prepare and hand off the transversal Noema rollout across governed repositories by inspecting each repository's authoritative current state and producing repo-specific adoption decisions without cross-repository writes from Noema.
+scope:
+  allowed:
+    - registry/ecosystem.yaml
+    - validation/consumers
+    - noema.project.yaml
+    - experimental/execution-governance
+  excluded:
+    - secrets
+context_mode: audit
+inputs:
+  - scheme: repo
+    locator: registry/ecosystem.yaml
+  - scheme: repo
+    locator: PROTOCOL.md
+  - scheme: repo
+    locator: noema.project.yaml
+capability_requirements: []
+allowed_writes: []
+forbidden_effects:
+  - cross-repo-write
+  - mutate-consumer-repository
+  - merge
+  - release
+expected_artifacts:
+  - transversal rollout brief
+  - repo-specific KEEP/MODIFY/ADD/DEFER decisions
+  - repo-specific implementation work orders when adoption is justified
+quality_claims:
+  - provenance
+  - context-efficiency
+human_gates: []

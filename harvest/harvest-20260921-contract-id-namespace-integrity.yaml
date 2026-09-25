@@ -1,0 +1,22 @@
+harvest_id: harvest-20260921-contract-id-namespace-integrity
+project_id: noema
+finding: >-
+  Governed workflows should keep contract IDs, generated-artifact IDs, style/reference IDs,
+  experiment IDs and human-facing aliases in distinct namespaces. A label collision can
+  make a durable state cursor falsely report completion even when the underlying contract
+  was never satisfied.
+evidence_refs:
+  - scheme: github
+    locator: Picazo333/agency-foundation/pull/33
+  - scheme: github
+    locator: Picazo333/agency-foundation/blob/main/docs/03-brand/workbench/divinivid/generation/SATURATION_CHECKPOINT_20_V1.md
+scope: >-
+  Protocol/eval candidate for identity, cursor and recovery semantics. Domain-specific
+  visual content remains outside Noema authority.
+confidence: high
+routes:
+  - noema
+  - skill-foundry
+  - eval
+confidentiality: INTERNAL
+status: CANDIDATE

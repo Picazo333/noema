@@ -27,4 +27,40 @@ ecosystem:
     status: active
     repository: github://Picazo333/stack-ia
     manifest: github://Picazo333/stack-ia/noema.project.yaml
-    noema_status: rc0-configured-external-qualification-owned-by-stackia
+    noema_status: rc0-integrated-on-v21-branch-domain-gated
+
+  - project_id: 4geeks-control-tower
+    status: active
+    repository: github://Picazo333/4geeks-control-tower
+    manifest: github://Picazo333/4geeks-control-tower/noema.project.yaml
+    noema_status: rc0-integrated-next-case-bridge-pending
+
+  - project_id: nexova-ai-engineering
+    status: active
+    repository: github://Picazo333/nexova-ai-engineering
+    manifest: github://Picazo333/nexova-ai-engineering/noema.project.yaml
+    noema_status: rc0-integrated-on-delivery-branch-academic-gated
+
+  - project_id: miguel-personal-context
+    status: active
+    repository: github://Picazo333/miguel-personal-context
+    manifest: github://Picazo333/miguel-personal-context/noema.project.yaml
+    noema_status: rc0-integrated-private-default-deny
+
+  - project_id: febris
+    status: active
+    repository: github://Picazo333/FEBRIS
+    manifest: github://Picazo333/FEBRIS/noema.project.yaml
+    noema_status: rc0-integrated-on-beta-branch-human-gated
+
+  - project_id: md-app-after-grok
+    status: active
+    repository: github://Picazo333/MD_APP-AFTER_GROK
+    manifest: github://Picazo333/MD_APP-AFTER_GROK/noema.project.yaml
+    noema_status: rc0-integrated-vr03b-product-gated
+
+  - project_id: eidema
+    status: active
+    repository: github://Picazo333/Eidema
+    manifest: github://Picazo333/Eidema/noema.project.yaml
+    noema_status: rc0-integrated-visual-gated

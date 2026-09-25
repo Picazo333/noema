@@ -14,17 +14,17 @@ ecosystem:
   - project_id: skill-foundry
     status: active
     repository: github://Picazo333/skill-foundry
-    manifest: null
-    noema_status: audit-completed-migration-next
+    manifest: github://Picazo333/skill-foundry/noema.project.yaml
+    noema_status: rc0-configured-vnext-released
 
   - project_id: agency-foundation
     status: active
     repository: github://Picazo333/agency-foundation
-    manifest: null
-    noema_status: audit-completed-migration-deferred-until-checkpoint
+    manifest: github://Picazo333/agency-foundation/noema.project.yaml
+    noema_status: rc0-configured-domain-gated
 
   - project_id: stack-ia
     status: active
     repository: github://Picazo333/stack-ia
     manifest: github://Picazo333/stack-ia/noema.project.yaml
-    noema_status: phase2-audit-integrated
+    noema_status: rc0-configured-external-qualification-owned-by-stackia

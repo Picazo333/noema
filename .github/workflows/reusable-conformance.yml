@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: Picazo333/noema
-          ref: 5b282ae358bc300fbc385c41050566bbe30cf6e3
+          ref: 1c3b6fc551aeb4f3cdcd66cb4575c39d850bbc44
           path: .noema-tool
       - uses: actions/setup-python@v6
         with:
@@ -32,4 +32,7 @@ jobs:
         env:
           PIP_CONSTRAINT: .noema-tool/constraints/ci.txt
         run: python -m pip install -c .noema-tool/constraints/ci.txt -e ./.noema-tool
-      - run: noema lint "${{ inputs.project_root }}"
+      - name: Noema lint
+        run: noema lint "${{ inputs.project_root }}"
+      - name: Noema audit
+        run: noema audit "${{ inputs.project_root }}"

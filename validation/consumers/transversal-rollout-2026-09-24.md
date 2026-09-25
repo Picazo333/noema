@@ -18,7 +18,8 @@ No PR or `NOEMA PASS` below certifies domain quality or a completed migration.
 | C09 Eidema | `f07946b` | [PR #2](https://github.com/Picazo333/Eidema/pull/2) adds bounded RC0 metadata; Noema lint/audit PASS | Corpus/specimen choice and visual approval remain domain gates. |
 | C10 Plastic Surgeon Demo | `9753f90` | Existing RC0 consumer verified locally: static gate, Noema lint and audit PASS; no product change | EG synthetic fixtures only after independent EG audit and an eligible pin. |
 
-All eleven integration PRs are drafts and were not merged. The StackIA, Nexova,
+At the initial 2026-09-24 review, all eleven integration PRs were drafts and
+unmerged. The StackIA, Nexova,
 FEBRIS, MD Dental and Eidema
 handoffs are explicitly partial. Control Tower's domain validator failure is
 pre-existing and distinct from its Noema conformance. The Noema pytest suite
@@ -57,7 +58,29 @@ The active Noema WorkOrders and Handoffs are linked from consumer entrypoints
 where needed and schema-validated. This verifies RC0 technical wiring on the
 proposed PR heads. `PARTIAL` handoffs refer to domain flows or human gates that
 remain unobserved, not missing RC0 wiring. Control Tower domain validation
-still fails on the pre-existing closed Tailwind case; Noema CI on that head
-passes. N0 CI on the shared-workflow update passed (`36075945224`). Noema
+failed on the pre-existing closed Tailwind case; Noema CI on that head
+passed. N0 CI on the shared-workflow update passed (`36075945224`). Noema
 conformance does not promote a domain decision. EG remains outside RC0
 consumers pending independent audit and an eligible pin.
+
+## Merge audit — 2026-09-25
+
+The user explicitly authorized auditing and merging the required integration.
+All eleven PR heads were compared with their stated bases and had no merge
+conflict. N0 and C01–C03, C05–C10 passed their Noema CI before merge. N0 was
+merged with a merge commit (`4a4a132`), preserving the pinned reusable-workflow
+commit `5aa4289` in `main` history. The other successful integration merges
+were C01 `94592d9`, C02 `92adec2`, C03 `a2c324a`, C05 `5737168`, C06
+`22bc546`, C07 `5068e88`, C08 `38e6215`, C09 `3c0051b`, and C10 `5842298`.
+C02, C05, and C07 landed on their respective product branches, not on `main`;
+those product branches still have their own domain acceptance gates.
+
+C04 Noema [PR #8](https://github.com/Picazo333/4geeks-control-tower/pull/8)
+remains open. Its Noema CI passed, while the Control Tower validator failed
+because the closed Tailwind assignment lacked `delivery/SUBMISSION.md` and
+`CASE.md` still said `PLANNED`. A separate factual repair [PR #9](https://github.com/Picazo333/4geeks-control-tower/pull/9)
+uses only the existing `assignment.yaml` and registry claims, explicitly notes
+the absence of a platform receipt, and passes both workflows. Automatic
+approval review rejected merging that domain-record repair into `main` as
+outside the explicit Noema integration scope. No indirect merge was attempted;
+an explicit user decision is pending. Neither PR is counted as merged here.

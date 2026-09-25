@@ -18,7 +18,7 @@ No PR or `NOEMA PASS` below certifies domain quality or a completed migration.
 | C09 Eidema | `f07946b` | [PR #2](https://github.com/Picazo333/Eidema/pull/2) adds bounded RC0 metadata; Noema lint/audit PASS | Corpus/specimen choice and visual approval remain domain gates. |
 | C10 Plastic Surgeon Demo | `9753f90` | Existing RC0 consumer verified locally: static gate, Noema lint and audit PASS; no product change | EG synthetic fixtures only after independent EG audit and an eligible pin. |
 
-All nine integration PRs are drafts and were not merged. The StackIA, Nexova,
+All eleven integration PRs are drafts and were not merged. The StackIA, Nexova,
 FEBRIS, MD Dental and Eidema
 handoffs are explicitly partial. Control Tower's domain validator failure is
 pre-existing and distinct from its Noema conformance. The Noema pytest suite
@@ -32,3 +32,32 @@ consumer has either its existing RC0 integration verified or a bounded integrati
 PR; it does not close human or domain gates. In particular, `PARTIAL` does not
 mean `MIGRATED`, and the four new PRs must be rechecked after their base branches
 move. EG remains unpropagated pending its independent audit and eligible pin.
+
+## RC0 technical integration — 2026-09-25
+
+The shared consumer workflow at Noema commit `5aa4289178b92f299887aaa1f73d12e97478b1a8`
+checks out immutable RC0 core `1c3b6fc551aeb4f3cdcd66cb4575c39d850bbc44`
+and runs both `noema lint` and `noema audit`. Every consumer now has a pinned
+CI gate. C06 keeps its own corpus validator and runs the same full Noema audit.
+
+| Consumer | PR head | Noema CI run |
+| --- | --- | --- |
+| C01 Foundry | `05c7c16` | `36077631788` PASS |
+| C02 StackIA | `b68a32b` | `36077632591` PASS |
+| C03 Agency | `68af3e6` | `36077633804` PASS |
+| C04 Control Tower | `6aea220` | `36077631632` PASS |
+| C05 Nexova | `fd4ab78` | `36077633883` PASS |
+| C06 Personal Context | [PR #1](https://github.com/Picazo333/miguel-personal-context/pull/1) `f17813a` | `36077653404` PASS |
+| C07 FEBRIS | `e419c05` | `36077631563` PASS |
+| C08 MD Dental | `8b4172f` | `36077630507` PASS |
+| C09 Eidema | `e62391b` | `36077632927` PASS |
+| C10 Plastic Surgeon Demo | [PR #1](https://github.com/Picazo333/noema-plastic-surgeon-demo/pull/1) `7c56769` | `36077659565` PASS |
+
+The active Noema WorkOrders and Handoffs are linked from consumer entrypoints
+where needed and schema-validated. This verifies RC0 technical wiring on the
+proposed PR heads. `PARTIAL` handoffs refer to domain flows or human gates that
+remain unobserved, not missing RC0 wiring. Control Tower domain validation
+still fails on the pre-existing closed Tailwind case; Noema CI on that head
+passes. N0 CI on the shared-workflow update passed (`36075945224`). Noema
+conformance does not promote a domain decision. EG remains outside RC0
+consumers pending independent audit and an eligible pin.

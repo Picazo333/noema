@@ -75,12 +75,15 @@ were C01 `94592d9`, C02 `92adec2`, C03 `a2c324a`, C05 `5737168`, C06
 C02, C05, and C07 landed on their respective product branches, not on `main`;
 those product branches still have their own domain acceptance gates.
 
-C04 Noema [PR #8](https://github.com/Picazo333/4geeks-control-tower/pull/8)
-remains open. Its Noema CI passed, while the Control Tower validator failed
-because the closed Tailwind assignment lacked `delivery/SUBMISSION.md` and
-`CASE.md` still said `PLANNED`. A separate factual repair [PR #9](https://github.com/Picazo333/4geeks-control-tower/pull/9)
-uses only the existing `assignment.yaml` and registry claims, explicitly notes
-the absence of a platform receipt, and passes both workflows. Automatic
-approval review rejected merging that domain-record repair into `main` as
-outside the explicit Noema integration scope. No indirect merge was attempted;
-an explicit user decision is pending. Neither PR is counted as merged here.
+C04 initially remained open because the closed Tailwind assignment lacked
+`delivery/SUBMISSION.md` and `CASE.md` still said `PLANNED`. Its factual
+repair [PR #9](https://github.com/Picazo333/4geeks-control-tower/pull/9)
+uses existing `assignment.yaml` and registry claims and explicitly notes that
+no platform receipt is archived. Automatic approval review initially rejected
+merging that domain-record repair as outside the explicit Noema scope. After
+the user clarified that Control Tower was indispensable to the integration,
+PR #9 merged to `main` as `abc619a`. Noema [PR #8](https://github.com/Picazo333/4geeks-control-tower/pull/8)
+then incorporated that base and passed Control Tower Validation (`36080608006`)
+and Noema Conformance (`36080608767`) on head `99c9794`. It merged to `main`
+as `789c93d`. This completes C04's RC0 structural integration; the next real
+case and its academic gate remain domain-owned.

@@ -53,10 +53,10 @@ ecosystem:
     manifest: github://Picazo333/FEBRIS/noema.project.yaml
     noema_status: rc0-integrated-on-beta-branch-human-gated
 
-  - project_id: md-app-after-grok
+  - project_id: md-dental
     status: active
-    repository: github://Picazo333/MD_APP-AFTER_GROK
-    manifest: github://Picazo333/MD_APP-AFTER_GROK/noema.project.yaml
+    repository: github://Picazo333/MD-Dental
+    manifest: github://Picazo333/MD-Dental/noema.project.yaml
     noema_status: rc0-integrated-vr03b-product-gated
 
   - project_id: eidema

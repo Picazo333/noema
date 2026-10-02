@@ -55,9 +55,15 @@ ecosystem:
 
   - project_id: md-dental
     status: active
-    repository: github://Picazo333/MD-Dental
-    manifest: github://Picazo333/MD-Dental/noema.project.yaml
+    repository: github://Picazo333/md-dental-app
+    manifest: github://Picazo333/md-dental-app/noema.project.yaml
     noema_status: rc0-integrated-vr03b-product-gated
+
+  - project_id: medula-deportiva
+    status: active
+    repository: github://Picazo333/medula-deportiva
+    manifest: github://Picazo333/medula-deportiva/noema.project.yaml
+    noema_status: needs-verification
 
   - project_id: eidema
     status: active

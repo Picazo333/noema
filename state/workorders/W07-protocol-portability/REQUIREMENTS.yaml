@@ -1,0 +1,29 @@
+# W07 — Protocol Portability, CI & Artifact Promotion
+# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
+schema: divinivid-program/requirements@1
+workorder: W07
+revision: 1
+requirements:
+- id: W07-R01
+  priority: MUST
+  text: 'Durable entry path specified and minimal: AGENTS.md → noema.project.yaml → exact WorkOrder → relevant contracts
+    → checkpoint.'
+  acceptance: spec/11 lists ≤5 hops; each repo's current files mapped.
+- id: W07-R02
+  priority: MUST
+  text: 'Provider adapter rule: CLAUDE.md/Cursor/Codex files are pointers (e.g. @AGENTS.md) with no program authority.'
+  acceptance: spec/11 rule + check script flags adapters >N lines of authority content.
+- id: W07-R03
+  priority: MUST
+  text: Clean-session eval with ≥1 real bounded workload (W07-CS-001) drawn from an actual program WO, scoring correct
+    start, authority adherence, write-boundary adherence, checkpoint correctness, no hidden-context use.
+  acceptance: Eval doc + workload file; dry-run instructions.
+- id: W07-R04
+  priority: MUST
+  text: Artifact Promotion protocol with durable receipts; no universal sync; CI claims only what it can observe.
+  acceptance: Receipt schema validates example; spec states unobservable targets explicitly.
+- id: W07-R05
+  priority: MUST
+  text: Reusable CI checks for schemas, required artifacts, contract versions, broken refs, manifest completeness,
+    receipts, generated-artifact freshness, WorkOrder conformance (noema work-order v1), no-regression.
+  acceptance: check_workorder_package.py passes on all Genesis packages; fails on seeded broken fixture.

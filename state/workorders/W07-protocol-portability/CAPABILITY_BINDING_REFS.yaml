@@ -1,0 +1,36 @@
+# W07 — Protocol Portability, CI & Artifact Promotion
+# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
+schema: divinivid-program/capability-bindings@1
+workorder: W07
+bindings:
+- skill: workspace-operating-contract-orchestrator
+  role: minimum entry protocol
+  ref:
+    scheme: github
+    locator: Picazo333/skill-foundry/catalog/skills/workspace-operating-contract-orchestrator
+    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
+  status: BOUND_BY_REFERENCE (published in registry at pinned SHA; invoke via SKILL.md)
+- skill: capability-eval-architect
+  role: clean-session eval
+  ref:
+    scheme: github
+    locator: Picazo333/skill-foundry/catalog/skills/capability-eval-architect
+    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
+  status: BOUND_BY_REFERENCE (published in registry at pinned SHA; invoke via SKILL.md)
+- skill: checkpoint-resume-architect
+  role: recovery across sessions
+  ref:
+    scheme: github
+    locator: Picazo333/skill-foundry/catalog/skills/checkpoint-resume-architect
+    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
+  status: BOUND_BY_REFERENCE (published in registry at pinned SHA; invoke via SKILL.md)
+- skill: release-readiness-rollback-auditor
+  role: CI gate design
+  ref:
+    scheme: github
+    locator: Picazo333/skill-foundry/catalog/skills/release-readiness-rollback-auditor
+    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
+  status: BOUND_BY_REFERENCE (published in registry at pinned SHA; invoke via SKILL.md)
+execution_preference: Claude / Sonnet 5.5
+routing: Preference only (Genesis §20). Concrete executor/resource selection is owned by W05 (stack-ia state/routing/WORKLOAD_ROUTES.yaml).
+  Never route because quota is near expiry. Jules excluded.

@@ -1,0 +1,18 @@
+# W07 — Protocol Portability, CI & Artifact Promotion
+# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
+schema: divinivid-program/expected-evidence@1
+workorder: W07
+rule: evidence is tied to a commit SHA; if the artifact changes, evidence expires and is re-produced
+evidence:
+- id: W07-E01
+  artifact: spec/11-durable-entry-path.md
+  proves: R01 R02
+- id: W07-E02
+  artifact: schemas/promotion-receipt/v1 + example validation
+  proves: R04
+- id: W07-E03
+  artifact: check_workorder_package.py output on Genesis packages + failing fixture
+  proves: R05
+- id: W07-E04
+  artifact: validation/clean-session/**
+  proves: R03

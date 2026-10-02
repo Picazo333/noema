@@ -1,0 +1,36 @@
+# W07 — Protocol Portability, CI & Artifact Promotion
+# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
+schema: divinivid-program/work-package-graph@1
+workorder: W07
+rule: WPs are execution units inside this WO (not authorities); split only on dependency, write scope, human gate,
+  independent acceptance or recovery boundary
+workpackages:
+- id: W07-WP1
+  title: Entry path inventory & spec
+  objective: R01 R02
+  depends: []
+  writes:
+  - spec/11-durable-entry-path.md
+  gate: none
+  exit: R01 R02
+- id: W07-WP2
+  title: Promotion protocol + receipts
+  objective: R04
+  depends:
+  - W07-WP1
+  writes:
+  - spec/12-artifact-promotion.md
+  - schemas/promotion-receipt/**
+  gate: none
+  exit: R04
+- id: W07-WP3
+  title: CI checks + clean-session eval
+  objective: R03 R05
+  depends:
+  - W07-WP1
+  writes:
+  - validation/program-checks/**
+  - .github/workflows/reusable-*.yml
+  - validation/clean-session/**
+  gate: H-W07
+  exit: R03 R05

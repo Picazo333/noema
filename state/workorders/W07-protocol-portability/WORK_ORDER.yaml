@@ -37,10 +37,10 @@ inputs:
   locator: registry/ecosystem.yaml
 - scheme: github
   locator: Picazo333/Divinivid/docs/08-plans/program/PROGRAM_INTERFACES.md
-  version: '957098dc0ed80bbba3432be1d0a5e202f1ef0d0d'
+  version: '4cc48ec425491447707623af9de256d5d3eaae26'
 - scheme: github
   locator: Picazo333/Divinivid/docs/08-plans/program/protocols
-  version: '957098dc0ed80bbba3432be1d0a5e202f1ef0d0d'
+  version: '4cc48ec425491447707623af9de256d5d3eaae26'
 context_mode: architect
 capability_requirements:
 - id: workspace-operating-contract-orchestrator

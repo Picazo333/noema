@@ -1,6 +1,6 @@
 # RECOVERY AND HANDOFF — W07
 
-Resume with `github://Picazo333/Divinivid/docs/08-plans/program/protocols/@957098dc0ed80bbba3432be1d0a5e202f1ef0d0dRESUME_PROTOCOL.md` using this package's `CHECKPOINT.yaml` (schema `CHECKPOINT_SCHEMA.yaml`).
+Resume with `github://Picazo333/Divinivid/docs/08-plans/program/protocols/@4cc48ec425491447707623af9de256d5d3eaae26RESUME_PROTOCOL.md` using this package's `CHECKPOINT.yaml` (schema `CHECKPOINT_SCHEMA.yaml`).
 
 ## WorkOrder-specific checkpoint boundaries
 - after each WP
@@ -23,4 +23,4 @@ Resume with `github://Picazo333/Divinivid/docs/08-plans/program/protocols/@95709
 Consumers read handoff artifacts from this repo at the SHA recorded in `CHECKPOINT.yaml#current_sha`, never from chat.
 
 ## Unexpected needs
-Classify with `github://Picazo333/Divinivid/docs/08-plans/program/protocols/@957098dc0ed80bbba3432be1d0a5e202f1ef0d0dEXPANSION_POLICY.md`; record in `CHECKPOINT.yaml#child_inquiries` or `#blockers`. Unaffected work continues.
+Classify with `github://Picazo333/Divinivid/docs/08-plans/program/protocols/@4cc48ec425491447707623af9de256d5d3eaae26EXPANSION_POLICY.md`; record in `CHECKPOINT.yaml#child_inquiries` or `#blockers`. Unaffected work continues.

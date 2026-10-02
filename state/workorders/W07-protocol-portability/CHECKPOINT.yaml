@@ -16,7 +16,7 @@ current_sha: null
 genesis_ref:
   branch: claude/noema/genesis-w07
   commit: see Picazo333/Divinivid docs/08-plans/program/genesis/GENESIS_COMPLETION_VERDICT.yaml
-  publication_state: LOCAL_COMMITTED (push pending, DLI-01)
+  publication_state: REMOTE_BRANCH_PR_OPEN
 contract_revisions:
   program_contract: 1
   workorder: 1
@@ -49,8 +49,10 @@ dependencies_status:
 child_inquiries: []
 executor_preference: Claude / Sonnet 5.5
 next_exact_action: 'When W02 WP3 and W03 WP2 are committed, create <prefix>/noema/w07-protocol-portability from
-  the Genesis ref (or main once the Genesis PR is merged) and run WP1: inventory current entry paths (AGENTS.md, noema.project.yaml, CLAUDE.md adapters) across agency-foundation, skill-foundry, stack-ia, 4geeks-control-tower, noema.'
+  the Genesis ref and run WP1: inventory current entry paths (AGENTS.md, noema.project.yaml, CLAUDE.md adapters)
+  across agency-foundation, skill-foundry, stack-ia, 4geeks-control-tower, noema.'
 resume_entrypoint: state/workorders/W07-protocol-portability/KICKSTART.md
 forbidden_replay:
 - executing W01–W08 work as part of Genesis
-updated_at: '2026-10-02T02:44:54Z'
+updated_at: '2026-10-02T02:38:00Z'
+updated_by: cowork-genesis

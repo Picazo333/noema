@@ -1,36 +1,182 @@
-# W07 — Protocol Portability, CI & Artifact Promotion
-# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
-schema: divinivid-program/work-package-graph@1
-workorder: W07
-rule: WPs are execution units inside this WO (not authorities); split only on dependency, write scope, human gate,
-  independent acceptance or recovery boundary
-workpackages:
-- id: W07-WP1
-  title: Entry path inventory & spec
-  objective: R01 R02
-  depends: []
-  writes:
-  - spec/11-durable-entry-path.md
-  gate: none
-  exit: R01 R02
-- id: W07-WP2
-  title: Promotion protocol + receipts
-  objective: R04
-  depends:
-  - W07-WP1
-  writes:
-  - spec/12-artifact-promotion.md
-  - schemas/promotion-receipt/**
-  gate: none
-  exit: R04
-- id: W07-WP3
-  title: CI checks + clean-session eval
-  objective: R03 R05
-  depends:
-  - W07-WP1
-  writes:
-  - validation/program-checks/**
-  - .github/workflows/reusable-*.yml
-  - validation/clean-session/**
-  gate: H-W07
-  exit: R03 R05
+{
+  "workorder": "W07",
+  "workpackages": [
+    {
+      "id": "ENTRY_PROMOTION_SPEC",
+      "depends_on": [],
+      "objective": "Bounded new spec/receipt design with H-W07",
+      "requirement_refs": [
+        "W07-R01",
+        "W07-R02",
+        "W07-R03"
+      ],
+      "entry": {
+        "required": [
+          "H-GENESIS2 accepted candidate revision",
+          "H-W02 for process baseline use",
+          "Own repo AGENTS/current ref preflight",
+          "Required scoped W05 route",
+          "Only actual input contracts used by this package"
+        ],
+        "not_required": [
+          "Complete other-domain builds",
+          "Whole W05B lane PASS"
+        ]
+      },
+      "execution": {
+        "steps": [
+          "Read frozen protocol and current candidate interfaces; identify schema conformance rather than rewrite Noema",
+          "Draft only new spec11/12 and promotion schema; material semantic change ADR stop",
+          "Secure H-W07 on exact design",
+          "Implement reusable CI/clean-session eval; actual model qualification W05",
+          "Run required Noema lint/audit/tests in owning authorized runtime; record unobservable external cases honestly"
+        ],
+        "allowed_writes": [
+          "spec/11-durable-entry-path.md",
+          "spec/12-artifact-promotion.md",
+          "schemas/promotion-receipt/",
+          "validation/clean-session/",
+          "validation/program-checks/",
+          ".github/workflows/reusable-program-conformance.yml"
+        ],
+        "forbidden": [
+          "Effects outside scope",
+          "Claiming human PASS",
+          "Secret persistence",
+          "Provider/architecture changes without owning gate"
+        ]
+      },
+      "eval": {
+        "requirements": [
+          {
+            "id": "W07-R01",
+            "oracle": "AGENTS→manifest→WO→specialist contracts→checkpoint exact-ref replay-free entry; real task and qualified current model chosen W05, no hardcoded unverified Sonnet5.5 requirement.",
+            "evidence": "CLEAN_SESSION_EVAL.md + real execution receipt"
+          },
+          {
+            "id": "W07-R02",
+            "oracle": "No edits spec00..10/ADR1..9/work-order-v1; explicit ADR needed for semantic change; adapters pointers only, no domain authority absorption.",
+            "evidence": "spec11/12 + conformance/diff receipts"
+          },
+          {
+            "id": "W07-R03",
+            "oracle": "GitHub executable canon, Obsidian knowledge, Drive media receipts; no universal sync/credential CI, no inferred external verification; per-repo PR adoption only. Accepted process shape/version and publication refs resolve.",
+            "evidence": "promotion schema + reusable checks/eval"
+          }
+        ],
+        "adversarial": [
+          "Stale input ref",
+          "Missing permissions",
+          "Interrupted/replayed effect",
+          "False evidence grade",
+          "Unsupported human-gate closure"
+        ]
+      },
+      "exit": {
+        "condition": "Every blocking oracle supported; reserved human acceptance recorded against exact bytes",
+        "receipt_fields": [
+          "package_id",
+          "input_hashes",
+          "output_hashes",
+          "oracle_results",
+          "gate_refs",
+          "route_ref",
+          "limitations",
+          "effect_ledger"
+        ],
+        "advance": "Only independently accepted output unlocks consumers; BLOCKED never silently treated PASS"
+      },
+      "split_reason": "Independent accepted output, permission/write/recovery boundary"
+    },
+    {
+      "id": "CI_CLEAN_SESSION",
+      "depends_on": [
+        "ENTRY_PROMOTION_SPEC"
+      ],
+      "objective": "Reusable structural checks and real clean-session evaluation",
+      "requirement_refs": [
+        "W07-R01",
+        "W07-R02",
+        "W07-R03"
+      ],
+      "entry": {
+        "required": [
+          "H-GENESIS2 accepted candidate revision",
+          "H-W02 for process baseline use",
+          "Own repo AGENTS/current ref preflight",
+          "Required scoped W05 route",
+          "Only actual input contracts used by this package"
+        ],
+        "not_required": [
+          "Complete other-domain builds",
+          "Whole W05B lane PASS"
+        ]
+      },
+      "execution": {
+        "steps": [
+          "Read frozen protocol and current candidate interfaces; identify schema conformance rather than rewrite Noema",
+          "Draft only new spec11/12 and promotion schema; material semantic change ADR stop",
+          "Secure H-W07 on exact design",
+          "Implement reusable CI/clean-session eval; actual model qualification W05",
+          "Run required Noema lint/audit/tests in owning authorized runtime; record unobservable external cases honestly"
+        ],
+        "allowed_writes": [
+          "spec/11-durable-entry-path.md",
+          "spec/12-artifact-promotion.md",
+          "schemas/promotion-receipt/",
+          "validation/clean-session/",
+          "validation/program-checks/",
+          ".github/workflows/reusable-program-conformance.yml"
+        ],
+        "forbidden": [
+          "Effects outside scope",
+          "Claiming human PASS",
+          "Secret persistence",
+          "Provider/architecture changes without owning gate"
+        ]
+      },
+      "eval": {
+        "requirements": [
+          {
+            "id": "W07-R01",
+            "oracle": "AGENTS→manifest→WO→specialist contracts→checkpoint exact-ref replay-free entry; real task and qualified current model chosen W05, no hardcoded unverified Sonnet5.5 requirement.",
+            "evidence": "CLEAN_SESSION_EVAL.md + real execution receipt"
+          },
+          {
+            "id": "W07-R02",
+            "oracle": "No edits spec00..10/ADR1..9/work-order-v1; explicit ADR needed for semantic change; adapters pointers only, no domain authority absorption.",
+            "evidence": "spec11/12 + conformance/diff receipts"
+          },
+          {
+            "id": "W07-R03",
+            "oracle": "GitHub executable canon, Obsidian knowledge, Drive media receipts; no universal sync/credential CI, no inferred external verification; per-repo PR adoption only. Accepted process shape/version and publication refs resolve.",
+            "evidence": "promotion schema + reusable checks/eval"
+          }
+        ],
+        "adversarial": [
+          "Stale input ref",
+          "Missing permissions",
+          "Interrupted/replayed effect",
+          "False evidence grade",
+          "Unsupported human-gate closure"
+        ]
+      },
+      "exit": {
+        "condition": "Every blocking oracle supported; reserved human acceptance recorded against exact bytes",
+        "receipt_fields": [
+          "package_id",
+          "input_hashes",
+          "output_hashes",
+          "oracle_results",
+          "gate_refs",
+          "route_ref",
+          "limitations",
+          "effect_ledger"
+        ],
+        "advance": "Only independently accepted output unlocks consumers; BLOCKED never silently treated PASS"
+      },
+      "split_reason": "Independent accepted output, permission/write/recovery boundary"
+    }
+  ],
+  "rule": "No package is a second authority; only actual acceptance unlocks downstream"
+}

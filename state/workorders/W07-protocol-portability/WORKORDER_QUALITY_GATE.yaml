@@ -1,32 +1,21 @@
-# W07 — Protocol Portability, CI & Artifact Promotion
-# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
-schema: divinivid-program/workorder-quality-gate@1
-workorder: W07
-loop: COVERAGE -> ADVERSARIAL -> CORRECTION -> VERIFICATION (single pass; no further round without new failure mode)
-coverage:
-- Genesis §12 entry path
-- adapters
-- clean-session eval
-- promotion
-- CI list
-- observability honesty
-adversarial:
-- attack: No repo owns 'transversal operating protocol'
-  finding: real gap U-02
-  correction: noema by manifest evidence; DEC-W07-HOME confirm at PR
-- attack: W07 blocks W08
-  finding: Genesis forbids
-  correction: non_blocking_for_w08 in DAG
-- attack: CI claims Drive verification
-  finding: risk
-  correction: R04 explicit unobservable list
-verification:
-- new spec numbers 11/12 do not collide with existing spec/00..10
-- WORK_ORDER.yaml validates against noema work-order v1 schema
-- 'sufficiency standard (Genesis §15): outcome, authority, locked, may/may-not change, where to write, capabilities,
-  evidence, gates, checkpoint, recovery, handoff, DONE — all present'
-verdict: WAITING_DEPENDENCY
-verdict_reason: 'Starts when central contract shapes are sufficiently stable: W02 DOWNSTREAM_REQUIREMENTS shape
-  and W03 protocol schemas committed (start edges). Home = noema per DEC-W07-HOME (recommended; confirm at PR review).'
-compiled_at: '2026-10-02'
-compiled_by: cowork-genesis
+{
+  "compile_state": "WO_READY",
+  "contract_completeness": "READY_FOR_OWNER_REVIEW",
+  "checks": {
+    "authority": "BOUND",
+    "scope": "BOUNDED",
+    "requirements": "ORACLE_AND_EVIDENCE_MAPPED",
+    "packages": "EXPLICIT_ENTRY_EXECUTION_EVAL_EXIT",
+    "capabilities": "PUBLISHED_INSTRUCTION_REFS",
+    "routing": "EXPLICIT_BLOCKED_W05B",
+    "recovery": "BOUND",
+    "human_gates": "NOT_BYPASSED"
+  },
+  "not_claimed": [
+    "Downstream PASS",
+    "Architecture owner approval",
+    "Route qualification",
+    "Independent review"
+  ],
+  "dispatch": "BLOCKED_PENDING_ENTRY"
+}

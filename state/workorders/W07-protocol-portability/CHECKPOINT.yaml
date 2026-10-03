@@ -1,58 +1,8 @@
-# W07 — Protocol Portability, CI & Artifact Promotion
-# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
-checkpoint_id: W07-CP-000
-schema: divinivid-program/checkpoint@1
-workstream: W07
-workorder_ref:
-  repo: noema
-  path: state/workorders/W07-protocol-portability/WORK_ORDER.yaml
-state: WAITING_DEPENDENCY
-state_reason: 'Starts when central contract shapes are sufficiently stable: W02 DOWNSTREAM_REQUIREMENTS shape and
-  W03 protocol schemas committed (start edges). Home = noema per DEC-W07-HOME (recommended; confirm at PR review).'
-repo: noema
-branch: claude/noema/genesis-w07
-baseline_sha: 1047d10ad588572a240651a437aec228cef61412
-current_sha: null
-genesis_ref:
-  branch: claude/noema/genesis-w07
-  commit: see Picazo333/Divinivid docs/08-plans/program/genesis/GENESIS_COMPLETION_VERDICT.yaml
-  publication_state: REMOTE_BRANCH_PR_OPEN
-contract_revisions:
-  program_contract: 1
-  workorder: 1
-completed_workpackages: []
-current_workpackage: null
-artifacts_produced: []
-side_effects_completed: []
-gate_states:
-  H-W07: PENDING
-accepted_decisions: []
-open_findings: []
-blockers:
-- id: W07-DEP-W02
-  kind: WAITING_DEPENDENCY
-  exact_dependency: VERTICAL_SLICE_V1 + DOWNSTREAM_REQUIREMENTS shapes committed
-  unblock: W02 produces it
-- id: W07-DEP-W03
-  kind: WAITING_DEPENDENCY
-  exact_dependency: W03 protocol schemas committed in candidate dir
-  unblock: W03 produces it
-dependencies_status:
-  W02:
-    kind: start
-    artifact: VERTICAL_SLICE_V1 + DOWNSTREAM_REQUIREMENTS shapes committed
-    status: pending
-  W03:
-    kind: start
-    artifact: W03 protocol schemas committed in candidate dir
-    status: pending
-child_inquiries: []
-executor_preference: Claude / Sonnet 5.5
-next_exact_action: 'When W02 WP3 and W03 WP2 are committed, create <prefix>/noema/w07-protocol-portability from
-  the Genesis ref and run WP1: inventory current entry paths (AGENTS.md, noema.project.yaml, CLAUDE.md adapters)
-  across agency-foundation, skill-foundry, stack-ia, 4geeks-control-tower, noema.'
-resume_entrypoint: state/workorders/W07-protocol-portability/KICKSTART.md
-forbidden_replay:
-- executing W01–W08 work as part of Genesis
-updated_at: '2026-10-02T02:38:00Z'
-updated_by: cowork-genesis
+{
+  "status": "NOT_EXECUTED",
+  "current": "ENTRY_PROMOTION_SPEC",
+  "completed": [],
+  "source_base": "4570c81c12e9482fcee305387aa05ca5027eea52",
+  "owner_gate": "PENDING",
+  "derived_Genesis_execution": false
+}

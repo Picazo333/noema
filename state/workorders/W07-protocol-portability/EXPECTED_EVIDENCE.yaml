@@ -1,18 +1,24 @@
-# W07 — Protocol Portability, CI & Artifact Promotion
-# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
-schema: divinivid-program/expected-evidence@1
-workorder: W07
-rule: evidence is tied to a commit SHA; if the artifact changes, evidence expires and is re-produced
-evidence:
-- id: W07-E01
-  artifact: spec/11-durable-entry-path.md
-  proves: R01 R02
-- id: W07-E02
-  artifact: schemas/promotion-receipt/v1 + example validation
-  proves: R04
-- id: W07-E03
-  artifact: check_workorder_package.py output on Genesis packages + failing fixture
-  proves: R05
-- id: W07-E04
-  artifact: validation/clean-session/**
-  proves: R03
+{
+  "workorder": "W07",
+  "evidence": [
+    {
+      "requirement": "W07-R01",
+      "artifact": "CLEAN_SESSION_EVAL.md + real execution receipt",
+      "oracle": "AGENTS→manifest→WO→specialist contracts→checkpoint exact-ref replay-free entry; real task and qualified current model chosen W05, no hardcoded unverified Sonnet5.5 requirement.",
+      "producer": "W07"
+    },
+    {
+      "requirement": "W07-R02",
+      "artifact": "spec11/12 + conformance/diff receipts",
+      "oracle": "No edits spec00..10/ADR1..9/work-order-v1; explicit ADR needed for semantic change; adapters pointers only, no domain authority absorption.",
+      "producer": "W07"
+    },
+    {
+      "requirement": "W07-R03",
+      "artifact": "promotion schema + reusable checks/eval",
+      "oracle": "GitHub executable canon, Obsidian knowledge, Drive media receipts; no universal sync/credential CI, no inferred external verification; per-repo PR adoption only. Accepted process shape/version and publication refs resolve.",
+      "producer": "W07"
+    }
+  ],
+  "proof_rule": "Narrative, file existence and isolated CI do not establish completion; source hashes + semantic/runtime receipts required"
+}

@@ -1,99 +1,122 @@
-# W07 — Protocol Portability, CI & Artifact Promotion
-# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
-# Schema: noema work-order v1 (github://Picazo333/noema/schemas/work-order/v1.schema.json@1047d10). Program
-# coordination fields (state, dependencies, refs, next action) live in CHECKPOINT.yaml.
-work_order_id: divinivid-w07-protocol-portability
-project_id: noema
-objective: 'Make operating quality survive executor/account/session changes: clean account + zero chat history +
-  repository authority + WorkOrder = correct operation. Specify the minimum durable entry path, keep provider adapters
-  thin, build a clean-session evaluation, formalize Artifact Promotion with durable receipts (GitHub / Obsidian
-  / Drive) and provide deterministic CI checks.'
-scope:
-  allowed:
-  - Specify the durable entry path (AGENTS.md → noema.project.yaml → exact WorkOrder → contracts → checkpoint) in
-    noema spec.
-  - Define thin-adapter rules for CLAUDE/Cursor/Codex files (pointer only).
-  - Build a clean-session evaluation (protocol + scoring) and prepare one real bounded clean-session workload suitable
-    to evaluate Sonnet 5.5.
-  - Define ARTIFACT_PROMOTION_PROTOCOL and promotion-receipt schema (GitHub = executable/canonical, Obsidian = durable
-    knowledge, Drive = media/heavy/shared).
-  - Provide reusable CI checks (schemas, required artifacts, contract versions, broken refs, manifest completeness,
-    receipts, generated-artifact freshness, WorkOrder conformance, no-regression) usable by other repos.
-  excluded:
-  - Universal bidirectional sync.
-  - Claiming Drive/Obsidian verification CI cannot observe.
-  - Duplicating program authority into provider-specific files.
-  - Adopting the checks in other repos directly (each repo's own PR/WO adopts them).
-inputs:
-- scheme: repo
-  locator: AGENTS.md
-- scheme: repo
-  locator: PROTOCOL.md
-- scheme: repo
-  locator: noema.project.yaml
-- scheme: repo
-  locator: schemas/work-order/v1.schema.json
-- scheme: repo
-  locator: registry/ecosystem.yaml
-- scheme: github
-  locator: Picazo333/Divinivid/docs/08-plans/program/PROGRAM_INTERFACES.md
-  version: '4cc48ec425491447707623af9de256d5d3eaae26'
-- scheme: github
-  locator: Picazo333/Divinivid/docs/08-plans/program/protocols
-  version: '4cc48ec425491447707623af9de256d5d3eaae26'
-context_mode: architect
-capability_requirements:
-- id: workspace-operating-contract-orchestrator
-  provider: skill-foundry
-  ref:
-    scheme: github
-    locator: Picazo333/skill-foundry/catalog/skills/workspace-operating-contract-orchestrator
-    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
-- id: capability-eval-architect
-  provider: skill-foundry
-  ref:
-    scheme: github
-    locator: Picazo333/skill-foundry/catalog/skills/capability-eval-architect
-    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
-- id: checkpoint-resume-architect
-  provider: skill-foundry
-  ref:
-    scheme: github
-    locator: Picazo333/skill-foundry/catalog/skills/checkpoint-resume-architect
-    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
-- id: release-readiness-rollback-auditor
-  provider: skill-foundry
-  ref:
-    scheme: github
-    locator: Picazo333/skill-foundry/catalog/skills/release-readiness-rollback-auditor
-    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
-allowed_writes:
-- spec/11-durable-entry-path.md
-- spec/12-artifact-promotion.md
-- schemas/promotion-receipt/**
-- validation/clean-session/**
-- .github/workflows/reusable-*.yml
-- validation/program-checks/**
-- state/workorders/W07-protocol-portability/CHECKPOINT.yaml
-- state/workorders/W07-protocol-portability/audit/**
-forbidden_effects:
-- changing existing spec/00..10, ADR-0001..0009 or schemas/work-order/v1 semantics (new versions only via noema
-  ADR)
-- writes in other repos
-- CI that requires credentials for Drive/Obsidian
-- write outside allowed_writes
-- direct push to main
-expected_artifacts:
-- spec/11-durable-entry-path.md
-- spec/12-artifact-promotion.md
-- schemas/promotion-receipt/v1.schema.json
-- validation/clean-session/CLEAN_SESSION_EVAL.md
-- validation/clean-session/workloads/W07-CS-001.yaml
-- .github/workflows/reusable-program-conformance.yml
-- validation/program-checks/check_workorder_package.py
-quality_claims:
-- portability
-- contract-conformance
-- recoverability
-human_gates:
-- 'H-W07: human accepts new spec sections (noema ADR if protocol semantics change)'
+{
+  "work_order_id": "divinivid-w07",
+  "project_id": "noema",
+  "objective": "Preserve Noema durable-entry, thin-adapter, clean-session and promotion/CI scope with process-unit candidate interfaces and current W03 publication semantics",
+  "scope": {
+    "allowed": [
+      "spec11 durable entry and spec12 promotion as originally scoped",
+      "Provider-thin entry pointers",
+      "Clean-session eval with one real bounded qualified model task",
+      "Promotion receipt/CI checks"
+    ],
+    "excluded": [
+      "Changing frozen protocol/schema semantics silently",
+      "Services/databases/eventbus/RAG/state ownership",
+      "Writes in other repos",
+      "Universal sync",
+      "CI needing Drive/Obsidian credentials"
+    ]
+  },
+  "inputs": [
+    {
+      "scheme": "repo",
+      "locator": "state/workorders/W07-protocol-portability/EXECUTION_CONTRACT.yaml"
+    },
+    {
+      "scheme": "repo",
+      "locator": "state/workorders/W07-protocol-portability/CONTEXT_BUNDLE.md"
+    },
+    {
+      "scheme": "repo",
+      "locator": "state/workorders/W07-protocol-portability/CAPABILITY_BINDING_REFS.yaml"
+    }
+  ],
+  "context_mode": "build",
+  "capability_requirements": [
+    {
+      "id": "requirements-acceptance-contract-builder",
+      "provider": "skill-foundry",
+      "version": "1.0.0",
+      "ref": {
+        "scheme": "github",
+        "locator": "Picazo333/skill-foundry/catalog/skills/requirements-acceptance-contract-builder/SKILL.md",
+        "version": "06267247756988f350ffbf9e19330bf5c92ed337"
+      }
+    },
+    {
+      "id": "human-gate-authority-architect",
+      "provider": "skill-foundry",
+      "version": "1.0.0",
+      "ref": {
+        "scheme": "github",
+        "locator": "Picazo333/skill-foundry/catalog/skills/human-gate-authority-architect/SKILL.md",
+        "version": "06267247756988f350ffbf9e19330bf5c92ed337"
+      }
+    },
+    {
+      "id": "checkpoint-resume-architect",
+      "provider": "skill-foundry",
+      "version": "1.0.0",
+      "ref": {
+        "scheme": "github",
+        "locator": "Picazo333/skill-foundry/catalog/skills/checkpoint-resume-architect/SKILL.md",
+        "version": "06267247756988f350ffbf9e19330bf5c92ed337"
+      }
+    },
+    {
+      "id": "completion-deliverable-verifier",
+      "provider": "skill-foundry",
+      "version": "1.0.0",
+      "ref": {
+        "scheme": "github",
+        "locator": "Picazo333/skill-foundry/catalog/skills/completion-deliverable-verifier/SKILL.md",
+        "version": "06267247756988f350ffbf9e19330bf5c92ed337"
+      }
+    },
+    {
+      "id": "agent-work-order-compiler",
+      "provider": "skill-foundry",
+      "version": "1.1.0",
+      "ref": {
+        "scheme": "github",
+        "locator": "Picazo333/skill-foundry/catalog/skills/agent-work-order-compiler/SKILL.md",
+        "version": "06267247756988f350ffbf9e19330bf5c92ed337"
+      }
+    }
+  ],
+  "allowed_writes": [
+    "spec/11-durable-entry-path.md",
+    "spec/12-artifact-promotion.md",
+    "schemas/promotion-receipt/",
+    "validation/clean-session/",
+    "validation/program-checks/",
+    ".github/workflows/reusable-program-conformance.yml",
+    "state/workorders/W07-protocol-portability/"
+  ],
+  "forbidden_effects": [
+    "Main write/merge",
+    "Deploy/DNS/CRM/outreach/payment/purchase",
+    "Local installation or credential grants without explicit separate H-RUNTIME",
+    "Derived execution during Genesis2",
+    "Advancement without actual applicable Entry/gate",
+    "Changing owning authority or exact accepted architecture without exception"
+  ],
+  "expected_artifacts": [
+    "spec/11-durable-entry-path.md",
+    "spec/12-artifact-promotion.md",
+    "schemas/promotion-receipt/v1.schema.json",
+    "validation/clean-session/CLEAN_SESSION_EVAL.md",
+    "validation/clean-session/workloads/W07-CS-001.yaml",
+    ".github/workflows/reusable-program-conformance.yml",
+    "validation/program-checks/check_workorder_package.py"
+  ],
+  "quality_claims": [
+    "provenance",
+    "contract-conformance",
+    "recoverability",
+    "delivery-integrity"
+  ],
+  "human_gates": [
+    "H-W07: Noema human — Accept new spec; ADR if protocol semantics change"
+  ]
+}

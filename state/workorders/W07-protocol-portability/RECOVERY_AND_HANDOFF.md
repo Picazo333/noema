@@ -1,26 +1,3 @@
-# RECOVERY AND HANDOFF — W07
+Checkpoint after each accepted output and before/after permitted side effect: current package, exact input/output hashes, route, open gate, ledger event id, accepted receipts and next unmet Entry. On interruption read back real remote/staging effect before retry; do not replay acknowledged payment/deploy/capture effects. Reconcile current repo drift against pinned inputs and invalidate affected evidence. Keep secrets outside Git. Material change raises ArchitectureException through W00; unqualified resource returns W05B requirement. Resume only affected package.
 
-Resume with `github://Picazo333/Divinivid/docs/08-plans/program/protocols/@4cc48ec425491447707623af9de256d5d3eaae26RESUME_PROTOCOL.md` using this package's `CHECKPOINT.yaml` (schema `CHECKPOINT_SCHEMA.yaml`).
-
-## WorkOrder-specific checkpoint boundaries
-- after each WP
-- H-W07
-- plus every program boundary in CHECKPOINT_SCHEMA.yaml#checkpoint_boundaries
-
-## Forbidden replay
-- —
-
-**Side effects:** none permitted by this WorkOrder.
-
-## Execution branch
-`<prefix>/noema/w07-protocol-portability` created from the Genesis ref (or `main` once the Genesis PR is merged). Prefix per `Repos/CLAUDE.md` (claude-code→claude, cursor→cursor, codex→codex). Executors without git write access (e.g. ChatGPT Work) do not commit: a git-capable executor commits their outputs and records the producing executor in `CHECKPOINT.yaml#updated_by`.
-
-## Downstream handoff
-| Artifact | Consumer |
-|---|---|
-| reusable CI + entry-path spec + promotion protocol | every repo (adoption via own PR), W00 (freshness checks) |
-
-Consumers read handoff artifacts from this repo at the SHA recorded in `CHECKPOINT.yaml#current_sha`, never from chat.
-
-## Unexpected needs
-Classify with `github://Picazo333/Divinivid/docs/08-plans/program/protocols/@4cc48ec425491447707623af9de256d5d3eaae26EXPANSION_POLICY.md`; record in `CHECKPOINT.yaml#child_inquiries` or `#blockers`. Unaffected work continues.
+Terminal: W07_PORTABILITY_PROMOTION_AND_CI_ACCEPTED. Handoff: Reusable protocols/checks to owning repos through their PRs; conformance is not domain-quality PASS

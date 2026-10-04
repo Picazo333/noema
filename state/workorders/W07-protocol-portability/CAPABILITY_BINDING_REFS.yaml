@@ -1,36 +1,77 @@
-# W07 — Protocol Portability, CI & Artifact Promotion
-# Compiled by Divinivid Genesis (2026-10-02). Program contract revision 1.
-schema: divinivid-program/capability-bindings@1
-workorder: W07
-bindings:
-- skill: workspace-operating-contract-orchestrator
-  role: minimum entry protocol
-  ref:
-    scheme: github
-    locator: Picazo333/skill-foundry/catalog/skills/workspace-operating-contract-orchestrator
-    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
-  status: BOUND_BY_REFERENCE (published in registry at pinned SHA; invoke via SKILL.md)
-- skill: capability-eval-architect
-  role: clean-session eval
-  ref:
-    scheme: github
-    locator: Picazo333/skill-foundry/catalog/skills/capability-eval-architect
-    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
-  status: BOUND_BY_REFERENCE (published in registry at pinned SHA; invoke via SKILL.md)
-- skill: checkpoint-resume-architect
-  role: recovery across sessions
-  ref:
-    scheme: github
-    locator: Picazo333/skill-foundry/catalog/skills/checkpoint-resume-architect
-    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
-  status: BOUND_BY_REFERENCE (published in registry at pinned SHA; invoke via SKILL.md)
-- skill: release-readiness-rollback-auditor
-  role: CI gate design
-  ref:
-    scheme: github
-    locator: Picazo333/skill-foundry/catalog/skills/release-readiness-rollback-auditor
-    version: 17e6731b015bb69ba0059ebfac5d59432c6d0fca
-  status: BOUND_BY_REFERENCE (published in registry at pinned SHA; invoke via SKILL.md)
-execution_preference: Claude / Sonnet 5.5
-routing: Preference only (Genesis §20). Concrete executor/resource selection is owned by W05 (stack-ia state/routing/WORKLOAD_ROUTES.yaml).
-  Never route because quota is near expiry. Jules excluded.
+{
+  "workorder": "W07",
+  "capabilities": [
+    {
+      "id": "requirements-acceptance-contract-builder",
+      "version": "1.0.0",
+      "canonical_path": "catalog/skills/requirements-acceptance-contract-builder",
+      "revision": "06267247756988f350ffbf9e19330bf5c92ed337",
+      "registry_path": "foundry/registry/SKILL_REGISTRY.yaml",
+      "fit": "Instruction contract for requirements-acceptance-contract-builder; does not supply subject-specific legal/tax decisions",
+      "limitations": "Later executor must read exact SKILL and applicable overlays/manifest, no runtime qualification implied",
+      "manifest_path": "catalog/skills/requirements-acceptance-contract-builder/SKILL.md"
+    },
+    {
+      "id": "human-gate-authority-architect",
+      "version": "1.0.0",
+      "canonical_path": "catalog/skills/human-gate-authority-architect",
+      "revision": "06267247756988f350ffbf9e19330bf5c92ed337",
+      "registry_path": "foundry/registry/SKILL_REGISTRY.yaml",
+      "fit": "Instruction contract for human-gate-authority-architect; does not supply subject-specific legal/tax decisions",
+      "limitations": "Later executor must read exact SKILL and applicable overlays/manifest, no runtime qualification implied",
+      "manifest_path": "catalog/skills/human-gate-authority-architect/SKILL.md"
+    },
+    {
+      "id": "checkpoint-resume-architect",
+      "version": "1.0.0",
+      "canonical_path": "catalog/skills/checkpoint-resume-architect",
+      "revision": "06267247756988f350ffbf9e19330bf5c92ed337",
+      "registry_path": "foundry/registry/SKILL_REGISTRY.yaml",
+      "fit": "Instruction contract for checkpoint-resume-architect; does not supply subject-specific legal/tax decisions",
+      "limitations": "Later executor must read exact SKILL and applicable overlays/manifest, no runtime qualification implied",
+      "manifest_path": "catalog/skills/checkpoint-resume-architect/SKILL.md"
+    },
+    {
+      "id": "completion-deliverable-verifier",
+      "version": "1.0.0",
+      "canonical_path": "catalog/skills/completion-deliverable-verifier",
+      "revision": "06267247756988f350ffbf9e19330bf5c92ed337",
+      "registry_path": "foundry/registry/SKILL_REGISTRY.yaml",
+      "fit": "Instruction contract for completion-deliverable-verifier; does not supply subject-specific legal/tax decisions",
+      "limitations": "Later executor must read exact SKILL and applicable overlays/manifest, no runtime qualification implied",
+      "manifest_path": "catalog/skills/completion-deliverable-verifier/SKILL.md"
+    },
+    {
+      "id": "agent-work-order-compiler",
+      "version": "1.1.0",
+      "canonical_path": "catalog/skills/agent-work-order-compiler",
+      "revision": "06267247756988f350ffbf9e19330bf5c92ed337",
+      "registry_path": "foundry/registry/SKILL_REGISTRY.yaml",
+      "fit": "Instruction contract for agent-work-order-compiler; does not supply subject-specific legal/tax decisions",
+      "limitations": "Later executor must read exact SKILL and applicable overlays/manifest, no runtime qualification implied",
+      "manifest_path": "catalog/skills/agent-work-order-compiler/SKILL.md"
+    }
+  ],
+  "resource": {
+    "id": null,
+    "fit": "Candidates only",
+    "evidence_ref": "docs/08-plans/program/genesis-v2/TOOLING_AND_ROUTING_RECOMMENDATIONS.yaml"
+  },
+  "qualification": {
+    "status": "UNKNOWN",
+    "workload": "W07",
+    "host": "UNRESOLVED",
+    "interface": "UNRESOLVED",
+    "evidence_ref": "W05B real workload qualification pending"
+  },
+  "availability": {
+    "status": "UNKNOWN",
+    "observed_at": null,
+    "evidence_ref": "Refresh outside-Git overlay at execution"
+  },
+  "authority": {
+    "status": "UNKNOWN",
+    "evidence_ref": "H-GENESIS2/H-W02 and owning future gate required"
+  },
+  "execution_status": "BLOCKED"
+}

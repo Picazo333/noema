@@ -1,0 +1,42 @@
+schema: 1
+id: md-dental-agent-succession
+status: proposal
+source:
+  project: Picazo333/MD_APP-AFTER-GROK
+  observation_date: 2026-09-21
+problem:
+  summary: executor_or_model_depletion_requires_safe_low_context_resume_without_rewriting_authority_or_evidence
+observed_transitions:
+  - kind: MODEL_SWAP
+    role: builder_integrator
+    from: {executor: cursor, model: grok-4.6}
+    to: {executor: cursor, model: gpt-5.6-sol, effort: medium}
+  - kind: EXECUTOR_SUCCESSION
+    role: independent_auditor
+    from: {executor: claude, frozen_sha: 9ae0e46dbe0e547bf2b76cb249c6e0822413bfea}
+    to: {executor: jules, branch: agent/jules-quality}
+candidate_contracts:
+  - role_binding
+  - execution_frontier
+  - context_temperature
+  - agent_transition
+  - resume_eval
+  - historical_verdict_immutability
+  - peer_independence
+authority:
+  likely_owner: noema
+  consumer_extension_allowed: true
+  domain_state_transfer: false
+promotion:
+  current: CONSUMER_PROPOSAL
+  requires:
+    - second_real_consumer
+    - context_reduction_measurement
+    - resume_eval_success_across_replacements
+    - no_false_shared_gate_pass
+    - deterministic_binding_reference_validation
+non_goals:
+  - persistent_agent_runtime
+  - adaptive_executor_routing
+  - provider_specific_core
+  - centralized_domain_state

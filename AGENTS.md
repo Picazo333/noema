@@ -32,3 +32,5 @@ python -m noema audit .
 
 ## Optional: portfolio routing
 For objectives spanning several deliverables or without an obvious Skill, you may consult `github://Picazo333/skill-foundry/catalog/skills/portfolio-router@e50b028a16f1508eaf6ff7d23f0fda32af396eef`. This is a reference, not part of the read-first sequence; repository precedence is unchanged.
+
+[Índice unificado de Noema en Drive](https://drive.google.com/file/d/1iRqObtGedCUhqicNkA0YyvKdngqn0dgk/view?usp=drivesdk)
